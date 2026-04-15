@@ -411,12 +411,20 @@ function buildFC(data){
     return svg;
   }
   var r1=[
-    {x:PAD,           w:w4,key:'met_acid', lbl:'대사성 산증',   sub:'HCO₃⁻↓'},
-    {x:PAD+w4+g,      w:w4,key:'resp_acid',lbl:'호흡성 산증',   sub:'CO₂↑'},
-    {x:PAD+2*(w4+g),  w:w4,key:'resp_alk', lbl:'호흡성 알칼리증',sub:'CO₂↓'},
-    {x:PAD+3*(w4+g),  w:w4,key:'met_alk',  lbl:'대사성 알칼리증',sub:'HCO₃⁻↑'}
+    {x:PAD,           w:w4,key:'met_acid', lbl:'대사성 산증',    sub:'HCO₃⁻↓'},
+    {x:PAD+w4+g,      w:w4,key:'resp_acid',lbl:'호흡성 산증',    sub:'CO₂↑'},
+    {x:PAD+2*(w4+g),  w:w4,key:'resp_alk', lbl:'호흡성 알칼리증', sub:'CO₂↓'},
+    {x:PAD+3*(w4+g),  w:w4,key:'met_alk',  lbl:'대사성 알칼리증', sub:'HCO₃⁻↑'}
   ];
+  /* 활성 박스 sub를 실제값으로 교체 */
+  var r1subMap={
+    'met_acid': 'HCO₃⁻ '+data.hco3.toFixed(1),
+    'resp_acid':'CO₂ '+data.pco2.toFixed(1),
+    'resp_alk': 'CO₂ '+data.pco2.toFixed(1),
+    'met_alk':  'HCO₃⁻ '+data.hco3.toFixed(1)
+  };
   r1.forEach(function(n){
+    if(n.key===pType&&r1subMap[pType]) n.sub=r1subMap[pType];
     var isAcid=(n.key==='met_acid'||n.key==='resp_acid');
     var col=(n.key===pType)?(isAcid?C.acid:C.alk):C.dim;
     svg+=box(n.x,bby[1],n.w,col,n.lbl,n.sub);
@@ -429,18 +437,19 @@ function buildFC(data){
   /* ── ROW 2: compensation ── */
   svg+=rowLabel(R[2],'③ 보상');
   var r2=[];
+  /* 보상 행: 활성 박스만 실제값, 비활성은 방향 힌트 */
   if(pType==='met_acid'||pType==='met_alk'){
     r2=[
-      {x:PAD,          w:w3,key:'adequate',       lbl:'적절한 보상',   sub:'단순 장애'},
-      {x:PAD+w3+g,     w:w3,key:'mixed_resp_alk', lbl:'혼합+호흡알칼리증',sub:'CO₂ 과도↓'},
-      {x:PAD+2*(w3+g), w:w3,key:'mixed_resp_acid',lbl:'혼합+호흡산증', sub:'CO₂↓ 부족'}
+      {x:PAD,          w:w3,key:'adequate',       lbl:'적절한 보상',     sub:cStatus==='adequate'?       'CO₂ '+data.pco2.toFixed(1):'단순 장애'},
+      {x:PAD+w3+g,     w:w3,key:'mixed_resp_alk', lbl:'혼합+호흡알칼리증', sub:cStatus==='mixed_resp_alk'? 'CO₂ '+data.pco2.toFixed(1):'CO₂ 과도↓'},
+      {x:PAD+2*(w3+g), w:w3,key:'mixed_resp_acid',lbl:'혼합+호흡산증',    sub:cStatus==='mixed_resp_acid'?'CO₂ '+data.pco2.toFixed(1):'CO₂↓ 부족'}
     ];
   }else if(pType==='resp_acid'||pType==='resp_alk'){
     r2=[
-      {x:PAD,          w:w4,key:'acute',         lbl:'급성 반응',      sub:'완충 단계'},
-      {x:PAD+w4+g,     w:w4,key:'chronic',       lbl:'만성 보상',      sub:'>72h'},
-      {x:PAD+2*(w4+g), w:w4,key:'mixed_met_alk', lbl:'혼합+대사알칼리증',sub:'HCO₃⁻↑↑'},
-      {x:PAD+3*(w4+g), w:w4,key:'mixed_met_acid',lbl:'혼합+대사산증',  sub:'HCO₃⁻↓↓'}
+      {x:PAD,          w:w4,key:'acute',         lbl:'급성 반응',       sub:cStatus==='acute'?          'HCO₃⁻ '+data.hco3.toFixed(1):'완충 단계'},
+      {x:PAD+w4+g,     w:w4,key:'chronic',       lbl:'만성 보상',       sub:cStatus==='chronic'?        'HCO₃⁻ '+data.hco3.toFixed(1):'>72h'},
+      {x:PAD+2*(w4+g), w:w4,key:'mixed_met_alk', lbl:'혼합+대사알칼리증', sub:cStatus==='mixed_met_alk'?  'HCO₃⁻ '+data.hco3.toFixed(1):'HCO₃⁻↑↑'},
+      {x:PAD+3*(w4+g), w:w4,key:'mixed_met_acid',lbl:'혼합+대사산증',    sub:cStatus==='mixed_met_acid'? 'HCO₃⁻ '+data.hco3.toFixed(1):'HCO₃⁻↓↓'}
     ];
   }else{
     r2=[{x:PAD,w:W-PAD*2,key:'na',lbl:'보상 평가 불가',sub:'일차장애 불명확'}];
@@ -510,7 +519,7 @@ function run(){
 
   var html='<div class="steps-wrap">';
   var isMixed=false,compLabel='',isAcute=false,isChronic=false,mixComponents=[];
-  var fcData={phStatus:'',phVal:ph,primaryType:'',compStatus:'na',agStatus:'na',agVal:null,drStatus:'na',drVal:null};
+  var fcData={phStatus:'',phVal:ph,pco2:pco2,hco3:hco3,primaryType:'',compStatus:'na',agStatus:'na',agVal:null,drStatus:'na',drVal:null};
 
   /* STEP 1: pH */
   var phNormal=(ph>=7.35&&ph<=7.45);
