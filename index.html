@@ -322,141 +322,162 @@ function mkStep(n,col,title,tag,tc,body){
 }
 
 function buildFC(data){
-  /* Flowchart — horizontal scroll for mobile, 700px wide SVG */
-  var W=700,BH=48,BW_SM=130,BW_MD=155,BW_LG=165;
-  var R=[30,108,186,264,342]; /* row y tops */
-  var isDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches;
+  /* 모바일 최적화: 전체 너비 360px, 스크롤 없이 표시 */
+  /* 단계 레이블은 각 행 위에 배치, 박스는 레이블 아래 시작 */
+  var W=360;
+  var BH=40;   /* 박스 높이 */
+  var LH=18;   /* 레이블 높이 */
+  var GAP=10;  /* 행간 간격 */
+  var PAD=6;   /* 박스 좌우 여백(최소) */
+  /* 행 구조: [레이블 y, 박스 y] */
+  var rowH=BH+LH+GAP;
+  var R=[];
+  for(var i=0;i<5;i++) R.push(i*rowH+4);
+  var totalH=5*rowH+4;
 
-  /* colors */
+  var isDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches;
   var C={
     acid:{fill:'rgba(249,115,22,0.15)',stroke:'#f97316',text:isDark?'#fdba74':'#9a3412'},
     alk:{fill:'rgba(56,189,248,0.12)',stroke:'#38bdf8',text:isDark?'#7dd3fc':'#075985'},
     ok:{fill:'rgba(74,222,128,0.12)',stroke:'#4ade80',text:isDark?'#86efac':'#14532d'},
     warn:{fill:'rgba(251,191,36,0.12)',stroke:'#fbbf24',text:isDark?'#fde68a':'#78350f'},
-    dim:{fill:isDark?'rgba(30,41,59,0.6)':'rgba(241,245,249,0.8)',stroke:isDark?'rgba(148,163,184,0.2)':'rgba(0,0,0,0.1)',text:isDark?'rgba(148,163,184,0.5)':'rgba(0,0,0,0.3)'}
+    dim:{fill:isDark?'rgba(30,41,59,0.6)':'rgba(241,245,249,0.8)',stroke:isDark?'rgba(148,163,184,0.2)':'rgba(0,0,0,0.1)',text:isDark?'rgba(148,163,184,0.45)':'rgba(0,0,0,0.25)'}
   };
+  var labelCol=isDark?'rgba(148,163,184,0.55)':'rgba(0,0,0,0.35)';
 
-  function box(x,y,w,h,col,label,sub){
+  /* 박스 그리기: lby = 레이블 y, bby = 박스 y */
+  function row(lby,label){
+    return '<text x="'+(W/2)+'" y="'+(lby+13)+'" text-anchor="middle" dominant-baseline="central" '+
+           'fill="'+labelCol+'" font-size="9" font-weight="600" font-family="system-ui,sans-serif" letter-spacing="0.04em">'+label+'</text>';
+  }
+  function box(x,y,w,col,label,sub){
     var cx=x+w/2;
-    var r='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="8" fill="'+col.fill+'" stroke="'+col.stroke+'" stroke-width="1.5"/>';
+    var r='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+BH+'" rx="6" fill="'+col.fill+'" stroke="'+col.stroke+'" stroke-width="1.5"/>';
     if(sub){
-      r+='<text x="'+cx+'" y="'+(y+h/2-7)+'" text-anchor="middle" dominant-baseline="central" fill="'+col.text+'" font-size="12" font-weight="600" font-family="system-ui,sans-serif">'+label+'</text>';
-      r+='<text x="'+cx+'" y="'+(y+h/2+8)+'" text-anchor="middle" dominant-baseline="central" fill="'+col.text+'" font-size="10" font-family="system-ui,sans-serif" opacity="0.8">'+sub+'</text>';
+      r+='<text x="'+cx+'" y="'+(y+BH/2-7)+'" text-anchor="middle" dominant-baseline="central" fill="'+col.text+'" font-size="11" font-weight="600" font-family="system-ui,sans-serif">'+label+'</text>';
+      r+='<text x="'+cx+'" y="'+(y+BH/2+8)+'" text-anchor="middle" dominant-baseline="central" fill="'+col.text+'" font-size="9.5" font-family="system-ui,sans-serif" opacity="0.85">'+sub+'</text>';
     }else{
-      r+='<text x="'+cx+'" y="'+(y+h/2)+'" text-anchor="middle" dominant-baseline="central" fill="'+col.text+'" font-size="12" font-weight="600" font-family="system-ui,sans-serif">'+label+'</text>';
+      r+='<text x="'+cx+'" y="'+(y+BH/2)+'" text-anchor="middle" dominant-baseline="central" fill="'+col.text+'" font-size="11" font-weight="600" font-family="system-ui,sans-serif">'+label+'</text>';
     }
     return r;
   }
   function arr(x1,y1,x2,y2,active){
-    return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+(active?'#818cf8':'rgba(148,163,184,0.2)')+'" stroke-width="'+(active?2:1)+'" marker-end="url(#fc_arr)"/>';
+    return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+(active?'#818cf8':'rgba(148,163,184,0.18)')+'" stroke-width="'+(active?2:1)+'" marker-end="url(#fc_arr)"/>';
   }
 
   var pType=data.primaryType, cStatus=data.compStatus, agStatus=data.agStatus, drStatus=data.drStatus;
   var phAcid=(data.phStatus==='acidemia'||data.phStatus==='normal_acid');
   var phAlk=(data.phStatus==='alkalemia'||data.phStatus==='normal_alk');
 
-  var svg='<svg width="'+W+'" height="420" viewBox="0 0 '+W+' 420" style="display:block">';
+  var svg='<svg width="100%" viewBox="0 0 '+W+' '+totalH+'" style="display:block">';
   svg+='<defs><marker id="fc_arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 2L8 5L2 8" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round"/></marker></defs>';
 
-  /* Row labels */
-  var rlbls=['① pH','② 일차장애','③ 보상','④ AG','⑤ Δratio'];
-  rlbls.forEach(function(l,i){
-    svg+='<text x="8" y="'+(R[i]+BH/2)+'" dominant-baseline="central" fill="'+(isDark?'rgba(148,163,184,0.4)':'rgba(0,0,0,0.25)')+'" font-size="9" font-family="system-ui,sans-serif">'+l+'</text>';
-  });
-
-  var OX=36; /* offset x to account for row labels */
-
   /* ── ROW 0: pH ── */
+  var r0lby=R[0], r0bby=R[0]+LH;
+  svg+=row(r0lby,'① pH');
+  /* 3개 균등 배치: 총 너비 W, 패딩 PAD */
+  var w3=(W-PAD*2-8)/3, g3=4;
   var r0=[
-    {x:OX,    w:BW_MD,key:'acid_side',lbl:phAcid&&!phAlk?(data.phStatus==='normal_acid'?'정상 (산성)':'산혈증'):'산혈증',sub:phAcid&&!phAlk?('pH '+data.phVal.toFixed(2)):'pH<7.35'},
-    {x:OX+170,w:BW_MD,key:'norm',     lbl:'정상',sub:'7.35–7.45'},
-    {x:OX+340,w:BW_MD,key:'alk_side', lbl:phAlk&&!phAcid?(data.phStatus==='normal_alk'?'정상 (알칼리)':'알칼리혈증'):'알칼리혈증',sub:phAlk&&!phAcid?('pH '+data.phVal.toFixed(2)):'pH>7.45'}
+    {x:PAD,           w:w3,key:'acid_side',lbl:phAcid&&!phAlk?(data.phStatus==='normal_acid'?'정상(산성쪽)':'산혈증'):'산혈증',     sub:phAcid&&!phAlk?('pH '+data.phVal.toFixed(2)):'pH<7.35'},
+    {x:PAD+w3+g3,     w:w3,key:'norm',     lbl:'정상',sub:'7.35–7.45'},
+    {x:PAD+2*(w3+g3), w:w3,key:'alk_side', lbl:phAlk&&!phAcid?(data.phStatus==='normal_alk'?'정상(알칼리)':'알칼리혈증'):'알칼리혈증',sub:phAlk&&!phAcid?('pH '+data.phVal.toFixed(2)):'pH>7.45'}
   ];
   var activeR0key=phAcid&&!phAlk?'acid_side':phAlk&&!phAcid?'alk_side':'norm';
   r0.forEach(function(n){
     var active=n.key===activeR0key;
     var col=active?(n.key==='acid_side'?C.acid:(n.key==='alk_side'?C.alk:C.ok)):C.dim;
-    svg+=box(n.x,R[0],n.w,BH,col,n.lbl,n.sub);
+    svg+=box(n.x,r0bby,n.w,col,n.lbl,n.sub);
   });
   var activeR0=r0.filter(function(n){return n.key===activeR0key;})[0];
   var fromR0cx=activeR0.x+activeR0.w/2;
 
   /* ── ROW 1: primary ── */
+  var r1lby=R[1], r1bby=R[1]+LH;
+  svg+=row(r1lby,'② 일차장애');
+  var w4=(W-PAD*2-12)/4, g4=4;
   var r1=[
-    {x:OX,    w:BW_SM,key:'met_acid', lbl:'대사성 산증',   sub:'HCO₃⁻↓'},
-    {x:OX+138,w:BW_SM,key:'resp_acid',lbl:'호흡성 산증',   sub:'CO₂↑'},
-    {x:OX+276,w:BW_SM,key:'resp_alk', lbl:'호흡성 알칼리증',sub:'CO₂↓'},
-    {x:OX+414,w:BW_SM,key:'met_alk',  lbl:'대사성 알칼리증',sub:'HCO₃⁻↑'}
+    {x:PAD,             w:w4,key:'met_acid', lbl:'대사성 산증', sub:'HCO₃⁻↓'},
+    {x:PAD+w4+g4,       w:w4,key:'resp_acid',lbl:'호흡성 산증', sub:'CO₂↑'},
+    {x:PAD+2*(w4+g4),   w:w4,key:'resp_alk', lbl:'호흡성 알칼리증',sub:'CO₂↓'},
+    {x:PAD+3*(w4+g4),   w:w4,key:'met_alk',  lbl:'대사성 알칼리증',sub:'HCO₃⁻↑'}
   ];
   r1.forEach(function(n){
     var active=n.key===pType;
     var isAcid=(n.key==='met_acid'||n.key==='resp_acid');
     var col=active?(isAcid?C.acid:C.alk):C.dim;
-    svg+=box(n.x,R[1],n.w,BH,col,n.lbl,n.sub);
+    svg+=box(n.x,r1bby,n.w,col,n.lbl,n.sub);
   });
   var activeR1=r1.filter(function(n){return n.key===pType;})[0]||r1[0];
   var fromR1cx=activeR1.x+activeR1.w/2;
-  svg+=arr(fromR0cx,R[0]+BH,fromR1cx,R[1],true);
-  r1.forEach(function(n){if(n.key!==pType)svg+=arr(fromR0cx,R[0]+BH,n.x+n.w/2,R[1],false);});
+  svg+=arr(fromR0cx,r0bby+BH,fromR1cx,r1bby+LH,true);
+  r1.forEach(function(n){if(n.key!==pType)svg+=arr(fromR0cx,r0bby+BH,n.x+n.w/2,r1bby+LH,false);});
 
   /* ── ROW 2: compensation ── */
+  var r2lby=R[2], r2bby=R[2]+LH;
+  svg+=row(r2lby,'③ 보상');
   var r2=[];
   if(pType==='met_acid'||pType==='met_alk'){
+    var w3c=(W-PAD*2-8)/3;
     r2=[
-      {x:OX,    w:155,key:'adequate',       lbl:'적절한 보상',   sub:'단순 장애'},
-      {x:OX+165,w:165,key:'mixed_resp_alk', lbl:'혼합: +호흡알칼리증',sub:'CO₂ 과도 감소'},
-      {x:OX+340,w:165,key:'mixed_resp_acid',lbl:'혼합: +호흡산증',sub:'CO₂ 감소 부족'}
+      {x:PAD,             w:w3c,key:'adequate',       lbl:'적절한 보상',   sub:'단순 장애'},
+      {x:PAD+w3c+g3,      w:w3c,key:'mixed_resp_alk', lbl:'혼합+호흡알칼리증',sub:'CO₂ 과도↓'},
+      {x:PAD+2*(w3c+g3),  w:w3c,key:'mixed_resp_acid',lbl:'혼합+호흡산증',sub:'CO₂ 감소 부족'}
     ];
   }else if(pType==='resp_acid'||pType==='resp_alk'){
+    var w4c=(W-PAD*2-12)/4;
     r2=[
-      {x:OX,    w:110,key:'acute',         lbl:'급성 보상',   sub:'<24h'},
-      {x:OX+120,w:110,key:'chronic',       lbl:'만성 보상',   sub:'>72h'},
-      {x:OX+240,w:150,key:'mixed_met_alk', lbl:'혼합: +대사알칼리증',sub:'HCO₃⁻↑↑'},
-      {x:OX+400,w:150,key:'mixed_met_acid',lbl:'혼합: +대사산증',sub:'HCO₃⁻ 부족'}
+      {x:PAD,             w:w4c,key:'acute',         lbl:'급성 보상',   sub:'<24h'},
+      {x:PAD+w4c+g4,      w:w4c,key:'chronic',       lbl:'만성 보상',   sub:'>72h'},
+      {x:PAD+2*(w4c+g4),  w:w4c,key:'mixed_met_alk', lbl:'혼합+대사알칼리증',sub:'HCO₃⁻↑↑'},
+      {x:PAD+3*(w4c+g4),  w:w4c,key:'mixed_met_acid',lbl:'혼합+대사산증',sub:'HCO₃⁻ 부족'}
     ];
   }else{
-    r2=[{x:OX+150,w:260,key:'na',lbl:'보상 평가 불가',sub:'일차장애 불명확'}];
+    r2=[{x:PAD,w:W-PAD*2,key:'na',lbl:'보상 평가 불가',sub:'일차장애 불명확'}];
   }
   var activeR2=r2.filter(function(n){return n.key===cStatus;})[0]||r2[0];
   r2.forEach(function(n){
     var active=n.key===cStatus;
     var isMix=n.key.indexOf('mixed')===0;
-    var col=active?(isMix?C.warn:(n.key==='adequate'?C.ok:(n.key==='acute'||n.key==='chronic'?C.ok:C.dim))):C.dim;
-    svg+=box(n.x,R[2],n.w,BH,col,n.lbl,n.sub);
+    var col=active?(isMix?C.warn:(n.key==='adequate'||n.key==='acute'||n.key==='chronic'?C.ok:C.dim)):C.dim;
+    svg+=box(n.x,r2bby,n.w,col,n.lbl,n.sub);
   });
   var fromR2cx=activeR2.x+activeR2.w/2;
-  svg+=arr(fromR1cx,R[1]+BH,fromR2cx,R[2],true);
-  r2.forEach(function(n){if(n.key!==cStatus)svg+=arr(fromR1cx,R[1]+BH,n.x+n.w/2,R[2],false);});
+  svg+=arr(fromR1cx,r1bby+BH,fromR2cx,r2bby+LH,true);
+  r2.forEach(function(n){if(n.key!==cStatus)svg+=arr(fromR1cx,r1bby+BH,n.x+n.w/2,r2bby+LH,false);});
 
   /* ── ROW 3: AG ── */
-  var r3=agStatus==='na'?[{x:OX+175,w:210,key:'na',lbl:'AG 미계산',sub:'Na/Cl 미입력'}]:[
-    {x:OX+30, w:BW_LG,key:'hagma',lbl:'HAGMA',sub:data.agVal!==null?'AG='+data.agVal.toFixed(1):'AG>12'},
-    {x:OX+215,w:BW_LG,key:'nagma',lbl:'NAGMA',sub:data.agVal!==null?'AG='+data.agVal.toFixed(1):'AG≤12'}
+  var r3lby=R[3], r3bby=R[3]+LH;
+  svg+=row(r3lby,'④ 음이온차 (AG)');
+  var r3=agStatus==='na'?[{x:PAD,w:W-PAD*2,key:'na',lbl:'AG 미계산',sub:'Na/Cl 미입력'}]:[
+    {x:PAD,                  w:(W-PAD*2-g3)/2,key:'hagma',lbl:'HAGMA',sub:data.agVal!==null?'AG='+data.agVal.toFixed(1):'AG>12'},
+    {x:PAD+(W-PAD*2-g3)/2+g3,w:(W-PAD*2-g3)/2,key:'nagma',lbl:'NAGMA',sub:data.agVal!==null?'AG='+data.agVal.toFixed(1):'AG≤12'}
   ];
   if(agStatus==='na')drStatus='na';
   var activeR3=r3.filter(function(n){return n.key===agStatus;})[0]||r3[0];
   r3.forEach(function(n){
     var active=n.key===agStatus;
     var col=active?(n.key==='hagma'?C.acid:(n.key==='nagma'?C.alk:C.dim)):C.dim;
-    svg+=box(n.x,R[3],n.w,BH,col,n.lbl,n.sub);
+    svg+=box(n.x,r3bby,n.w,col,n.lbl,n.sub);
   });
   var fromR3cx=activeR3.x+activeR3.w/2;
-  svg+=arr(fromR2cx,R[2]+BH,fromR3cx,R[3],true);
-  r3.forEach(function(n){if(n.key!==agStatus)svg+=arr(fromR2cx,R[2]+BH,n.x+n.w/2,R[3],false);});
+  svg+=arr(fromR2cx,r2bby+BH,fromR3cx,r3bby+LH,true);
+  r3.forEach(function(n){if(n.key!==agStatus)svg+=arr(fromR2cx,r2bby+BH,n.x+n.w/2,r3bby+LH,false);});
 
   /* ── ROW 4: delta ratio ── */
+  var r4lby=R[4], r4bby=R[4]+LH;
+  svg+=row(r4lby,'⑤ Delta ratio');
   var r4=[];
   if(agStatus==='hagma'){
     r4=[
-      {x:OX,    w:155,key:'pure',         lbl:'순수 HAGMA',  sub:data.drVal!==null?'ratio='+data.drVal.toFixed(2):'ratio 1–2'},
-      {x:OX+165,w:155,key:'mixed_nagma',  lbl:'HAGMA+NAGMA', sub:'ratio<1'},
-      {x:OX+330,w:165,key:'mixed_met_alk',lbl:'HAGMA+대사알칼리증',sub:'ratio>2'}
+      {x:PAD,             w:w3c,key:'pure',         lbl:'순수 HAGMA',  sub:data.drVal!==null?'ratio='+data.drVal.toFixed(2):'ratio 1–2'},
+      {x:PAD+w3c+g3,      w:w3c,key:'mixed_nagma',  lbl:'HAGMA+NAGMA', sub:'ratio<1'},
+      {x:PAD+2*(w3c+g3),  w:w3c,key:'mixed_met_alk',lbl:'HAGMA+대사알칼리증',sub:'ratio>2'}
     ];
   }else if(agStatus==='nagma'){
-    r4=[{x:OX+175,w:210,key:'nagma_only',lbl:'NAGMA 단독',sub:'설사·RTA·식염수'}];
+    r4=[{x:PAD,w:W-PAD*2,key:'nagma_only',lbl:'NAGMA 단독',sub:'설사·RTA·식염수'}];
     drStatus='nagma_only';
   }else{
-    r4=[{x:OX+175,w:210,key:'na',lbl:'Delta ratio 미계산',sub:'HAGMA 아님 또는 미입력'}];
+    r4=[{x:PAD,w:W-PAD*2,key:'na',lbl:'Delta ratio 미계산',sub:'HAGMA 아님 또는 미입력'}];
     drStatus='na';
   }
   var activeR4=r4.filter(function(n){return n.key===drStatus;})[0]||r4[0];
@@ -464,11 +485,11 @@ function buildFC(data){
     var active=n.key===drStatus;
     var isMix=n.key.indexOf('mixed')===0;
     var col=active?(isMix?C.warn:(n.key==='pure'||n.key==='nagma_only'?C.ok:C.dim)):C.dim;
-    svg+=box(n.x,R[4],n.w,BH,col,n.lbl,n.sub);
+    svg+=box(n.x,r4bby,n.w,col,n.lbl,n.sub);
   });
   var fromR4cx=activeR4.x+activeR4.w/2;
-  svg+=arr(fromR3cx,R[3]+BH,fromR4cx,R[4],true);
-  r4.forEach(function(n){if(n.key!==drStatus)svg+=arr(fromR3cx,R[3]+BH,n.x+n.w/2,R[4],false);});
+  svg+=arr(fromR3cx,r3bby+BH,fromR4cx,r4bby+LH,true);
+  r4.forEach(function(n){if(n.key!==drStatus)svg+=arr(fromR3cx,r3bby+BH,n.x+n.w/2,r4bby+LH,false);});
 
   svg+='</svg>';
   return svg;
@@ -734,7 +755,7 @@ function run(){
 
   /* FLOWCHART */
   var fcSvg=buildFC(fcData);
-  var fcHtml='<div class="fc-wrap"><div class="fc-hdr">해석 경로 플로우차트 <span>(좌우로 스크롤)</span></div><div class="fc-scroll">'+fcSvg+'</div></div>';
+  var fcHtml='<div class="fc-wrap"><div class="fc-hdr">해석 경로 플로우차트</div>'+fcSvg+'</div>';
 
   var out=document.getElementById('out');
   out.innerHTML=html+finalHtml+fcHtml;
