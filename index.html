@@ -370,9 +370,12 @@ function buildFC(data){
 
   /* ── 정상 케이스: ROW 0 + ROW 1(정상 단일박스)만 표시 ── */
   var isNormalCase=(pType==='normal');
-  var normalTotalH=isNormalCase?(2*rowH+4):totalH;
+  var noAG=(agStatus==='na');
+  var noRatio=(agStatus==='na'||agStatus==='nagma');
+  var visRows=isNormalCase?2:(noAG?3:(noRatio?4:5));
+  var svgH=visRows*rowH+4;
 
-  var svg='<svg width="100%" viewBox="0 0 '+W+' '+normalTotalH+'" style="display:block">';
+  var svg='<svg width="100%" viewBox="0 0 '+W+' '+svgH+'" style="display:block">';
   svg+='<defs><marker id="fc_arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 2L8 5L2 8" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round"/></marker></defs>';
 
   var bby=[]; /* 각 행 박스 상단 y */
@@ -434,7 +437,7 @@ function buildFC(data){
     ];
   }else if(pType==='resp_acid'||pType==='resp_alk'){
     r2=[
-      {x:PAD,          w:w4,key:'acute',         lbl:'급성 보상',      sub:'<24h'},
+      {x:PAD,          w:w4,key:'acute',         lbl:'급성 반응',      sub:'완충 단계'},
       {x:PAD+w4+g,     w:w4,key:'chronic',       lbl:'만성 보상',      sub:'>72h'},
       {x:PAD+2*(w4+g), w:w4,key:'mixed_met_alk', lbl:'혼합+대사알칼리증',sub:'HCO₃⁻↑↑'},
       {x:PAD+3*(w4+g), w:w4,key:'mixed_met_acid',lbl:'혼합+대사산증',  sub:'HCO₃⁻↓↓'}
@@ -452,48 +455,45 @@ function buildFC(data){
   svg+=arr(cx1,bby[1]+BH,cx2,bby[2],true);
   r2.forEach(function(n){if(n.key!==cStatus)svg+=arr(cx1,bby[1]+BH,n.x+n.w/2,bby[2],false);});
 
-  /* ── ROW 3: AG ── */
-  svg+=rowLabel(R[3],'④ 음이온차 (AG)');
-  var hw=(W-PAD*2-g)/2;
-  var r3=agStatus==='na'?[{x:PAD,w:W-PAD*2,key:'na',lbl:'AG 미계산',sub:'Na/Cl 미입력'}]:[
-    {x:PAD,      w:hw,key:'hagma',lbl:'HAGMA',sub:data.agVal!==null?'AG='+data.agVal.toFixed(1):'AG>12'},
-    {x:PAD+hw+g, w:hw,key:'nagma',lbl:'NAGMA',sub:data.agVal!==null?'AG='+data.agVal.toFixed(1):'AG≤12'}
-  ];
-  if(agStatus==='na')drStatus='na';
-  var a3=r3.filter(function(n){return n.key===agStatus;})[0]||r3[0];
-  r3.forEach(function(n){
-    var col=(n.key===agStatus)?(n.key==='hagma'?C.acid:(n.key==='nagma'?C.alk:C.dim)):C.dim;
-    svg+=box(n.x,bby[3],n.w,col,n.lbl,n.sub);
-  });
-  var cx3=a3.x+a3.w/2;
-  svg+=arr(cx2,bby[2]+BH,cx3,bby[3],true);
-  r3.forEach(function(n){if(n.key!==agStatus)svg+=arr(cx2,bby[2]+BH,n.x+n.w/2,bby[3],false);});
+  /* ── ROW 3: AG ── (Na/Cl 미입력 시 생략) */
 
-  /* ── ROW 4: delta ratio ── */
-  svg+=rowLabel(R[4],'⑤ Delta ratio');
-  var r4=[];
-  if(agStatus==='hagma'){
-    r4=[
-      {x:PAD,          w:w3,key:'pure',         lbl:'순수 HAGMA',     sub:data.drVal!==null?'ratio='+data.drVal.toFixed(2):'ratio 1–2'},
-      {x:PAD+w3+g,     w:w3,key:'mixed_nagma',  lbl:'HAGMA+NAGMA',    sub:'ratio<1'},
-      {x:PAD+2*(w3+g), w:w3,key:'mixed_met_alk',lbl:'HAGMA+대사알칼리증',sub:'ratio>2'}
+  /* ── ROW 3: AG ── */
+  if(!noAG){
+    svg+=rowLabel(R[3],'④ 음이온차 (AG)');
+    var hw=(W-PAD*2-g)/2;
+    var r3=[
+      {x:PAD,      w:hw,key:'hagma',lbl:'HAGMA',sub:data.agVal!==null?'AG='+data.agVal.toFixed(1):'AG>12'},
+      {x:PAD+hw+g, w:hw,key:'nagma',lbl:'NAGMA',sub:data.agVal!==null?'AG='+data.agVal.toFixed(1):'AG≤12'}
     ];
-  }else if(agStatus==='nagma'){
-    r4=[{x:PAD,w:W-PAD*2,key:'nagma_only',lbl:'NAGMA 단독',sub:'설사·RTA·식염수'}];
-    drStatus='nagma_only';
-  }else{
-    r4=[{x:PAD,w:W-PAD*2,key:'na',lbl:'Delta ratio 미계산',sub:'HAGMA 아님 또는 미입력'}];
-    drStatus='na';
+    var a3=r3.filter(function(n){return n.key===agStatus;})[0]||r3[0];
+    r3.forEach(function(n){
+      var col=(n.key===agStatus)?(n.key==='hagma'?C.acid:(n.key==='nagma'?C.alk:C.dim)):C.dim;
+      svg+=box(n.x,bby[3],n.w,col,n.lbl,n.sub);
+    });
+    var cx3=a3.x+a3.w/2;
+    svg+=arr(cx2,bby[2]+BH,cx3,bby[3],true);
+    r3.forEach(function(n){if(n.key!==agStatus)svg+=arr(cx2,bby[2]+BH,n.x+n.w/2,bby[3],false);});
+
+    /* ── ROW 4: delta ratio ── (HAGMA일 때만 표시) */
+    if(agStatus==='hagma'){
+      svg+=rowLabel(R[4],'⑤ Delta ratio');
+      var r4=[];
+      r4=[
+        {x:PAD,          w:w3,key:'pure',         lbl:'순수 HAGMA',     sub:data.drVal!==null?'ratio='+data.drVal.toFixed(2):'ratio 1–2'},
+        {x:PAD+w3+g,     w:w3,key:'mixed_nagma',  lbl:'HAGMA+NAGMA',    sub:'ratio<1'},
+        {x:PAD+2*(w3+g), w:w3,key:'mixed_met_alk',lbl:'HAGMA+대사알칼리증',sub:'ratio>2'}
+      ];
+      var a4=r4.filter(function(n){return n.key===drStatus;})[0]||r4[0];
+      r4.forEach(function(n){
+        var isMix=n.key.indexOf('mixed')===0;
+        var col=(n.key===drStatus)?(isMix?C.warn:(n.key==='pure'?C.ok:C.dim)):C.dim;
+        svg+=box(n.x,bby[4],n.w,col,n.lbl,n.sub);
+      });
+      var cx4=a4.x+a4.w/2;
+      svg+=arr(cx3,bby[3]+BH,cx4,bby[4],true);
+      r4.forEach(function(n){if(n.key!==drStatus)svg+=arr(cx3,bby[3]+BH,n.x+n.w/2,bby[4],false);});
+    }
   }
-  var a4=r4.filter(function(n){return n.key===drStatus;})[0]||r4[0];
-  r4.forEach(function(n){
-    var isMix=n.key.indexOf('mixed')===0;
-    var col=(n.key===drStatus)?(isMix?C.warn:(n.key==='pure'||n.key==='nagma_only'?C.ok:C.dim)):C.dim;
-    svg+=box(n.x,bby[4],n.w,col,n.lbl,n.sub);
-  });
-  var cx4=a4.x+a4.w/2;
-  svg+=arr(cx3,bby[3]+BH,cx4,bby[4],true);
-  r4.forEach(function(n){if(n.key!==drStatus)svg+=arr(cx3,bby[3]+BH,n.x+n.w/2,bby[4],false);});
 
   svg+='</svg>';
   return svg;
@@ -579,7 +579,7 @@ function run(){
     cFormula='급성: HCO₃⁻≈'+aH.toFixed(1)+' | 만성: HCO₃⁻≈'+cH.toFixed(1);
     var dC=hco3-cH, dA=hco3-aH;
     if(Math.abs(dC)<=1){cTag='만성 보상';cCls='tag-info';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 만성 예측값 '+cH.toFixed(1)+' (차이 '+dC.toFixed(1)+') → 적절한 만성 대사 보상';isChronic=true;compLabel='만성 대사 보상';fcData.compStatus='chronic';}
-    else if(Math.abs(dA)<=1){cTag='급성 보상';cCls='tag-ok';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성 예측값 '+aH.toFixed(1)+' (차이 '+dA.toFixed(1)+') → 적절한 급성 대사 보상';isAcute=true;compLabel='급성 대사 보상';fcData.compStatus='acute';}
+    else if(Math.abs(dA)<=1){cTag='급성 반응 (완충 단계)';cCls='tag-ok';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성 예측값 '+aH.toFixed(1)+' (차이 '+dA.toFixed(1)+') — 예측 범위 내입니다.<br><br>급성 호흡성 산증에서 HCO₃⁻의 소폭 증가는 <strong style="font-weight:600">신장 보상이 아닌 CO₂ 증가에 의한 단순 physicochemical 완충 반응</strong>입니다. 신장 보상(HCO₃⁻ 재흡수 증가)은 6–12시간 이후부터 시작되며, 수일에 걸쳐 만성 보상 수준에 도달합니다.';isAcute=true;compLabel='급성 반응 (완충 단계)';fcData.compStatus='acute';}
     else if(dC>1&&dC<=3){cTag='만성 보상 (경계적 초과)';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 만성 예측값 '+cH.toFixed(1)+'보다 '+dC.toFixed(1)+' mEq/L 높음. 경계적 수준 — 이뇨제·구토 등 대사성 알칼리증 원인을 임상적으로 함께 확인하세요.';isChronic=true;compLabel='만성 대사 보상 (경계적 초과)';fcData.compStatus='chronic';}
     else if(dC>3){cTag='혼합: +대사성 알칼리증';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 만성 예측값 '+cH.toFixed(1)+'보다 '+dC.toFixed(1)+' mEq/L 높음 → 대사성 알칼리증 독립 공존 가능성';isMixed=true;mixComponents=['호흡성 산증','대사성 알칼리증'];compLabel='보상 초과 → 혼합 대사성 알칼리증';fcData.compStatus='mixed_met_alk';}
     else if(dA<-1&&dA>=-3){cTag='급성 보상 (경계적 부족)';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성 예측값 '+aH.toFixed(1)+'보다 '+Math.abs(dA).toFixed(1)+' mEq/L 낮음. 경계적 수준 — 대사성 산증 동반 여부를 임상적으로 함께 확인하세요.';isAcute=true;compLabel='급성 대사 보상 (경계적 부족)';fcData.compStatus='acute';}
@@ -589,7 +589,7 @@ function run(){
     cFormula='급성: HCO₃⁻≈'+aH2.toFixed(1)+' | 만성: HCO₃⁻≈'+cH2.toFixed(1);
     var dC2=hco3-cH2, dA2=hco3-aH2;
     if(Math.abs(dC2)<=1){cTag='만성 보상';cCls='tag-info';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 만성 예측값 '+cH2.toFixed(1)+' (차이 '+dC2.toFixed(1)+') → 적절한 만성 대사 보상';isChronic=true;compLabel='만성 대사 보상';fcData.compStatus='chronic';}
-    else if(Math.abs(dA2)<=1){cTag='급성 보상';cCls='tag-ok';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성 예측값 '+aH2.toFixed(1)+' (차이 '+dA2.toFixed(1)+') → 적절한 급성 대사 보상';isAcute=true;compLabel='급성 대사 보상';fcData.compStatus='acute';}
+    else if(Math.abs(dA2)<=1){cTag='급성 반응 (완충 단계)';cCls='tag-ok';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성 예측값 '+aH2.toFixed(1)+' (차이 '+dA2.toFixed(1)+') — 예측 범위 내입니다.<br><br>급성 호흡성 알칼리증에서 HCO₃⁻의 소폭 감소는 <strong style="font-weight:600">신장 보상이 아닌 PaCO₂ 감소에 의한 단순 physicochemical 완충 반응</strong>입니다. 신장 보상(HCO₃⁻ 재흡수 억제 및 배출 증가)은 4–12시간 이후부터 시작되며, 수일에 걸쳐 만성 보상 수준에 도달합니다.';isAcute=true;compLabel='급성 반응 (완충 단계)';fcData.compStatus='acute';}
     else if(dC2<-1&&dC2>=-3){cTag='만성 보상 (경계적 부족)';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 만성 예측값 '+cH2.toFixed(1)+'보다 '+Math.abs(dC2).toFixed(1)+' mEq/L 낮음. 경계적 수준 — 대사성 산증 원인을 임상적으로 함께 확인하세요.';isChronic=true;compLabel='만성 대사 보상 (경계적 부족)';fcData.compStatus='chronic';}
     else if(dC2<-3){cTag='혼합: +대사성 산증';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 만성 예측값 '+cH2.toFixed(1)+'보다 '+Math.abs(dC2).toFixed(1)+' mEq/L 낮음 → 대사성 산증 독립 공존 가능성';isMixed=true;mixComponents=['호흡성 알칼리증','대사성 산증'];compLabel='보상 초과 → 혼합 대사성 산증';fcData.compStatus='mixed_met_acid';}
     else if(dA2>1&&dA2<=3){cTag='급성 보상 (경계적 초과)';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성 예측값 '+aH2.toFixed(1)+'보다 '+dA2.toFixed(1)+' mEq/L 높음. 경계적 수준 — 대사성 알칼리증 원인을 임상적으로 함께 확인하세요.';isAcute=true;compLabel='급성 대사 보상 (경계적 초과)';fcData.compStatus='acute';}
@@ -767,7 +767,7 @@ function run(){
 
   var blocks='<div class="dxblocks">';
   blocks+='<div class="dxblock"><div class="dxblock-lbl">최종 진단</div><div class="dxblock-val">'+fullTitle+'</div></div>';
-  var compStr=compLabel+(isAcute?' (급성)':isChronic?' (만성)':'');
+  var compStr=compLabel+(isAcute?' (급성 반응)':isChronic?' (만성)':'');
   blocks+='<div class="dxblock"><div class="dxblock-lbl">보상</div><div class="dxblock-val">'+compStr+'</div></div>';
   if(agEff!==null)blocks+='<div class="dxblock"><div class="dxblock-lbl">음이온차 (AG)</div><div class="dxblock-val">'+(agEff>12?'고음이온차 (HAGMA)':'정상 음이온차 (NAGMA)')+' — AG '+agEff.toFixed(1)+' mEq/L</div></div>';
   if(drRatio!==null)blocks+='<div class="dxblock"><div class="dxblock-lbl">Delta ratio</div><div class="dxblock-val">'+drRatio.toFixed(2)+' → '+(drRatio<1?'HAGMA+NAGMA 혼합':drRatio<=2?'순수 HAGMA':'HAGMA+대사알칼리증 혼합')+'</div></div>';
