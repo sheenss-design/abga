@@ -366,8 +366,13 @@ function buildFC(data){
   var pType=data.primaryType, cStatus=data.compStatus, agStatus=data.agStatus, drStatus=data.drStatus;
   var phAcid=(data.phStatus==='acidemia'||data.phStatus==='normal_acid');
   var phAlk=(data.phStatus==='alkalemia'||data.phStatus==='normal_alk');
+  var phNeut=(data.phStatus==='neutral');
 
-  var svg='<svg width="100%" viewBox="0 0 '+W+' '+totalH+'" style="display:block">';
+  /* ── 정상 케이스: ROW 0 + ROW 1(정상 단일박스)만 표시 ── */
+  var isNormalCase=(pType==='normal');
+  var normalTotalH=isNormalCase?(2*rowH+4):totalH;
+
+  var svg='<svg width="100%" viewBox="0 0 '+W+' '+normalTotalH+'" style="display:block">';
   svg+='<defs><marker id="fc_arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 2L8 5L2 8" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round"/></marker></defs>';
 
   var bby=[]; /* 각 행 박스 상단 y */
@@ -381,10 +386,10 @@ function buildFC(data){
   svg+=rowLabel(R[0],'① pH');
   var r0=[
     {x:PAD,           w:w3,key:'acid_side',lbl:phAcid&&!phAlk?(data.phStatus==='normal_acid'?'정상(산성)':'산혈증'):'산혈증',     sub:phAcid&&!phAlk?('pH '+data.phVal.toFixed(2)):'pH<7.35'},
-    {x:PAD+w3+g,      w:w3,key:'norm',     lbl:'정상',sub:'7.35–7.45'},
+    {x:PAD+w3+g,      w:w3,key:'norm',     lbl:phNeut?'정상 (중립)':'정상',sub:phNeut?('pH '+data.phVal.toFixed(2)):'7.35–7.45'},
     {x:PAD+2*(w3+g),  w:w3,key:'alk_side', lbl:phAlk&&!phAcid?(data.phStatus==='normal_alk'?'정상(알칼리)':'알칼리혈증'):'알칼리혈증',sub:phAlk&&!phAcid?('pH '+data.phVal.toFixed(2)):'pH>7.45'}
   ];
-  var ak0=phAcid&&!phAlk?'acid_side':phAlk&&!phAcid?'alk_side':'norm';
+  var ak0=phAcid&&!phAlk?'acid_side':(phAlk&&!phAcid?'alk_side':'norm');
   r0.forEach(function(n){
     var col=(n.key===ak0)?(n.key==='acid_side'?C.acid:(n.key==='alk_side'?C.alk:C.ok)):C.dim;
     svg+=box(n.x,bby[0],n.w,col,n.lbl,n.sub);
@@ -394,6 +399,14 @@ function buildFC(data){
 
   /* ── ROW 1: primary ── */
   svg+=rowLabel(R[1],'② 일차장애');
+  if(isNormalCase){
+    /* 정상일 때: 단일 "정상" 박스만 표시, 이후 행 없음 */
+    svg+=box(PAD,bby[1],W-PAD*2,C.ok,'정상 산염기 상태','이상 없음');
+    var cx1=W/2;
+    svg+=arr(cx0,bby[0]+BH,cx1,bby[1],true);
+    svg+='</svg>';
+    return svg;
+  }
   var r1=[
     {x:PAD,           w:w4,key:'met_acid', lbl:'대사성 산증',   sub:'HCO₃⁻↓'},
     {x:PAD+w4+g,      w:w4,key:'resp_acid',lbl:'호흡성 산증',   sub:'CO₂↑'},
@@ -501,12 +514,13 @@ function run(){
 
   /* STEP 1: pH */
   var phNormal=(ph>=7.35&&ph<=7.45);
-  var phAcidSide=phNormal&&ph<7.40, phAlkSide=phNormal&&ph>=7.40;
+  var phAcidSide=phNormal&&ph<7.40, phAlkSide=phNormal&&ph>7.40;
   var phTag,phCls,phNote;
   if(ph<7.35){phTag='산혈증';phCls='tag-bad';phNote='pH '+ph.toFixed(2)+' < 7.35 → 산혈증';fcData.phStatus='acidemia';}
   else if(ph>7.45){phTag='알칼리혈증';phCls='tag-bad';phNote='pH '+ph.toFixed(2)+' > 7.45 → 알칼리혈증';fcData.phStatus='alkalemia';}
   else if(phAcidSide){phTag='정상 (산성 쪽)';phCls='tag-warn';phNote='pH '+ph.toFixed(2)+' → 정상 범위이나 7.40보다 낮음. 혼합장애에서 산증 우세 시 pH가 정상으로 보일 수 있습니다.';fcData.phStatus='normal_acid';}
-  else{phTag='정상 (알칼리 쪽)';phCls='tag-warn';phNote='pH '+ph.toFixed(2)+' → 정상 범위이나 7.40보다 높음. 혼합장애에서 알칼리증 우세 시 pH가 정상으로 보일 수 있습니다.';fcData.phStatus='normal_alk';}
+  else if(phAlkSide){phTag='정상 (알칼리 쪽)';phCls='tag-warn';phNote='pH '+ph.toFixed(2)+' → 정상 범위이나 7.40보다 높음. 혼합장애에서 알칼리증 우세 시 pH가 정상으로 보일 수 있습니다.';fcData.phStatus='normal_alk';}
+  else{phTag='정상 (중립)';phCls='tag-ok';phNote='pH '+ph.toFixed(2)+' = 7.40 → 생리적 중립값';fcData.phStatus='neutral';}
   html+=mkStep(1,'#818cf8','pH 평가',phTag,phCls,
     srow('입력 pH',ph.toFixed(2),ph<7.35?'r':ph>7.45?'r':ph<7.40?'a':'g')+
     srow('정상 범위','7.35–7.45 (중립 7.40)')+
@@ -516,6 +530,8 @@ function run(){
   var pType,pTag,pCls,rNote='';
   /* BUG FIX: loCO2 경계값 포함 (CO2=35도 정상하한이므로 "낮음"으로 처리) */
   var hiCO2=pco2>45,loCO2=pco2<=35,hiHCO=hco3>26,loHCO=hco3<22;
+  /* 완전 정상 판정: pH·CO2·HCO3 모두 정상 범위 → 이상 없음 */
+  var allNormal=phNormal&&!hiCO2&&!loCO2&&!hiHCO&&!loHCO;
   if(ph<7.35){
     if(hiCO2){pType='resp_acid';pTag='호흡성 산증';pCls='tag-bad';rNote='pH 감소+PaCO₂ 증가 → Respiratory Opposite';}
     else{pType='met_acid';pTag='대사성 산증';pCls='tag-bad';rNote='pH 감소+HCO₃⁻ 감소 → Metabolic Equal';}
@@ -523,16 +539,19 @@ function run(){
     /* BUG FIX: pH알칼리혈증에서 loCO2여도 hiHCO면 대사알칼리증 일차 + 호흡알칼리증 혼합 */
     if(hiHCO&&loCO2){pType='met_alk';pTag='대사성 알칼리증';pCls='tag-info';rNote='pH 증가+HCO₃⁻ 증가+PaCO₂ 감소 → 대사성 알칼리증 일차, PaCO₂ 감소는 보상 또는 혼합 호흡알칼리증';}
     else if(loCO2){pType='resp_alk';pTag='호흡성 알칼리증';pCls='tag-info';rNote='pH 증가+PaCO₂ 감소 → Respiratory Opposite';}
-    else{pType='met_alk';pTag='대사성 알칼리증';pCls='tag-info';rNote='pH 증가+HCO₃⁻ 증가 → Metabolic Equal';}
+    else{pType='met_alk';pTag='대사성 알칼리증';pCls='tag-info';rNote='pH 증가+HCO₃⁻ 증가'+(hiCO2?' → Metabolic Equal (PaCO₂ 상승은 보상)':' → Metabolic Equal');}
   }else if(phAcidSide){
     if(loHCO&&loCO2){pType='met_acid';pTag='대사성 산증 (추정)';pCls='tag-warn';rNote='pH 산성 쪽+HCO₃⁻ 감소+PaCO₂ 감소 → 대사성 산증 일차, PaCO₂ 감소는 호흡 보상';}
+    else if(loHCO){pType='met_acid';pTag='대사성 산증 (추정)';pCls='tag-warn';rNote='pH 산성 쪽+HCO₃⁻ 감소+PaCO₂ 정상 → 대사성 산증 일차, PaCO₂ 보상은 정상 범위 내';}
     else if(hiHCO&&hiCO2){pType='resp_acid';pTag='호흡성 산증 (추정)';pCls='tag-warn';rNote='pH 산성 쪽+PaCO₂ 증가+HCO₃⁻ 증가 → 호흡성 산증 일차';}
+    else if(allNormal){pType='normal';pTag='정상';pCls='tag-ok';rNote='pH, PaCO₂, HCO₃⁻ 모두 정상 범위';}
     else{pType='mix_norm_acid';pTag='혼합장애 의심';pCls='tag-warn';rNote='pH 정상 산성 쪽 — 이차 지표 불일치';}
   }else{
-    /* BUG FIX: pH알칼리쪽에서 hiHCO+loCO2는 대사알칼리증 일차 */
     if(hiHCO&&loCO2){pType='met_alk';pTag='대사성 알칼리증 (추정)';pCls='tag-warn';rNote='pH 알칼리 쪽+HCO₃⁻ 증가+PaCO₂ 감소 → 대사성 알칼리증 일차, PaCO₂ 감소는 보상 또는 혼합 호흡알칼리증';}
-    else if(hiHCO&&hiCO2){pType='met_alk';pTag='대사성 알칼리증 (추정)';pCls='tag-warn';rNote='pH 알칼리 쪽+HCO₃⁻ 증가+PaCO₂ 증가 → 대사성 알칼리증 일차';}
+    else if(hiHCO&&hiCO2){pType='met_alk';pTag='대사성 알칼리증 (추정)';pCls='tag-warn';rNote='pH 알칼리 쪽+HCO₃⁻ 증가+PaCO₂ 증가 → 대사성 알칼리증 일차, PaCO₂ 증가는 보상';}
+    else if(hiHCO){pType='met_alk';pTag='대사성 알칼리증 (추정)';pCls='tag-warn';rNote='pH 알칼리 쪽+HCO₃⁻ 증가+PaCO₂ 정상 → 대사성 알칼리증 일차, PaCO₂ 보상은 정상 범위 내';}
     else if(loHCO&&loCO2){pType='resp_alk';pTag='호흡성 알칼리증 (추정)';pCls='tag-warn';rNote='pH 알칼리 쪽+PaCO₂ 감소+HCO₃⁻ 감소 → 호흡성 알칼리증 일차';}
+    else if(allNormal){pType='normal';pTag='정상';pCls='tag-ok';rNote='pH, PaCO₂, HCO₃⁻ 모두 정상 범위';}
     else{pType='mix_norm_alk';pTag='혼합장애 의심';pCls='tag-warn';rNote='pH 정상 알칼리 쪽 — 이차 지표 불일치';}
   }
   fcData.primaryType=pType;
@@ -585,11 +604,11 @@ function run(){
   var agVal=null,agEff=null,highAG=false,drRatio=null,drInterp='',drCls='',agQualifier='';
   var agTag2,agCls2,agBody='';
   if(na!==null&&cl!==null){
-    agVal=na-(cl+hco3);agEff=(alb!==null)?agVal+2.5*(4.5-alb):agVal;highAG=agEff>12;
+    agVal=na-(cl+hco3);agEff=(alb!==null&&alb<3.5)?agVal+2.5*(4.0-alb):(alb!==null&&alb>5.0)?agVal+2.5*(4.0-alb):agVal;highAG=agEff>12;
     agTag2=highAG?'HAGMA':'NAGMA';agCls2=highAG?'tag-bad':'tag-ok';
     fcData.agStatus=highAG?'hagma':'nagma';fcData.agVal=agEff;
     agBody+=srow('AG = '+na+'–('+cl+'+'+hco3.toFixed(1)+')',agVal.toFixed(1)+' mEq/L',agVal>12?'r':'g')+srow('정상 기준','≤ 12 mEq/L');
-    if(alb!==null){agBody+=srow('보정 AG (Alb '+alb+')',agEff.toFixed(1)+' mEq/L',agEff>12?'r':'g')+cbox('<p class="mono">보정AG = '+agVal.toFixed(1)+' + 2.5×(4.5–'+alb+') = '+agEff.toFixed(1)+'</p>');}
+    if(alb!==null&&(alb<3.5||alb>5.0)){agBody+=srow('보정 AG (Alb '+alb+')',agEff.toFixed(1)+' mEq/L',agEff>12?'r':'g')+cbox('<p class="mono">보정AG = '+agVal.toFixed(1)+' + 2.5×(4.0–'+alb+') = '+agEff.toFixed(1)+'</p><p style="margin-top:4px">Albumin이 정상 범위(3.5–5.0 g/dL)를 벗어나 보정하였습니다.</p>');}
     if(highAG){
       var dAG=agEff-10,dHCO=24-hco3;
       /* BUG FIX: dHCO 음수(HCO3>24)이면 대사알칼리증 동반. dr 음수/무한대 방지 */
@@ -641,18 +660,29 @@ function run(){
       var gmid='gm'+Date.now(),gcid='gc'+Date.now();
       agBody+='<div class="goldmark-wrap"><div class="goldmark-hdr" onclick="window._tog(\''+gmid+'\',\''+gcid+'\')">GOLDMARK 감별진단 <span class="chv op" id="'+gcid+'">▾</span></div>'+
         '<div class="goldmark-body" id="'+gmid+'">'+
-        '<p>HAGMA의 주요 원인을 기억하는 약자입니다.</p>'+
+        '<p style="margin-bottom:8px">미측정 음이온(주로 독성 산, 대사산물)이 증가한 상황으로, 주요 원인을 GOLDMARK로 기억합니다.</p>'+
         '<div class="goldmark-grid">'+
-        '<div class="gm-item"><div class="gm-letter">G</div><div class="gm-name">Glycols</div><div class="gm-detail">에틸렌·프로필렌 글리콜 (부동액)</div></div>'+
-        '<div class="gm-item"><div class="gm-letter">O</div><div class="gm-name">Oxoproline</div><div class="gm-detail">아세트아미노펜 장기 사용</div></div>'+
-        '<div class="gm-item"><div class="gm-letter">L</div><div class="gm-name">L-Lactate</div><div class="gm-detail">패혈증, 쇼크, 심부전</div></div>'+
-        '<div class="gm-item"><div class="gm-letter">D</div><div class="gm-name">D-Lactate</div><div class="gm-detail">단장 증후군, 장폐색</div></div>'+
-        '<div class="gm-item"><div class="gm-letter">M</div><div class="gm-name">Methanol</div><div class="gm-detail">메탄올 중독 (실명 유발)</div></div>'+
-        '<div class="gm-item"><div class="gm-letter">A</div><div class="gm-name">Aspirin</div><div class="gm-detail">살리실산 과다 복용</div></div>'+
-        '<div class="gm-item"><div class="gm-letter">R</div><div class="gm-name">Renal failure</div><div class="gm-detail">급·만성 신부전</div></div>'+
-        '<div class="gm-item"><div class="gm-letter">K</div><div class="gm-name">Ketoacidosis</div><div class="gm-detail">DKA, 알코올성, 기아성</div></div>'+
+        '<div class="gm-item"><div class="gm-letter">G</div><div class="gm-name">Glycols</div><div class="gm-detail">에틸렌·프로필렌 글리콜 (부동액 중독)</div></div>'+
+        '<div class="gm-item"><div class="gm-letter">O</div><div class="gm-name">Oxoproline</div><div class="gm-detail">아세트아미노펜 장기 사용 시 5-oxoproline 상승</div></div>'+
+        '<div class="gm-item"><div class="gm-letter">L</div><div class="gm-name">L-Lactate</div><div class="gm-detail">패혈증·심근경색·쇼크·심한 빈혈 등 조직 저산소증에서 혐기성대사의 결과로 젖산 생성</div></div>'+
+        '<div class="gm-item"><div class="gm-letter">D</div><div class="gm-name">D-Lactate</div><div class="gm-detail">Short bowel syndrome 등에서 장내 세균이 탄수화물을 비정상적으로 발효시켜 만드는 젖산</div></div>'+
+        '<div class="gm-item"><div class="gm-letter">M</div><div class="gm-name">Methanol</div><div class="gm-detail">체내에서 독성인 포름산(Formic acid)으로 대사되어 실명과 산증 유발</div></div>'+
+        '<div class="gm-item"><div class="gm-letter">A</div><div class="gm-name">Aspirin</div><div class="gm-detail">과다 복용 시 호흡 중추를 자극해 호흡성 알칼리증을 먼저 일으키지만, 이후 살리실산 자체가 산으로 작용</div></div>'+
+        '<div class="gm-item"><div class="gm-letter">R</div><div class="gm-name">Renal failure</div><div class="gm-detail">급성 신손상·말기 신부전 시 산성 노폐물(인산, 황산 등) 축적</div></div>'+
+        '<div class="gm-item"><div class="gm-letter">K</div><div class="gm-name">Ketoacidosis</div><div class="gm-detail">당뇨병성·알코올성·기아성 케톤산증 — 포도당을 에너지로 쓰지 못해 지방을 분해하면서 부산물로 케톤체 축적</div></div>'+
         '</div></div></div>';
-    }else{agBody+=cbox('<p>정상 음이온차(NAGMA) → 설사·RTA·대량 식염수 투여 등 고려</p>');}
+    }else{
+      /* NAGMA 상세 설명 */
+      var nmid='nagma'+Date.now(),ncid='nagmac'+Date.now();
+      agBody+=cbox('<p style="font-weight:600;margin-bottom:6px">정상 음이온차 대사성 산증 (NAGMA)</p>'+
+        '<p style="margin-bottom:6px">미측정 음이온(산 등)이 증가하는 게 아니라 <strong style="font-weight:600">HCO₃⁻가 줄어드는 상황</strong>입니다. 줄어든 음이온을 메꾸기 위해 Cl⁻이 증가하여 결과적으로 음이온차는 정상을 유지합니다 (↓HCO₃⁻, ↑Cl⁻).</p>'+
+        '<p style="font-weight:600;margin-bottom:4px">주요 원인</p>'+
+        '<div style="display:flex;flex-direction:column;gap:6px">'+
+        '<div style="padding:8px 10px;background:var(--bg3);border-radius:6px"><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px">Gastrointestinal loss (위장관 손실)</div><div style="font-size:11px;color:var(--text3)">HCO₃⁻를 많이 포함한 장액이 설사·췌장액·담즙 누공으로 다량 소실 시 혈중 HCO₃⁻가 감소하고 전기적 중성 유지를 위해 Cl⁻ 재흡수 증가 → 고염소혈증성 NAGMA</div></div>'+
+        '<div style="padding:8px 10px;background:var(--bg3);border-radius:6px"><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px">Renal tubular acidosis (신세뇨관 산증)</div><div style="font-size:11px;color:var(--text3)">HCO₃⁻의 재흡수 장애 또는 H⁺의 배출 장애 발생 시</div></div>'+
+        '<div style="padding:8px 10px;background:var(--bg3);border-radius:6px"><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px">Large volume Normal Saline infusion (대량 생리식염수 투여)</div><div style="font-size:11px;color:var(--text3)">0.9% NaCl (Na 154 mEq/L + Cl 154 mEq/L) 다량 투여 시 Cl⁻ 과부하로 NAGMA 유발</div></div>'+
+        '</div>');
+    }
     html+=mkStep(4,'#fb923c','음이온차 (AG)',agTag2,agCls2,agBody);
   }else{
     html+=mkStep(4,'#fb923c','음이온차 (AG)','Na/Cl 미입력','tag-info','<p style="padding:10px 0;color:var(--text3)">Na⁺와 Cl⁻를 입력하면 AG 및 delta ratio를 자동 계산합니다.</p>');
@@ -685,9 +715,10 @@ function run(){
 
   /* FINAL CARD */
   var fCls='th-warn';
-  if(!phNormal)fCls=(ph<7.35)?'th-acid':'th-alk';
+  if(pType==='normal')fCls='th-ok';
+  else if(!phNormal)fCls=(ph<7.35)?'th-acid':'th-alk';
   else if(isMixed)fCls='th-warn';
-  else{if(pType==='met_acid'||pType==='resp_acid')fCls='th-acid';else if(pType==='met_alk'||pType==='resp_alk')fCls='th-alk';else if(pType==='norm')fCls='th-ok';}
+  else{if(pType==='met_acid'||pType==='resp_acid')fCls='th-acid';else if(pType==='met_alk'||pType==='resp_alk')fCls='th-alk';}
 
   var primDisplay='';
   if(pType==='met_acid'){
@@ -699,10 +730,11 @@ function run(){
   }else if(pType==='met_alk'){primDisplay='대사성 알칼리증';}
   else if(pType==='resp_acid'){primDisplay='호흡성 산증';}
   else if(pType==='resp_alk'){primDisplay='호흡성 알칼리증';}
+  else if(pType==='normal'){primDisplay='정상 산염기 상태';}
   else{primDisplay='혼합장애 (추가 평가 필요)';}
 
   /* HAGMA 동반 — 일차장애가 met_acid가 아닌 경우에도 AG 상승 시 명시 */
-  var hagmaCoexist=(highAG&&pType!=='met_acid'&&!isMixed);
+  var hagmaCoexist=(highAG&&pType!=='met_acid'&&pType!=='normal'&&!isMixed);
   var fullTitle='';
   if(isMixed&&mixComponents.length>=2){
     var parts=[];
@@ -713,7 +745,7 @@ function run(){
       else parts.push(c);
     });
     fullTitle=parts.join(' + ');
-    /* HAGMA가 있는 경우 일차진단에 명시 (예: 호흡성 알칼리증 + 고음이온차 대사성 산증) */
+    /* HAGMA가 있는 경우 일차진단에 명시 */
     if(highAG&&mixComponents.indexOf('대사성 산증')===-1&&mixComponents.indexOf('대사성 알칼리증(AG)')===-1){
       fullTitle+=' + 고음이온차 대사성 산증 (AG 동반 상승)';
     }
@@ -730,6 +762,7 @@ function run(){
   else if(pType==='met_alk'){primCause='구토·NGT 흡인·이뇨제·저칼륨혈증 등. 소변 Cl⁻ 측정 권장'+(hagmaCoexist?' | AG 상승 원인 추가 감별 필요 (GOLDMARK)':'');}
   else if(pType==='resp_acid'){primCause='폐·기도 질환·호흡근 피로·중추 호흡억제 감별'+(hagmaCoexist?' | AG 상승 원인 추가 감별 필요 (GOLDMARK)':'');}
   else if(pType==='resp_alk'){primCause='과호흡 원인 파악 — 통증·불안·패혈증·간부전·폐색전·기계환기 등'+(hagmaCoexist?' | AG 상승 원인 추가 감별 필요 (GOLDMARK)':'');}
+  else if(pType==='normal'){primCause='산염기 이상 없음. AG 및 산소화 수치도 함께 확인하세요.';}
   else{primCause='이차 지표 및 임상 맥락을 종합하여 원인 감별 필요';}
 
   var blocks='<div class="dxblocks">';
