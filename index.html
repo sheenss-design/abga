@@ -288,6 +288,11 @@ body{
       <div class="field-ref">정상 95–100</div>
       <input id="i_sao2" type="number" inputmode="decimal" step="0.1">
     </div>
+    <div class="field">
+      <div class="field-label">FiO₂ <span class="unit">0.21–1.00</span></div>
+      <div class="field-ref">실내공기 0.21</div>
+      <input id="i_fio2" type="number" inputmode="decimal" step="0.01" min="0.21" max="1.0" placeholder="예: 0.21">
+    </div>
   </div>
 
   <p class="section-title">전해질 (음이온차 계산용)</p>
@@ -528,8 +533,8 @@ function buildFC(data){
     svg+=arr(cx2,bby[2]+BH,cx3,bby[3],true);
     r3.forEach(function(n){if(n.key!==agStatus)svg+=arr(cx2,bby[2]+BH,n.x+n.w/2,bby[3],false);});
 
-    /* ── ROW 4: delta ratio ── (HAGMA일 때만 표시) */
-    if(agStatus==='hagma'){
+    /* ── ROW 4: delta ratio ── (met_acid + HAGMA일 때만 표시) */
+    if(agStatus==='hagma' && pType==='met_acid'){
       svg+=rowLabel(R[4],'⑤ Delta ratio');
       var r4=[];
       var drValStr=data.drVal!==null?'ratio='+data.drVal.toFixed(2):null;
@@ -651,7 +656,7 @@ function buildAGDiagram(na, cl, hco3, agEff, drRatio, pType){
     }else if(drIsNeg){
       noteText='<strong>HCO₃⁻ '+fmt(hco3)+' &gt; 24</strong> — ΔHCO₃⁻가 음수. 대사성 알칼리증 혼합으로 delta ratio 계산 불가.';
     }else{
-      noteText='<strong>AG '+fmt(agEff)+'</strong> — 음이온차 상승. 대사성 산증이 아닌 경우 delta ratio는 산출하지 않습니다.';
+      noteText='<strong>AG '+fmt(agEff)+'</strong> — 고음이온차. 그러나 일차장애가 아니므로 Delta ratio는 산출하지 않습니다.';
     }
     html += '<div class="ag-note">'+noteText+'</div>';
 
@@ -684,7 +689,7 @@ function buildAGDiagram(na, cl, hco3, agEff, drRatio, pType){
 
 function run(){
   var ph=rd('i_ph'),pco2=rd('i_pco2'),hco3=rd('i_hco3'),po2=rd('i_po2');
-  var na=rd('i_na'),cl=rd('i_cl'),alb=rd('i_alb'),sao2=rd('i_sao2'),lac=rd('i_lac');
+  var na=rd('i_na'),cl=rd('i_cl'),alb=rd('i_alb'),sao2=rd('i_sao2'),lac=rd('i_lac'),fio2=rd('i_fio2');
   if(ph===null||pco2===null||hco3===null){alert('pH, PaCO₂, HCO₃⁻는 필수입니다.');return;}
 
   mk('i_ph',ph,7.35,7.45);mk('i_pco2',pco2,35,45);mk('i_hco3',hco3,22,26);
@@ -906,7 +911,16 @@ function run(){
     }else if(highAG){
       /* ── HAGMA이지만 met_acid 아님: delta ratio 생략 ── */
       agQualifier='동반HAGMA';fcData.drStatus='na';
-      agBody+=cbox('<p>일차장애가 대사성 산증이 아니므로 Delta ratio는 산출하지 않습니다.</p>');
+      agBody+=cbox('<p>고음이온차 대사성 산증이 일차장애가 아니므로 Delta ratio는 산출하지 않습니다.</p>'
+        +'<p style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">'
+        +'<strong>⚠ 미측정 음이온(산) 증가 동반 — 추가 평가 권고</strong><br>'
+        +'일차장애와 별개로 음이온차가 상승되어 있습니다. 숨겨진 산의 증가 원인을 찾기 위해 다음 항목 검사를 고려하세요.<br>'
+        +'• <strong>Lactate</strong> — 패혈증·쇼크·조직 저산소증 시 젖산 상승<br>'
+        +'• <strong>Ketone / β-hydroxybutyrate</strong> — 당뇨병성·알코올성·기아성 케톤산증<br>'
+        +'• <strong>BUN / Creatinine</strong> — 요독증(신부전)<br>'
+        +'• <strong>Osmol gap</strong> — 독성 알코올(메탄올, 에틸렌 글리콜) 섭취 의심 시<br>'
+        +'• <strong>Salicylate</strong> — 아스피린 과다 복용 의심 시'
+        +'</p>');
     }
 
     /* ── 다이어그램 (항상 마지막) ── */
@@ -932,7 +946,7 @@ function run(){
   }
 
   /* STEP 6: O2 */
-  var o2Tag,o2Cls,o2Body='';
+  var o2Tag,o2Cls,o2Body='',discWarn=false;
   if(po2!==null||sao2!==null){
 
     // ── PaO2 판정 ──
@@ -956,7 +970,7 @@ function run(){
     // ── PaO2-SaO2 일관성 분석 ──
     // 산소-헤모글로빈 해리곡선 기준 예상값 (간략 추정)
     // PaO2≥100→SaO2≥98, PaO2≥80→SaO2≥95, PaO2≥60→SaO2≥90, PaO2≥40→SaO2≥75
-    var discNote='', discWarn=false;
+    var discNote=''; discWarn=false;
     if(po2!==null&&sao2!==null){
       // 예상 SaO2 범위 추정 (산소-헤모글로빈 해리곡선 기반)
       var expectedSao2Min, expectedSao2Max;
@@ -1005,16 +1019,34 @@ function run(){
       else{o2Tag='저산소혈증';o2Cls='tag-bad';}
     }
 
+    // ── P/F ratio 계산 (FiO2 입력 시) ──
+    var pfRatio=null,pfTag='',pfCls='',pfNote='',pfWarn=false;
+    if(po2!==null&&fio2!==null&&fio2>0){
+      pfRatio=po2/fio2;
+      if(pfRatio>400){pfTag='정상';pfCls='g';pfNote='폐 가스교환 정상.';}
+      else if(pfRatio>300){pfTag='경계 (400 미만)';pfCls='a';pfNote='정상 하한에 근접. 폐 기능 주의 모니터링 필요.';}
+      else if(pfRatio>200){pfTag='경도 호흡부전';pfCls='a';pfNote='P/F ratio 201–300: 경도 호흡부전. 산소 보충 강화 및 원인 평가 필요.';pfWarn=true;}
+      else if(pfRatio>100){pfTag='중등도 호흡부전';pfCls='r';pfNote='P/F ratio 101–200: 중등도 호흡부전. PEEP 조정 및 폐보호환기 적용 고려.';pfWarn=true;}
+      else{pfTag='중증 호흡부전';pfCls='r';pfNote='P/F ratio ≤100: 중증 호흡부전. 복와위 환기, ECMO 등 구제 치료 고려.';pfWarn=true;}
+    }
+
     o2Body='';
     if(po2!==null) o2Body+=srow('PaO₂',po2.toFixed(1)+' mmHg',po2<60?'r':po2<80?'a':'g')+srow('정상 범위','80–100 mmHg');
     if(sao2!==null) o2Body+=srow('SaO₂',sao2.toFixed(1)+'%',sao2<90?'r':sao2<95?'a':'g')+srow('정상 범위','95–100%');
+    if(fio2!==null) o2Body+=srow('FiO₂',fio2.toFixed(2)+(fio2===0.21?' (실내공기)':''));
+    if(pfRatio!==null){
+      o2Body+='<div style="border-top:1px dashed var(--border);margin:4px 0"></div>';
+      o2Body+=srow('P/F ratio (PaO₂÷FiO₂)',pfRatio.toFixed(0)+' mmHg',pfCls)+srow('판정',pfTag,pfCls);
+    }
 
     var o2Notes='';
     if(po2!==null) o2Notes+='<p>'+po2Note+'</p>';
     if(sao2!==null) o2Notes+='<p style="margin-top:4px">'+sao2Note+'</p>';
 
     o2Body+=cbox(o2Notes
-      +'<p style="margin-top:6px;font-size:11px;color:var(--text3)">PaO₂ 기준: ≥80 정상 / 60–79 경도 / 40–59 중등도 / &lt;40 중증<br>SaO₂ 기준: ≥95% 정상 / 90–94% 경계 / 85–89% 중등도 / &lt;85% 심각</p>');
+      +'<p style="margin-top:6px;font-size:11px;color:var(--text3)">PaO₂ 기준: ≥80 정상 / 60–79 경도 / 40–59 중등도 / &lt;40 중증<br>SaO₂ 기준: ≥95% 정상 / 90–94% 경계 / 85–89% 중등도 / &lt;85% 심각</p>'
+      +(pfRatio!==null?'<p style="margin-top:6px;font-size:11px;color:var(--text3)">P/F ratio = PaO₂ ÷ FiO₂ (Berlin ARDS 정의 기준)<br>&gt;400 정상 / 301–400 경계 / 201–300 경도 호흡부전 / 101–200 중등도 호흡부전 / ≤100 중증 호흡부전</p>':''))
+    +(pfRatio!==null&&pfWarn?nw('<p><strong>⚠ P/F ratio '+pfRatio.toFixed(0)+'</strong> — '+pfNote+'</p><p style="margin-top:4px;font-size:11px;color:var(--text3)">※ Berlin 정의는 PEEP ≥5 cmH₂O 조건을 요구합니다. 임상 판단과 함께 해석하세요.</p>'):pfRatio!==null?ni('<p>P/F ratio '+pfRatio.toFixed(0)+' — '+pfNote+'</p>'):'');
 
     if(discNote){
       o2Body+=(discWarn?nw('<p>⚠ <strong>PaO₂–SaO₂ 불일치</strong></p><p style="margin-top:4px">'+discNote+'</p>'):ni('<p>'+discNote+'</p>'));
@@ -1086,7 +1118,15 @@ function run(){
   if(agEff!==null)blocks+='<div class="dxblock"><div class="dxblock-lbl">음이온차 (AG)</div><div class="dxblock-val">'+(agEff>12?'고음이온차 (HAGMA)':'정상 음이온차 (NAGMA)')+' — AG '+agEff.toFixed(1)+' mEq/L</div></div>';
   if(drRatio!==null)blocks+='<div class="dxblock"><div class="dxblock-lbl">Delta ratio</div><div class="dxblock-val">'+drRatio.toFixed(2)+' → '+(drRatio<1?'HAGMA+NAGMA 혼합':drRatio<=2?'순수 HAGMA':'HAGMA+대사성 알칼리증 혼합')+'</div></div>';
   if(lac!==null)blocks+='<div class="dxblock"><div class="dxblock-lbl">Lactate</div><div class="dxblock-val">'+lac.toFixed(1)+' mmol/L — '+(lac<2?'정상':lac<4?'경도 상승 (모니터링)':'심각한 젖산 산증')+'</div></div>';
-  if(po2!==null&&po2<80)blocks+='<div class="dxblock"><div class="dxblock-lbl">산소화</div><div class="dxblock-val">저산소혈증 — PaO₂ '+po2.toFixed(0)+' mmHg</div></div>';
+  /* 산소화 블록 — 입력된 값 기준으로 구성 */
+  if(po2!==null||sao2!==null||pfRatio!==null){
+    var o2Parts=[];
+    if(po2!==null)  o2Parts.push('PaO₂ '+po2.toFixed(0)+' mmHg → '+(po2>=80?'정상':po2>=60?'경도 저산소혈증':po2>=40?'중등도 저산소혈증':'중증 저산소혈증'));
+    if(sao2!==null) o2Parts.push('SaO₂ '+sao2.toFixed(1)+'% → '+(sao2>=95?'정상':sao2>=90?'경도 감소':sao2>=85?'중등도 감소':'심각한 감소'));
+    if(pfRatio!==null) o2Parts.push('P/F ratio '+pfRatio.toFixed(0)+' → '+pfTag);
+    if(discWarn) o2Parts.push('⚠ PaO₂–SaO₂ 불일치');
+    blocks+='<div class="dxblock"><div class="dxblock-lbl">산소화</div><div class="dxblock-val">'+o2Parts.join('<br>')+'</div></div>';
+  }
   blocks+='</div>';
 
   var finalHtml='<div class="final-card '+fCls+'"><div class="final-hdr"><div class="final-ey">최종 진단 요약</div><h2>'+fullTitle+'</h2></div><div class="final-row"><div class="final-row-t">원인 / 감별</div><p>'+primCause+'</p></div><div class="final-row"><div class="final-row-t">진단 세부 항목</div>'+blocks+'</div></div>';
@@ -1103,7 +1143,7 @@ function run(){
 }
 
 function resetAll(){
-  ['i_ph','i_pco2','i_hco3','i_po2','i_na','i_cl','i_alb','i_sao2','i_lac'].forEach(function(id){
+  ['i_ph','i_pco2','i_hco3','i_po2','i_na','i_cl','i_alb','i_sao2','i_lac','i_fio2'].forEach(function(id){
     var el=document.getElementById(id);if(el){el.value='';el.className='';}
   });
   var out=document.getElementById('out');out.style.display='none';out.innerHTML='';
