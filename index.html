@@ -921,7 +921,7 @@ function run(){
   if(lac!==null){
     var lacTag,lacCls,lacNote;
     if(lac<2.0){lacTag='정상';lacCls='tag-ok';lacNote='Lactate '+lac.toFixed(1)+' mmol/L < 2.0 → 정상';}
-    else if(lac<4.0){lacTag='경등도 상승';lacCls='tag-warn';lacNote='Lactate '+lac.toFixed(1)+' mmol/L → 2.0–4.0: 경도 상승. 조직 관류 저하 가능성 모니터링 필요';}
+    else if(lac<4.0){lacTag='경도 상승';lacCls='tag-warn';lacNote='Lactate '+lac.toFixed(1)+' mmol/L → 2.0–4.0: 경도 상승. 조직 관류 저하 가능성 모니터링 필요';}
     else{lacTag='심각한 젖산 산증';lacCls='tag-bad';lacNote='Lactate '+lac.toFixed(1)+' mmol/L ≥ 4.0 → 심각한 젖산 산증. L-Lactate가 HAGMA의 주요 원인일 가능성 높음. 쇼크·패혈증·저산소증 즉시 평가 필요';}
     var lacBody=srow('Lactate',lac.toFixed(1)+' mmol/L (= mEq/L)',lac>=4?'r':lac>=2?'a':'g')+
       srow('정상 기준','< 2.0 mmol/L')+
@@ -939,7 +939,7 @@ function run(){
     var po2Tag='',po2Cls='',po2Note='';
     if(po2!==null){
       if(po2>=80){po2Tag='정상';po2Cls='g';po2Note='PaO₂ '+po2.toFixed(1)+' ≥ 80 mmHg → 정상 산소화';}
-      else if(po2>=60){po2Tag='경등도 저산소혈증';po2Cls='a';po2Note='PaO₂ '+po2.toFixed(1)+' (60–79) → 경등도 저산소혈증';}
+      else if(po2>=60){po2Tag='경도 저산소혈증';po2Cls='a';po2Note='PaO₂ '+po2.toFixed(1)+' (60–79) → 경도 저산소혈증';}
       else if(po2>=40){po2Tag='중등도 저산소혈증';po2Cls='r';po2Note='PaO₂ '+po2.toFixed(1)+' (40–59) → 중등도 저산소혈증';}
       else{po2Tag='중증 저산소혈증';po2Cls='r';po2Note='PaO₂ '+po2.toFixed(1)+' < 40 mmHg → 중증 저산소혈증';}
     }
@@ -948,7 +948,7 @@ function run(){
     var sao2Tag='',sao2Cls='',sao2Note='';
     if(sao2!==null){
       if(sao2>=95){sao2Tag='정상';sao2Cls='g';sao2Note='SaO₂ '+sao2.toFixed(1)+'% ≥ 95% → 정상';}
-      else if(sao2>=90){sao2Tag='경등도 감소';sao2Cls='a';sao2Note='SaO₂ '+sao2.toFixed(1)+'% (90–94%) → 경계적 저하. 임상 상황에 따라 산소 보충 고려';}
+      else if(sao2>=90){sao2Tag='경도 감소';sao2Cls='a';sao2Note='SaO₂ '+sao2.toFixed(1)+'% (90–94%) → 경계적 저하. 임상 상황에 따라 산소 보충 고려';}
       else if(sao2>=85){sao2Tag='중등도 감소';sao2Cls='r';sao2Note='SaO₂ '+sao2.toFixed(1)+'% (85–89%) → 산소 공급 부족. 즉시 평가 필요';}
       else{sao2Tag='심각한 감소';sao2Cls='r';sao2Note='SaO₂ '+sao2.toFixed(1)+'% < 85% → 심각한 저산소혈증. 긴급 대응 필요';}
     }
@@ -991,17 +991,17 @@ function run(){
       var sao2Score=sao2>=95?0:sao2>=90?1:sao2>=85?2:3;
       var maxScore=Math.max(po2Score,sao2Score);
       if(maxScore===0){o2Tag='정상 산소화';o2Cls='tag-ok';}
-      else if(maxScore===1){o2Tag='경등도 저산소혈증';o2Cls='tag-warn';}
+      else if(maxScore===1){o2Tag='경도 저산소혈증';o2Cls='tag-warn';}
       else if(maxScore===2){o2Tag='중등도 저산소혈증';o2Cls='tag-bad';}
       else{o2Tag='중증 저산소혈증';o2Cls='tag-bad';}
     }else if(po2!==null){
       if(po2>=80){o2Tag='정상 산소화';o2Cls='tag-ok';}
-      else if(po2>=60){o2Tag='경등도 저산소혈증';o2Cls='tag-warn';}
+      else if(po2>=60){o2Tag='경도 저산소혈증';o2Cls='tag-warn';}
       else if(po2>=40){o2Tag='중등도 저산소혈증';o2Cls='tag-bad';}
       else{o2Tag='중증 저산소혈증';o2Cls='tag-bad';}
     }else{
       if(sao2>=95){o2Tag='정상 (SaO₂)';o2Cls='tag-ok';}
-      else if(sao2>=90){o2Tag='경등도 저산소혈증';o2Cls='tag-warn';}
+      else if(sao2>=90){o2Tag='경도 저산소혈증';o2Cls='tag-warn';}
       else{o2Tag='저산소혈증';o2Cls='tag-bad';}
     }
 
@@ -1014,7 +1014,7 @@ function run(){
     if(sao2!==null) o2Notes+='<p style="margin-top:4px">'+sao2Note+'</p>';
 
     o2Body+=cbox(o2Notes
-      +'<p style="margin-top:6px;font-size:11px;color:var(--text3)">PaO₂ 기준: ≥80 정상 / 60–79 경등도 / 40–59 중등도 / &lt;40 중증<br>SaO₂ 기준: ≥95% 정상 / 90–94% 경계 / 85–89% 중등도 / &lt;85% 심각</p>');
+      +'<p style="margin-top:6px;font-size:11px;color:var(--text3)">PaO₂ 기준: ≥80 정상 / 60–79 경도 / 40–59 중등도 / &lt;40 중증<br>SaO₂ 기준: ≥95% 정상 / 90–94% 경계 / 85–89% 중등도 / &lt;85% 심각</p>');
 
     if(discNote){
       o2Body+=(discWarn?nw('<p>⚠ <strong>PaO₂–SaO₂ 불일치</strong></p><p style="margin-top:4px">'+discNote+'</p>'):ni('<p>'+discNote+'</p>'));
