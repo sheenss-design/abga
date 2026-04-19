@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#0f172a">
-<title>ABGA 판독기</title>
+<title>통합 ABGA 판독기 v3.0</title>
 <style>
 :root {
   --bg: #0f172a;
@@ -98,7 +98,9 @@ body{
 /* ── main ── */
 .main{padding:16px;max-width:600px;margin:0 auto}
 /* ── section titles ── */
-.section-title{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin:20px 0 10px}
+.section-title{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin:20px 0 10px;display:flex;align-items:center;gap:6px}
+.badge-req{font-size:9px;padding:2px 7px;border-radius:10px;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);font-weight:700;letter-spacing:0;text-transform:none}
+.badge-opt{font-size:9px;padding:2px 7px;border-radius:10px;background:var(--bg3);color:var(--text3);border:1px solid var(--border2);font-weight:600;letter-spacing:0;text-transform:none}
 /* ── input grid ── */
 .input-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .field{display:flex;flex-direction:column;gap:5px}
@@ -123,6 +125,15 @@ body{
 .field.full{grid-column:1/-1}
 /* ── buttons ── */
 .btn-row{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:18px}
+
+/* ── 기계환기 체크박스 ── */
+.vent-row{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 10px;border-radius:var(--radius-sm);border:1.5px solid var(--border2);background:var(--surface);cursor:pointer;user-select:none;width:100%;min-height:48px}
+.vent-row:hover{border-color:var(--accent)}
+.vent-row.active{border-color:var(--warn);background:var(--warn-bg)}
+.vent-check{width:20px;height:20px;border-radius:5px;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;background:var(--surface)}
+.vent-row.active .vent-check{background:var(--warn);border-color:var(--warn)}
+.vent-label{font-size:12px;font-weight:600;color:var(--text2);line-height:1.4;white-space:nowrap}
+.vent-row.active .vent-label{color:var(--warn-text)}
 .btn-run{
   padding:15px;border-radius:var(--radius);border:none;
   background:var(--accent2);color:#fff;font-size:16px;font-weight:700;
@@ -253,11 +264,11 @@ body{
 </head>
 <body>
 <header class="app-header">
-  <h1>ABGA 판독기 <span>v2.0</span></h1>
+  <h1>통합 ABGA 판독기 <span>v3.0</span></h1>
 </header>
 
 <main class="main">
-  <p class="section-title">필수 입력</p>
+  <p class="section-title">필수 입력 <span class="badge-req">REQUIRED</span></p>
   <div class="input-grid">
     <div class="field">
       <div class="field-label">pH</div>
@@ -276,7 +287,7 @@ body{
     </div>
   </div>
 
-  <p class="section-title">산소화</p>
+  <p class="section-title">산소화 <span class="badge-opt">선택</span></p>
   <div class="input-grid">
     <div class="field">
       <div class="field-label">PaO₂ <span class="unit">mmHg</span></div>
@@ -293,9 +304,19 @@ body{
       <div class="field-ref">실내공기 0.21</div>
       <input id="i_fio2" type="number" inputmode="decimal" step="0.01" min="0.21" max="1.0" placeholder="예: 0.21">
     </div>
+    <div class="field">
+      <div class="field-label">기계환기</div>
+      <div class="field-ref">체크 시 보상 해석 주의 안내</div>
+      <div class="vent-row" id="vent_row" onclick="toggleVent()">
+        <div class="vent-check" id="vent_check">
+          <svg id="vent_icon" width="12" height="12" viewBox="0 0 12 12" style="display:none"><polyline points="1.5,6 4.5,9.5 10.5,2.5" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="vent-label">Mechanical Ventilation</div>
+      </div>
+    </div>
   </div>
 
-  <p class="section-title">전해질 (음이온차 계산용)</p>
+  <p class="section-title">전해질 및 임상화학 <span class="badge-opt">선택</span></p>
   <div class="input-grid">
     <div class="field">
       <div class="field-label">Na⁺ <span class="unit">mEq/L = mmol/L</span></div>
@@ -308,12 +329,32 @@ body{
       <input id="i_cl" type="number" inputmode="decimal" step="1">
     </div>
     <div class="field">
-      <div class="field-label">Albumin <span class="unit">g/dL</span> <span style="font-weight:400;color:var(--text3);font-size:10px">(선택)</span></div>
-      <div class="field-ref">정상 3.5–5.0 | Δratio 보정용</div>
+      <div class="field-label">K⁺ <span class="unit">mEq/L = mmol/L</span></div>
+      <div class="field-ref">정상 3.5–5.0</div>
+      <input id="i_k" type="number" inputmode="decimal" step="0.1">
+    </div>
+    <div class="field">
+      <div class="field-label">Glucose <span class="unit">mg/dL</span></div>
+      <div class="field-ref">정상 70–100 | 보정Na 계산</div>
+      <input id="i_glc" type="number" inputmode="decimal" step="1">
+    </div>
+    <div class="field">
+      <div class="field-label">BUN <span class="unit">mg/dL</span></div>
+      <div class="field-ref">정상 8–20</div>
+      <input id="i_bun" type="number" inputmode="decimal" step="1">
+    </div>
+    <div class="field">
+      <div class="field-label">Creatinine <span class="unit">mg/dL</span></div>
+      <div class="field-ref">정상 0.6–1.2</div>
+      <input id="i_cr" type="number" inputmode="decimal" step="0.01">
+    </div>
+    <div class="field">
+      <div class="field-label">Albumin <span class="unit">g/dL</span></div>
+      <div class="field-ref">정상 3.5–5.0 | AG 보정용</div>
       <input id="i_alb" type="number" inputmode="decimal" step="0.1">
     </div>
     <div class="field">
-      <div class="field-label">Lactate <span class="unit">mmol/L = mEq/L</span> <span style="font-weight:400;color:var(--text3);font-size:10px">(선택)</span></div>
+      <div class="field-label">Lactate <span class="unit">mmol/L</span></div>
       <div class="field-ref">정상 &lt;2.0 | ≥4.0 심각</div>
       <input id="i_lac" type="number" inputmode="decimal" step="0.1">
     </div>
@@ -329,6 +370,15 @@ body{
 
 <script>
 (function(){
+var ventilated=false;
+function toggleVent(){
+  ventilated=!ventilated;
+  var row=document.getElementById('vent_row');
+  var icon=document.getElementById('vent_icon');
+  if(ventilated){row.classList.add('active');icon.style.display='block';}
+  else{row.classList.remove('active');icon.style.display='none';}
+}
+window.toggleVent=toggleVent;
 function rd(id){var el=document.getElementById(id);if(!el)return null;var s=el.value;if(!s||s.trim()==='')return null;var n=Number(s);return isFinite(n)?n:null;}
 function mk(id,v,lo,hi){var el=document.getElementById(id);if(!el||v===null)return;el.className=(v<lo||v>hi)?'inp-bad':'inp-ok';}
 function srow(l,v,c){return '<div class="srow"><span class="srow-l">'+l+'</span><span class="srow-v'+(c?' '+c:'')+'">'+v+'</span></div>';}
@@ -519,14 +569,18 @@ function buildFC(data){
   /* ── ROW 3: AG ── */
   if(!noAG){
     svg+=rowLabel(R[3],'④ 음이온차 (AG)');
-    var hw=(W-PAD*2-g)/2;
+    var hw=(W-PAD*2-g*3)/4;
+    var agSub=data.agVal!==null?'AG='+data.agVal.toFixed(1):'';
     var r3=[
-      {x:PAD,      w:hw,key:'hagma',lbl:'HAGMA',sub:agStatus==='hagma'&&data.agVal!==null?'AG='+data.agVal.toFixed(1):'AG > 12'},
-      {x:PAD+hw+g, w:hw,key:'nagma',lbl:'NAGMA',sub:agStatus==='nagma'&&data.agVal!==null?'AG='+data.agVal.toFixed(1):'AG ≤ 12'}
+      {x:PAD,            w:hw,key:'hagma',lbl:'HAGMA', sub:agStatus==='hagma'?agSub:'AG>12+MA'},
+      {x:PAD+hw+g,       w:hw,key:'hag',  lbl:'HAG',   sub:agStatus==='hag'?agSub:'AG>12'},
+      {x:PAD+(hw+g)*2,   w:hw,key:'nagma',lbl:'NAGMA', sub:agStatus==='nagma'?agSub:'AG≤12+MA'},
+      {x:PAD+(hw+g)*3,   w:hw,key:'nag',  lbl:'NAG',   sub:agStatus==='nag'?agSub:'AG≤12'}
     ];
-    var a3=r3.filter(function(n){return n.key===agStatus;})[0]||r3[0];
+    var a3=r3.filter(function(n){return n.key===agStatus;})[0]||r3[1];
     r3.forEach(function(n){
-      var col=(n.key===agStatus)?(n.key==='hagma'?C.acid:(n.key==='nagma'?C.alk:C.dim)):C.dim;
+      var isActive=(n.key===agStatus);
+      var col=isActive?(n.key==='hagma'||n.key==='hag'?C.acid:C.alk):C.dim;
       svg+=box(n.x,bby[3],n.w,col,n.lbl,n.sub);
     });
     var cx3=a3.x+a3.w/2;
@@ -560,7 +614,7 @@ function buildFC(data){
 }
 
 /* ── AG 분포 다이어그램 생성 ── */
-function buildAGDiagram(na, cl, hco3, agEff, drRatio, pType){
+function buildAGDiagram(na, cl, hco3, agEff, drRatio, pType, hasMetAcid){
   var agRaw = na-cl-hco3;
   var dAG = agEff-12;
   var dHCO = 24-hco3;
@@ -624,7 +678,10 @@ function buildAGDiagram(na, cl, hco3, agEff, drRatio, pType){
   if(highAG){
     var diagTag, diagTagCls;
     var drIsNeg = (dHCO<0);
-    if(drRatio===null&&drIsNeg) { diagTag='HAGMA+대사성 알칼리증'; diagTagCls='ag-tag-m'; }
+    if(pType!=='met_acid'){
+      // 일차장애가 대사성 산증이 아님 → DR 미계산, hasMetAcid로 표시 구분
+      diagTag=hasMetAcid?'HAGMA':'HAG'; diagTagCls='ag-tag-h';
+    } else if(drRatio===null&&drIsNeg) { diagTag='HAGMA+대사성 알칼리증'; diagTagCls='ag-tag-m'; }
     else if(drRatio===null)     { diagTag='HAGMA'; diagTagCls='ag-tag-h'; }
     else if(drRatio<1)          { diagTag='HAGMA+NAGMA 혼합'; diagTagCls='ag-tag-na'; }
     else if(drRatio<=2)         { diagTag='순수 HAGMA'; diagTagCls='ag-tag-h'; }
@@ -653,15 +710,18 @@ function buildAGDiagram(na, cl, hco3, agEff, drRatio, pType){
           :drRatio<=2?' — UA 증가만큼 HCO₃⁻가 감소. 순수 HAGMA.'
           :' — UA 증가에 비해 HCO₃⁻가 덜 감소. 대사성 알칼리증 기저 HCO₃⁻↑.')
         +'<br><span class="ag-formula">ratio = '+fmt(dAG)+'÷'+fmt(dHCO)+' = '+drRatio.toFixed(2)+'</span>';
+    }else if(pType!=='met_acid'){
+      // 일차장애가 대사성 산증이 아닌 경우 — HCO3>24 여부와 무관하게 동일 메시지
+      noteText='';
     }else if(drIsNeg){
       noteText='<strong>HCO₃⁻ '+fmt(hco3)+' &gt; 24</strong> — ΔHCO₃⁻가 음수. 대사성 알칼리증 혼합으로 delta ratio 계산 불가.';
     }else{
-      noteText='<strong>AG '+fmt(agEff)+'</strong> — 고음이온차. 그러나 일차장애가 아니므로 Delta ratio는 산출하지 않습니다.';
+      noteText='';
     }
-    html += '<div class="ag-note">'+noteText+'</div>';
+    /* noteText 다이어그램 하단 note 삭제 */
 
   }else{
-    html += '<div class="ag-row-label">현재 입력값 <span class="ag-tag ag-tag-na">NAGMA</span></div>';
+    html += '<div class="ag-row-label">현재 입력값 <span class="ag-tag ag-tag-na">'+(hasMetAcid?'NAGMA':'NAG')+'</span></div>';
     var clCls2 = clDiff>0?'ag-s-clh':'ag-s-cl';
     var agBarW2 = Math.max(agRaw, 2);
     html += '<div class="ag-bar-row">'
@@ -676,10 +736,6 @@ function buildAGDiagram(na, cl, hco3, agEff, drRatio, pType){
       +lblSeg(hco3,    'HCO₃⁻', fmt(hco3)+''+diffStr(hcoDiff))
       +lblSeg(agBarW2, 'AG',    fmt(agEff)+''+diffStr(agDiff))
       +'</div>';
-    html += '<div class="ag-note">'
-      +'<strong>AG '+fmt(agEff)+' ≤ 12</strong> — HCO₃⁻↓, Cl⁻↑ 보상. 미측정 음이온 변화 없음.'
-      +'<br><span class="ag-formula">Na '+na+' – (Cl '+cl+' + HCO₃⁻ '+fmt(hco3)+') = '+fmt(agRaw)+'</span>'
-      +'</div>';
   }
 
   html += '</div>';
@@ -690,10 +746,15 @@ function buildAGDiagram(na, cl, hco3, agEff, drRatio, pType){
 function run(){
   var ph=rd('i_ph'),pco2=rd('i_pco2'),hco3=rd('i_hco3'),po2=rd('i_po2');
   var na=rd('i_na'),cl=rd('i_cl'),alb=rd('i_alb'),sao2=rd('i_sao2'),lac=rd('i_lac'),fio2=rd('i_fio2');
+  var k=rd('i_k'),glc=rd('i_glc'),bun=rd('i_bun'),cr=rd('i_cr');
   if(ph===null||pco2===null||hco3===null){alert('pH, PaCO₂, HCO₃⁻는 필수입니다.');return;}
 
   mk('i_ph',ph,7.35,7.45);mk('i_pco2',pco2,35,45);mk('i_hco3',hco3,22,26);
   if(po2!==null)mk('i_po2',po2,80,100);
+  if(k!==null)mk('i_k',k,3.5,5.0);
+  if(glc!==null)mk('i_glc',glc,70,100);
+  if(bun!==null)mk('i_bun',bun,8,20);
+  if(cr!==null)mk('i_cr',cr,0.6,1.2);
   if(sao2!==null)mk('i_sao2',sao2,95,100);
 
   var html='<div class="steps-wrap">';
@@ -821,23 +882,25 @@ function run(){
     else{cTag='보상 범위 이탈';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성/만성 보상 예측 범위 모두 벗어남. 혼합장애 가능성 검토 필요';compLabel='보상 범위 이탈';fcData.compStatus='adequate';}
   }else{cTag='추가 평가 필요';cCls='tag-warn';cNote='일차장애 확정이 어려워 보상 공식 적용이 제한됩니다.';compLabel='판정 보류';cFormula='일차장애 불명확';fcData.compStatus='na';}
   html+=mkStep(3,'#34d399','보상기전 평가',cTag,cCls,
-    srow('예측 보상식',cFormula)+srow('실제 값','CO₂ '+pco2.toFixed(1)+' / HCO₃⁻ '+hco3.toFixed(1))+cbox('<p>'+cNote+'</p>'));
+    srow('예측 보상식',cFormula)+srow('실제 값','CO₂ '+pco2.toFixed(1)+' / HCO₃⁻ '+hco3.toFixed(1))+cbox('<p>'+cNote+'</p>'+(ventilated?'<p style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-weight:600;color:var(--warn-text)">⚠ 기계환기 중: 환기량이 설정값에 의해 조절되므로 자발 호흡 보상이 제한됩니다. 보상 공식(Winters 등)은 자발 호흡을 전제로 하므로 이 결과를 주의하여 해석하세요.</p>':'')));
 
   /* STEP 4: AG */
   var agVal=null,agEff=null,highAG=false,drRatio=null,drInterp='',drCls='',agQualifier='';
   var agTag2,agCls2,agBody='';
   if(na!==null&&cl!==null){
     agVal=na-(cl+hco3);agEff=(alb!==null&&alb<3.5)?agVal+2.5*(4.0-alb):(alb!==null&&alb>5.0)?agVal+2.5*(4.0-alb):agVal;highAG=agEff>12;
-    agTag2=highAG?'HAGMA':'NAGMA';agCls2=highAG?'tag-bad':'tag-ok';
-    fcData.agStatus=highAG?'hagma':'nagma';fcData.agVal=agEff;
+    var hasMetAcid=(pType==='met_acid'||(isMixed&&mixComponents.indexOf('대사성 산증')!==-1));
+    agTag2=highAG?(hasMetAcid?'HAGMA':'HAG'):(hasMetAcid?'NAGMA':'NAG');
+    agCls2=highAG?'tag-bad':(hasMetAcid?'tag-warn':'tag-ok');
+    fcData.agStatus=highAG?(hasMetAcid?'hagma':'hag'):(hasMetAcid?'nagma':'nag');fcData.agVal=agEff;
     agBody+=srow('정상 기준','≤ 12 mEq/L');
     agBody+=srow('AG = '+na+'–('+cl+'+'+hco3.toFixed(1)+')',agVal.toFixed(1)+' mEq/L',agVal>12?'r':'g');
     if(alb!==null&&(alb<3.5||alb>5.0)){agBody+=srow('보정 AG (Alb '+alb+')',agEff.toFixed(1)+' mEq/L',agEff>12?'r':'g')+cbox('<p class="mono">보정AG = '+agVal.toFixed(1)+' + 2.5×(4.0–'+alb+') = '+agEff.toFixed(1)+'</p><p style="margin-top:4px">Albumin이 정상 범위(3.5–5.0 g/dL)를 벗어나 보정하였습니다.</p>');}
-    agBody+=srow('판정',highAG?'고음이온차 (HAGMA)':'정상 음이온차 (NAGMA)',highAG?'r':'g');
+    agBody+=srow('판정',highAG?(hasMetAcid?'고음이온차 대사성 산증 (HAGMA)':'고음이온차 (HAG)'):(hasMetAcid?'정상음이온차 대사성 산증 (NAGMA)':'정상 음이온차 (NAG)'),highAG?'r':'g');
     agBody+='<div style="border-top:1px dashed var(--border);margin:4px 0"></div>';
 
-    /* ── 판정 직후: HAGMA → GOLDMARK / NAGMA → 원인 설명 ── */
-    if(highAG){
+    /* ── 판정 직후: HAGMA → GOLDMARK (대사성 산증 있을 때만) ── */
+    if(highAG&&hasMetAcid){
       var gmid='gm'+Date.now(),gcid='gc'+Date.now();
       agBody+='<div class="goldmark-wrap"><div class="goldmark-hdr" onclick="window._tog(\''+gmid+'\',\''+gcid+'\')">HAGMA 원인 감별 (GOLDMARK) <span class="chv op" id="'+gcid+'">▾</span></div>'+
         '<div class="goldmark-body" id="'+gmid+'">'+
@@ -852,41 +915,44 @@ function run(){
         '<div class="gm-item"><div class="gm-letter">R</div><div class="gm-name">Renal failure</div><div class="gm-detail">급성 신손상·말기 신부전 시 산성 노폐물(인산, 황산 등) 축적</div></div>'+
         '<div class="gm-item"><div class="gm-letter">K</div><div class="gm-name">Ketoacidosis</div><div class="gm-detail">당뇨병성·알코올성·기아성 케톤산증 — 포도당을 에너지로 쓰지 못해 지방을 분해하면서 부산물로 케톤체 축적</div></div>'+
         '</div></div></div>';
-    }else{
-      agBody+=cbox('<p style="font-weight:600;margin-bottom:6px">정상 음이온차 대사성 산증 (NAGMA)</p>'+
+    }else if(!highAG){
+      agBody+=cbox('<p style="font-weight:600;margin-bottom:6px">정상 음이온차 '+(hasMetAcid?'대사성 산증 (NAGMA)':'(NAG)')+'</p>'+
         '<p style="margin-bottom:6px">미측정 음이온(산 등)이 증가하는 게 아니라 <strong style="font-weight:600">HCO₃⁻가 줄어드는 상황</strong>입니다. 줄어든 음이온을 메꾸기 위해 Cl⁻이 증가하여 결과적으로 음이온차는 정상을 유지합니다 (↓HCO₃⁻, ↑Cl⁻).</p>'+
-        '<p style="font-weight:600;margin-bottom:4px">주요 원인</p>'+
+        (hasMetAcid?'<p style="font-weight:600;margin-bottom:4px">주요 원인</p>'+
         '<div style="display:flex;flex-direction:column;gap:6px">'+
         '<div style="padding:8px 10px;background:var(--bg3);border-radius:6px"><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px">Gastrointestinal loss (위장관 손실)</div><div style="font-size:11px;color:var(--text3)">HCO₃⁻를 많이 포함한 장액이 설사·췌장액·담즙 누공으로 다량 소실 시 혈중 HCO₃⁻가 감소하고 전기적 중성 유지를 위해 Cl⁻ 재흡수 증가 → 고염소혈증성 NAGMA</div></div>'+
         '<div style="padding:8px 10px;background:var(--bg3);border-radius:6px"><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px">Renal tubular acidosis (신세뇨관 산증)</div><div style="font-size:11px;color:var(--text3)">HCO₃⁻의 재흡수 장애 또는 H⁺의 배출 장애 발생 시</div></div>'+
         '<div style="padding:8px 10px;background:var(--bg3);border-radius:6px"><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px">Large volume Normal Saline infusion (대량 생리식염수 투여)</div><div style="font-size:11px;color:var(--text3)">0.9% NaCl (Na 154 mEq/L + Cl 154 mEq/L) 다량 투여 시 Cl⁻ 과부하로 NAGMA 유발</div></div>'+
-        '</div>');
+        '</div>':''));
+    }else{
+      /* HAG: highAG=true 이지만 대사성 산증 없음 */
+      agBody+=cbox('<p>음이온차가 상승해 있으나 현재 일차장애가 대사성 산증이 아닙니다. '
+        +'AG 상승 원인(젖산, 케톤, 신부전 등)을 임상 맥락에 따라 추가 확인하세요.</p>');
     }
 
     if(highAG && pType==='met_acid'){
       /* ── HAGMA + met_acid: Delta ratio 계산 ── */
       var dAG=agEff-12,dHCO=24-hco3;
-      agBody+='<div style="border-top:1px dashed var(--border);margin:8px 0 4px"></div>';
-      agBody+='<div style="font-size:11px;font-weight:700;color:var(--text2);padding:4px 0 2px">Delta ratio</div>';
+      var drBody='';
       if(dHCO<0){
         drRatio=null;fcData.drVal=null;
         drInterp='HCO₃⁻ '+hco3.toFixed(1)+' > 24 → ΔHCO₃⁻ 음수: 대사성 알칼리증 혼합으로 HCO₃⁻가 정상보다 높아진 상태. Delta ratio 계산 불가';
         drCls='a';agQualifier='혼합(HAGMA+대사성 알칼리증)';fcData.drStatus='mixed_met_alk';
         if(!isMixed){isMixed=true;if(mixComponents.length===0&&primaryName)mixComponents=[primaryName];if(mixComponents.indexOf('대사성 알칼리증')===-1)mixComponents.push('대사성 알칼리증 (AG 기반)');}
-        agBody+=srow('ΔAG (보정AG–12)',dAG.toFixed(1))+srow('ΔHCO₃⁻ (24–HCO₃⁻)',dHCO.toFixed(1),'r')+srow('Delta ratio','계산 불가 (HCO₃⁻>24)','a');
-        agBody+=cbox('<p>'+drInterp+'</p><p class="mono" style="margin-top:4px">HCO₃⁻ > 24인 경우 ΔHCO₃⁻가 음수가 되어 delta ratio를 정상 계산할 수 없습니다. 이 자체가 대사성 알칼리증이 혼합되어 HCO₃⁻가 산증에 의한 소비를 상쇄하고 있음을 의미합니다.</p>');
+        drBody+=srow('ΔAG (보정AG–12)',dAG.toFixed(1))+srow('ΔHCO₃⁻ (24–HCO₃⁻)',dHCO.toFixed(1),'r')+srow('Delta ratio','계산 불가 (HCO₃⁻>24)','a');
+        drBody+=cbox('<p>'+drInterp+'</p><p class="mono" style="margin-top:4px">HCO₃⁻ > 24인 경우 ΔHCO₃⁻가 음수가 되어 delta ratio를 정상 계산할 수 없습니다. 이 자체가 대사성 알칼리증이 혼합되어 HCO₃⁻가 산증에 의한 소비를 상쇄하고 있음을 의미합니다.</p>');
       }else if(Math.abs(dHCO)>0.01){
         drRatio=dAG/dHCO;fcData.drVal=drRatio;
         if(drRatio<1){drInterp='ΔAG < ΔHCO₃⁻ → HAGMA + NAGMA 혼합 가능';drCls='a';agQualifier='혼합(HAGMA+NAGMA)';fcData.drStatus='mixed_nagma';}
         else if(drRatio<=2){drInterp='ΔAG ≈ ΔHCO₃⁻ → 순수 HAGMA';drCls='g';agQualifier='순수';fcData.drStatus='pure';}
         else{drInterp='ΔAG > 2×ΔHCO₃⁻ → HAGMA + 대사성 알칼리증 혼합 가능';drCls='a';agQualifier='혼합(HAGMA+대사성 알칼리증)';fcData.drStatus='mixed_met_alk';
           if(!isMixed){isMixed=true;if(mixComponents.length===0&&primaryName)mixComponents=[primaryName];if(mixComponents.indexOf('대사성 알칼리증')===-1)mixComponents.push('대사성 알칼리증 (AG 기반)');}}
-        agBody+=srow('ΔAG (보정AG–12)',dAG.toFixed(1))+srow('ΔHCO₃⁻ (24–HCO₃⁻)',dHCO.toFixed(1))+srow('Delta ratio',drRatio.toFixed(2),drCls);
-        agBody+=cbox('<p class="mono">'+dAG.toFixed(1)+' ÷ '+dHCO.toFixed(1)+' = '+drRatio.toFixed(2)+'</p><p style="margin-top:4px">'+drInterp+'</p><p class="mono" style="margin-top:3px">&lt;1: HAGMA+NAGMA 혼합 / 1–2: 순수 HAGMA / &gt;2: HAGMA+대사성 알칼리증 혼합</p>');
-        if(alb===null){agBody+=nw('⚠ 이 계산은 Albumin = 4.0 g/dL을 전제로 합니다. 실제 값이 다를 경우 위 Albumin 입력란에 입력하면 보정 AG로 재계산됩니다.');}
-        else if(Math.abs(alb-4.0)>0.05){agBody+=ni('ℹ Albumin '+alb.toFixed(1)+' g/dL 반영 → 보정AG('+agEff.toFixed(1)+')로 계산하였습니다.');}
+        drBody+=srow('ΔAG (보정AG–12)',dAG.toFixed(1))+srow('ΔHCO₃⁻ (24–HCO₃⁻)',dHCO.toFixed(1))+srow('Delta ratio',drRatio.toFixed(2),drCls);
+        drBody+=cbox('<p class="mono">'+dAG.toFixed(1)+' ÷ '+dHCO.toFixed(1)+' = '+drRatio.toFixed(2)+'</p><p style="margin-top:4px">'+drInterp+'</p><p class="mono" style="margin-top:3px">&lt;1: HAGMA+NAGMA 혼합 / 1–2: 순수 HAGMA / &gt;2: HAGMA+대사성 알칼리증 혼합</p>');
+        if(alb===null){drBody+=nw('⚠ 이 계산은 Albumin = 4.0 g/dL을 전제로 합니다. 실제 값이 다를 경우 위 Albumin 입력란에 입력하면 보정 AG로 재계산됩니다.');}
+        else if(Math.abs(alb-4.0)>0.05){drBody+=ni('ℹ Albumin '+alb.toFixed(1)+' g/dL 반영 → 보정AG('+agEff.toFixed(1)+')로 계산하였습니다.');}
         var deid='drb'+Date.now(),dcid='drc'+Date.now();
-        agBody+='<div class="drx"><div class="drxh" onclick="window._tog(\''+deid+'\',\''+dcid+'\')">Delta ratio 개념 및 해석 <span class="chv op" id="'+dcid+'">▾</span></div>'+
+        drBody+='<div class="drx"><div class="drxh" onclick="window._tog(\''+deid+'\',\''+dcid+'\')">Delta ratio 개념 및 해석 <span class="chv op" id="'+dcid+'">▾</span></div>'+
           '<div class="drxb" id="'+deid+'">'+
           '<p style="font-weight:600;color:var(--text);margin-bottom:6px">개념</p>'+
           '<p>고음이온차 대사성 산증(HAGMA)에서 음이온차의 증가량(ΔAG)과 중탄산염의 감소량(ΔHCO₃⁻)의 비를 비교하여 다른 산염기 장애가 동시에 존재하는지 확인하는 지표입니다. 순수 HAGMA라면 산(H⁺)의 증가만큼 중탄산염(HCO₃⁻)을 소비하므로 ΔAG : ΔHCO₃⁻ ≈ 1:1이어야 합니다.</p>'+
@@ -907,31 +973,198 @@ function run(){
           '<p style="margin-top:6px">② <strong style="font-weight:600">기저 HCO₃⁻ 상승</strong> — 만성 호흡성 산증(예: COPD)에 대한 신장 보상으로 HCO₃⁻가 이미 높은 상태에서 HAGMA가 새로 발생한 경우. HCO₃⁻의 기저값이 24보다 높기 때문에 HAGMA로 인한 감소가 상대적으로 작아 보여 ratio가 올라갑니다.</p>'+
           '<p style="margin-top:10px;font-size:11px;color:var(--text3)">⚠ Delta ratio는 HAGMA에서만 유효합니다. Albumin 보정 AG 사용을 권장합니다.</p>'+
           '</div></div>';
-      }else{agQualifier='순수';fcData.drStatus='pure';agBody+=cbox('<p>ΔHCO₃⁻ ≈ 0 — HCO₃⁻가 정상에 가까워 delta ratio 해석 주의</p>');}
+      }else{agQualifier='순수';fcData.drStatus='pure';drBody+=cbox('<p>ΔHCO₃⁻ ≈ 0 — HCO₃⁻가 정상에 가까워 delta ratio 해석 주의</p>');}
     }else if(highAG){
-      /* ── HAGMA이지만 met_acid 아님: delta ratio 생략 ── */
+      /* ── HAGMA이지만 met_acid가 일차장애 아님 ── */
       agQualifier='동반HAGMA';fcData.drStatus='na';
-      agBody+=cbox('<p>고음이온차 대사성 산증이 일차장애가 아니므로 Delta ratio는 산출하지 않습니다.</p>'
-        +'<p style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">'
-        +'<strong>⚠ 미측정 음이온(산) 증가 동반 — 추가 평가 권고</strong><br>'
-        +'일차장애와 별개로 음이온차가 상승되어 있습니다. 숨겨진 산의 증가 원인을 찾기 위해 다음 항목 검사를 고려하세요.<br>'
+
+      var dAG_mix=agEff-12, dHCO_mix=24-hco3;
+      var drMix=null, drMixTag='';
+
+      if(dHCO_mix>0.01){
+        /* HCO3⁻ < 24: DR 계산 가능 */
+        drMix=dAG_mix/dHCO_mix;
+        fcData.drVal=drMix;
+        if(drMix>2){
+          drMixTag='HAGMA 혼합 확인 (ratio='+drMix.toFixed(2)+')';
+          agQualifier='혼합HAGMA확인';fcData.drStatus='mixed_hagma_coexist';
+          if(!isMixed){isMixed=true;if(primaryName)mixComponents=[primaryName];}
+          else if(mixComponents.length===0&&primaryName)mixComponents=[primaryName];
+          if(mixComponents.indexOf('고음이온차 대사성 산증')===-1) mixComponents.push('고음이온차 대사성 산증');
+        }else if(drMix>=1){
+          drMixTag='순수 HAGMA 동반 가능 (ratio='+drMix.toFixed(2)+')';
+          fcData.drStatus='pure_coexist';
+        }else{
+          drMixTag='HAGMA+NAGMA 혼합 가능 (ratio='+drMix.toFixed(2)+')';
+          fcData.drStatus='mixed_nagma';
+        }
+      }
+      /* GOLDMARK 안내 공통 */
+      var goldmarkNote='<p style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">'
+        +'<strong>⚠ 미측정 음이온(산) 증가 — 추가 평가 권고</strong><br>'
+        +'숨겨진 산의 증가 원인을 찾기 위해 다음 항목 검사를 고려하세요.<br>'
         +'• <strong>Lactate</strong> — 패혈증·쇼크·조직 저산소증 시 젖산 상승<br>'
         +'• <strong>Ketone / β-hydroxybutyrate</strong> — 당뇨병성·알코올성·기아성 케톤산증<br>'
         +'• <strong>BUN / Creatinine</strong> — 요독증(신부전)<br>'
         +'• <strong>Osmol gap</strong> — 독성 알코올(메탄올, 에틸렌 글리콜) 섭취 의심 시<br>'
         +'• <strong>Salicylate</strong> — 아스피린 과다 복용 의심 시'
-        +'</p>');
+        +'</p>';
+
+      if(pType==='met_alk'){
+        /* 대사성 알칼리증: HCO3⁻ > 24가 일반적 → DR 계산 불가 경우가 많음 */
+        if(dHCO_mix>0.01){
+          /* HCO3⁻가 우연히 24 미만인 경우 (드묾) */
+          agBody+=cbox('<p><strong>대사성 알칼리증 + HAGMA 동반 가능성 — Delta ratio 확인</strong></p>'
+            +'<p style="margin-top:4px" class="mono">ΔAG='+dAG_mix.toFixed(1)+' / ΔHCO₃⁻='+dHCO_mix.toFixed(1)+' → ratio='+drMix.toFixed(2)+'</p>'
+            +'<p style="margin-top:6px">'+(drMix>2
+              ?'<strong style="color:var(--red)">ratio > 2: 대사성 알칼리증만으로 설명되지 않는 HAGMA 혼합이 확인됩니다.</strong>'
+              :'ratio ≤ 2: AG 상승이 대사성 알칼리증 범위 내로 진짜 HAGMA 가능성은 낮습니다.')
+            +'</p>'+goldmarkNote);
+        }else{
+          /* 전형적: HCO3⁻ ≥ 24 → DR 계산 불가, 알칼리증에 의한 수학적 상승 설명 */
+          agBody+=cbox('<p><strong>대사성 알칼리증에서의 AG 상승 — 해석 주의</strong></p>'
+            +'<p style="margin-top:6px">HCO₃⁻가 24 이상으로 상승해 있어 Delta ratio 계산이 불가합니다. '
+            +'대사성 알칼리증에서는 Cl⁻ 감소로 인해 AG가 수학적으로 상승할 수 있으므로, '
+            +'AG > 12만으로 HAGMA를 확정할 수 없습니다.</p>'
+            +'<p style="margin-top:6px">진짜 HAGMA가 동반되었는지 확인하려면 Lactate, 케톤, BUN/Cr 등 '
+            +'원인 검사가 필요합니다.</p>'+goldmarkNote);
+        }
+      }else{
+        /* 호흡성 산증/알칼리증 등: DR로 HAGMA 혼합 여부 판별 */
+        if(dHCO_mix>0.01){
+          agBody+=srow('ΔAG (보정AG–12)',dAG_mix.toFixed(1));
+          agBody+=srow('ΔHCO₃⁻ (24–HCO₃⁻)',dHCO_mix.toFixed(1));
+          agBody+=srow('Delta ratio',drMix.toFixed(2),drMix>2?'r':drMix>=1?'g':'a');
+          agBody+=cbox('<p class="mono">'+dAG_mix.toFixed(1)+' ÷ '+dHCO_mix.toFixed(1)+' = '+drMix.toFixed(2)+'</p>'
+            +'<p style="margin-top:6px">'+(drMix>2
+              ?'<strong style="color:var(--red)">⚠ ratio > 2 — HAGMA가 혼합장애로 동반되어 있습니다.</strong> 일차장애('+({resp_acid:'호흡성 산증',resp_alk:'호흡성 알칼리증',mix:'혼합장애',normal:'정상'}[pType]||pType)+')와 별개로 미측정 음이온 증가가 확인됩니다.'
+              :drMix>=1
+              ?'ratio 1–2: HAGMA 동반 가능성이 있습니다. 임상 맥락을 함께 고려하세요.'
+              :'ratio < 1: HAGMA와 NAGMA가 함께 동반되어 있을 가능성이 있습니다.')
+            +'</p>'+goldmarkNote);
+        }else{
+          /* HCO3⁻ ≥ 24: DR 계산 불가 */
+          agBody+=cbox('<p>HCO₃⁻ '+hco3.toFixed(1)+' ≥ 24 — ΔHCO₃⁻가 음수이므로 Delta ratio 계산 불가. '
+            +'대사성 알칼리증 혼합으로 HCO₃⁻가 정상보다 높아진 상태입니다.</p>'+goldmarkNote);
+        }
+      }
     }
 
     /* ── 다이어그램 (항상 마지막) ── */
     agBody+='<div style="border-top:1px dashed var(--border);margin:8px 0 4px"></div>';
-    agBody+=buildAGDiagram(na,cl,hco3,agEff,drRatio,pType);
+    agBody+=buildAGDiagram(na,cl,hco3,agEff,drRatio,pType,hasMetAcid);
     html+=mkStep(4,'#fb923c','음이온차 (AG)',agTag2,agCls2,agBody);
+    if(drBody) html+=mkStep(5,'#818cf8','Delta ratio',
+      (drRatio!==null?(drRatio<1?'HAGMA+NAGMA 혼합':drRatio<=2?'순수 HAGMA':'HAGMA+대사성 알칼리증 혼합'):'계산 불가'),
+      (drRatio!==null?(drRatio<1?'tag-warn':drRatio<=2?'tag-ok':'tag-warn'):'tag-info'),drBody);
   }else{
     html+=mkStep(4,'#fb923c','음이온차 (AG)','Na/Cl 미입력','tag-info','<p style="padding:10px 0;color:var(--text3)">Na⁺와 Cl⁻를 입력하면 AG 및 delta ratio를 자동 계산합니다.</p>');
   }
 
-  /* STEP 5: Lactic acid */
+  /* ── STEP 6-1: K⁺ ── */
+  if(k!==null){
+    var kTag,kCls,kBody='';
+    if(k<3.5){kTag='저칼륨혈증';kCls='tag-warn';}
+    else if(k<=5.0){kTag='정상';kCls='tag-ok';}
+    else{kTag='고칼륨혈증';kCls='tag-bad';}
+
+    kBody=srow('K⁺',k.toFixed(1)+' mEq/L',k<3.5?'a':k>5.0?'r':'g')+srow('정상 범위','3.5–5.0 mEq/L');
+    var kNote='';
+    // 산염기와 연관 설명
+    if(k<3.5){
+      kNote='저칼륨혈증(K⁺ '+k.toFixed(1)+').';
+      if(pType==='met_alk') kNote+=' 대사성 알칼리증과 저칼륨혈증은 흔히 동반됩니다 (구토·이뇨제). 세포 내로 K⁺가 이동하면서 H⁺가 세포 밖으로 나와 알칼리증을 악화시킵니다.';
+      else if(pType==='resp_alk') kNote+=' 알칼리 상태에서 K⁺가 세포 내로 이동하여 저칼륨혈증이 동반될 수 있습니다.';
+      else kNote+=' 저칼륨혈증 원인 확인이 필요합니다 (이뇨제, 구토, 설사, 원발성 알도스테론증 등).';
+    } else if(k>5.0){
+      kNote='고칼륨혈증(K⁺ '+k.toFixed(1)+').';
+      if(pType==='met_acid') kNote+=' 대사성 산증에서 H⁺가 세포 내로 이동하면서 K⁺가 세포 밖으로 나와 고칼륨혈증이 동반됩니다.';
+      if(cr!==null&&cr>1.2) kNote+=' Creatinine 상승과 동반: 신부전에 의한 K⁺ 배설 감소 고려.';
+      kNote+=' 심전도 모니터링 필요.';
+    } else {
+      kNote='칼륨 정상.';
+    }
+    kBody+=cbox('<p>'+kNote+'</p>');
+    html+=mkStep('6-1','#a78bfa','K⁺',kTag,kCls,kBody);
+  }
+  if(glc!==null){
+    var glcTag,glcCls;
+    if(glc<70){glcTag='저혈당';glcCls='tag-bad';}
+    else if(glc<=100){glcTag='정상';glcCls='tag-ok';}
+    else if(glc<=126){glcTag='공복혈당 이상';glcCls='tag-warn';}
+    else if(glc<=200){glcTag='고혈당';glcCls='tag-warn';}
+    else{glcTag='심각한 고혈당';glcCls='tag-bad';}
+
+    var glcBody=srow('Glucose',glc.toFixed(0)+' mg/dL',glc<70?'r':glc>200?'r':glc>126?'a':'g')+srow('정상 범위','70–100 mg/dL (공복)');
+
+    var corrNaStr='', corrNaNote='', osmCalcStr='';
+    if(na!==null&&glc>100){
+      // Hillier 2001 보정공식: Na_corr = Na_meas + 0.024 × (Glc - 100)
+      var naCorr=na+0.024*(glc-100);
+      var naDiff=naCorr-na;
+      corrNaStr='보정 Na⁺: '+naCorr.toFixed(1)+' mEq/L (+'+naDiff.toFixed(1)+')';
+      var naStatus=naCorr<135?'저나트륨혈증':naCorr<=145?'정상':' 고나트륨혈증';
+      corrNaNote='고혈당으로 혈장 삼투압이 상승하여 세포 밖으로 수분이 이동, 측정 Na⁺가 희석됩니다. '
+        +'보정 Na⁺(Hillier 공식) = '+na+' + 0.024×('+glc.toFixed(0)+'−100) = <strong>'+naCorr.toFixed(1)+'</strong> mEq/L → '+naStatus+'<br>'
+        +'<span style="font-size:11px;color:var(--text3)">보정 Na⁺가 정상 또는 고나트륨혈증이면 실제 탈수가 숨겨져 있을 수 있습니다.</span>';
+      glcBody+=srow('보정 Na⁺ (Hillier)',naCorr.toFixed(1)+' mEq/L',naCorr<135?'a':naCorr>145?'r':'g');
+    }
+
+    // DKA 가능성 안내
+    var glcNote='';
+    if(glc>250&&highAG&&pType==='met_acid'){
+      glcNote='<p style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)"><strong style="color:var(--red)">⚠ 고혈당 + HAGMA + 대사성 산증 → DKA 강력 의심</strong><br>혈중 케톤(β-hydroxybutyrate) 및 소변 케톤 확인 필요.</p>';
+    } else if(glc>200&&highAG){
+      glcNote='<p style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">고혈당 + AG 상승 동반: 당뇨병성 케톤산증(DKA) 또는 고혈당 고삼투압 상태(HHS) 감별이 필요합니다.</p>';
+    }
+
+    glcBody+=cbox((corrNaNote?'<p>'+corrNaNote+'</p>':'')+(glcNote||''));
+    html+=mkStep('6-2','#34d399','Glucose',glcTag,glcCls,glcBody);
+  }
+
+  /* ── STEP 6-3: BUN / Creatinine ── */
+  if(bun!==null||cr!==null){
+    var renTag,renCls,renBody='';
+    var ckdWarn=(cr!==null&&cr>1.2);
+    var bunHigh=(bun!==null&&bun>20);
+
+    if(cr!==null&&cr>3.0){renTag='중증 신기능 저하';renCls='tag-bad';}
+    else if(cr!==null&&cr>1.2){renTag='신기능 저하';renCls='tag-warn';}
+    else if(bun!==null&&bun>20){renTag='BUN 상승';renCls='tag-warn';}
+    else{renTag='정상';renCls='tag-ok';}
+
+    if(bun!==null) renBody+=srow('BUN',bun.toFixed(0)+' mg/dL',bun>20?'a':'g')+srow('정상 범위','8–20 mg/dL');
+    if(cr!==null)  renBody+=srow('Creatinine',cr.toFixed(2)+' mg/dL',cr>1.2?'r':'g')+srow('정상 범위','0.6–1.2 mg/dL');
+
+    // BUN/Cr ratio
+    var renNote='';
+    if(bun!==null&&cr!==null&&cr>0){
+      var bunCrRatio=bun/cr;
+      renBody+=srow('BUN/Cr ratio',bunCrRatio.toFixed(1),bunCrRatio>20?'a':'g');
+      renNote='BUN/Cr = '+bunCrRatio.toFixed(1)+'. '+(bunCrRatio>20?'> 20: Pre-renal 원인(탈수·출혈·심부전) 또는 고단백식이 가능성.':'10–20: 정상 범위. Renal(신장 자체) 또는 Post-renal(요로 폐쇄) 원인 감별.');
+    }
+
+    // 신부전 + HAGMA 연결
+    if(ckdWarn&&highAG&&pType==='met_acid'){
+      renNote+='<br><strong>신기능 저하 + HAGMA + 대사성 산증</strong> → 요독성 산증(Uremic acidosis) 가능성. GOLDMARK의 R(Renal failure) 해당.'+(cr>3.0?' 투석 적응증 평가 고려.':'');
+    } else if(ckdWarn){
+      renNote+=(renNote?'<br>':'')+'Creatinine 상승: 급성 신손상(AKI) 또는 만성 신질환(CKD) 평가 필요.';
+    }
+
+    // Osmol gap 계산 (BUN, Glc, Na 모두 있을 때)
+    if(na!==null&&bun!==null&&glc!==null){
+      var calcOsm=2*na+glc/18+bun/2.8;
+      renBody+='<div style="border-top:1px dashed var(--border);margin:6px 0 2px"></div>';
+      renBody+=srow('계산 삼투압',calcOsm.toFixed(0)+' mOsm/kg')+
+        cbox('<p class="mono">계산 삼투압 = 2×Na('+na+') + Glc/18('+((glc/18).toFixed(1))+') + BUN/2.8('+((bun/2.8).toFixed(1))+') = '+calcOsm.toFixed(0)+'</p>'
+          +'<p style="margin-top:4px">측정 삼투압을 입력하면 Osmol gap을 계산할 수 있습니다. Osmol gap &gt;10이면 독성 알코올(메탄올, 에틸렌 글리콜) 섭취를 의심합니다.</p>');
+    }
+
+    renBody+=cbox('<p>'+renNote+'</p>');
+    html+=mkStep('6-3','#fb7185','BUN / Creatinine',renTag,renCls,renBody);
+  }
+
+  /* ── STEP 6-4: Lactic acid ── */
   if(lac!==null){
     var lacTag,lacCls,lacNote;
     if(lac<2.0){lacTag='정상';lacCls='tag-ok';lacNote='Lactate '+lac.toFixed(1)+' mmol/L < 2.0 → 정상';}
@@ -942,11 +1175,12 @@ function run(){
       cbox('<p>'+lacNote+'</p>'+
         (highAG&&lac>=2?'<p style="margin-top:4px;font-weight:600;color:var(--text)">HAGMA + 젖산 상승: L-Lactate가 AG 증가의 원인일 가능성이 높습니다. 조직 관류 개선이 최우선 치료입니다.</p>':'')+
         '<p style="margin-top:4px" class="mono">1 mmol/L = 1 mEq/L (젖산은 1가 산)</p>');
-    html+=mkStep(5,'#f472b6','Lactic acid',lacTag,lacCls,lacBody);
+    html+=mkStep('6-4','#f472b6','Lactic acid',lacTag,lacCls,lacBody);
   }
 
   /* STEP 6: O2 */
   var o2Tag,o2Cls,o2Body='',discWarn=false;
+  var pfRatio=null,pfTag='',pfCls='',pfNote='',pfWarn=false;
   if(po2!==null||sao2!==null){
 
     // ── PaO2 판정 ──
@@ -1020,7 +1254,6 @@ function run(){
     }
 
     // ── P/F ratio 계산 (FiO2 입력 시) ──
-    var pfRatio=null,pfTag='',pfCls='',pfNote='',pfWarn=false;
     if(po2!==null&&fio2!==null&&fio2>0){
       pfRatio=po2/fio2;
       if(pfRatio>400){pfTag='정상';pfCls='g';pfNote='폐 가스교환 정상.';}
@@ -1056,7 +1289,7 @@ function run(){
     o2Tag='미입력';o2Cls='tag-info';
     o2Body='<p style="padding:10px 0;color:var(--text3)">PaO₂ 또는 SaO₂를 입력하면 산소화 상태를 평가합니다.</p>';
   }
-  html+=mkStep(6,'#38bdf8','산소화',o2Tag,o2Cls,o2Body);
+  html+=mkStep(7,'#38bdf8','산소화',o2Tag,o2Cls,o2Body);
   html+='</div>'; /* close steps-wrap */
 
   /* FINAL CARD */
@@ -1079,8 +1312,10 @@ function run(){
   else if(pType==='normal'){primDisplay='정상 산염기 상태';}
   else{primDisplay='혼합장애 (추가 평가 필요)';}
 
-  /* HAGMA 동반 — 일차장애가 met_acid가 아닌 경우에도 AG 상승 시 명시 */
-  var hagmaCoexist=(highAG&&pType!=='met_acid'&&pType!=='normal'&&!isMixed);
+  /* HAGMA 동반 — 일차장애가 met_acid가 아닌 경우에도 AG 상승 시 명시
+     단, met_alk + HCO3≥24이면 DR 계산 불가이므로 혼합 확정 불가 */
+  var hagmaCoexist=(highAG&&pType!=='met_acid'&&pType!=='normal'&&!isMixed
+    &&!(pType==='met_alk'&&hco3>=24));
   var fullTitle='';
   if(isMixed&&mixComponents.length>=2){
     var parts=[];
@@ -1091,8 +1326,11 @@ function run(){
       else parts.push(c);
     });
     fullTitle=parts.join(' + ');
-    /* HAGMA가 있는 경우 일차진단에 명시 */
-    if(highAG&&mixComponents.indexOf('대사성 산증')===-1&&mixComponents.indexOf('대사성 알칼리증(AG)')===-1){
+    /* HAGMA가 있는 경우 일차진단에 명시 — 이미 mixComponents에 없을 때만 추가 */
+    if(highAG
+      &&mixComponents.indexOf('대사성 산증')===-1
+      &&mixComponents.indexOf('대사성 알칼리증(AG)')===-1
+      &&mixComponents.indexOf('고음이온차 대사성 산증')===-1){
       fullTitle+=' + 고음이온차 대사성 산증 혼합 (AG 상승)';
     }
   }else{
@@ -1115,10 +1353,29 @@ function run(){
   blocks+='<div class="dxblock"><div class="dxblock-lbl">최종 진단</div><div class="dxblock-val">'+fullTitle+'</div></div>';
   var compStr=compLabel+(isAcute?' (급성 반응)':isChronic?' (만성)':'');
   blocks+='<div class="dxblock"><div class="dxblock-lbl">보상</div><div class="dxblock-val">'+compStr+'</div></div>';
-  if(agEff!==null)blocks+='<div class="dxblock"><div class="dxblock-lbl">음이온차 (AG)</div><div class="dxblock-val">'+(agEff>12?'고음이온차 (HAGMA)':'정상 음이온차 (NAGMA)')+' — AG '+agEff.toFixed(1)+' mEq/L</div></div>';
+  /* ④ AG */
+  if(agEff!==null)blocks+='<div class="dxblock"><div class="dxblock-lbl">음이온차 (AG)</div><div class="dxblock-val">'+(agEff>12?(hasMetAcid?'고음이온차 대사성 산증 (HAGMA)':'고음이온차 (HAG)'):(hasMetAcid?'정상음이온차 대사성 산증 (NAGMA)':'정상 음이온차 (NAG)'))+' — AG '+agEff.toFixed(1)+' mEq/L</div></div>';
+  /* ⑤ Delta ratio */
   if(drRatio!==null)blocks+='<div class="dxblock"><div class="dxblock-lbl">Delta ratio</div><div class="dxblock-val">'+drRatio.toFixed(2)+' → '+(drRatio<1?'HAGMA+NAGMA 혼합':drRatio<=2?'순수 HAGMA':'HAGMA+대사성 알칼리증 혼합')+'</div></div>';
+  /* ⑥-1 K⁺ */
+  if(k!==null)blocks+='<div class="dxblock"><div class="dxblock-lbl">K⁺</div><div class="dxblock-val">'+k.toFixed(1)+' mEq/L — '+(k<3.5?'저칼륨혈증':k>5.0?'고칼륨혈증':'정상')+'</div></div>';
+  /* ⑥-2 Glucose */
+  if(glc!==null){
+    var glcSumStr=glc.toFixed(0)+' mg/dL — '+(glc<70?'저혈당':glc<=100?'정상':glc<=126?'공복혈당 이상':glc<=200?'고혈당':'심각한 고혈당');
+    if(na!==null&&glc>100){var naC2=na+0.024*(glc-100);glcSumStr+=' | 보정Na⁺ '+naC2.toFixed(1)+' mEq/L';}
+    blocks+='<div class="dxblock"><div class="dxblock-lbl">Glucose</div><div class="dxblock-val">'+glcSumStr+'</div></div>';
+  }
+  /* ⑥-3 BUN/Cr */
+  if(cr!==null||bun!==null){
+    var renSumParts=[];
+    if(cr!==null) renSumParts.push('Cr '+cr.toFixed(2)+(cr>1.2?' ↑':''));
+    if(bun!==null) renSumParts.push('BUN '+bun.toFixed(0)+(bun>20?' ↑':''));
+    if(bun!==null&&cr!==null&&cr>0) renSumParts.push('BUN/Cr='+(bun/cr).toFixed(1));
+    blocks+='<div class="dxblock"><div class="dxblock-lbl">BUN / Creatinine</div><div class="dxblock-val">'+renSumParts.join(' | ')+(cr!==null&&cr>1.2&&highAG&&pType==='met_acid'?'<br>⚠ 요독성 산증 가능성':'')+'</div></div>';
+  }
+  /* ⑥-4 Lactic acid */
   if(lac!==null)blocks+='<div class="dxblock"><div class="dxblock-lbl">Lactate</div><div class="dxblock-val">'+lac.toFixed(1)+' mmol/L — '+(lac<2?'정상':lac<4?'경도 상승 (모니터링)':'심각한 젖산 산증')+'</div></div>';
-  /* 산소화 블록 — 입력된 값 기준으로 구성 */
+  /* ⑦ 산소화 */
   if(po2!==null||sao2!==null||pfRatio!==null){
     var o2Parts=[];
     if(po2!==null)  o2Parts.push('PaO₂ '+po2.toFixed(0)+' mmHg → '+(po2>=80?'정상':po2>=60?'경도 저산소혈증':po2>=40?'중등도 저산소혈증':'중증 저산소혈증'));
@@ -1127,6 +1384,8 @@ function run(){
     if(discWarn) o2Parts.push('⚠ PaO₂–SaO₂ 불일치');
     blocks+='<div class="dxblock"><div class="dxblock-lbl">산소화</div><div class="dxblock-val">'+o2Parts.join('<br>')+'</div></div>';
   }
+  /* 기계환기 */
+  if(ventilated)blocks+='<div class="dxblock"><div class="dxblock-lbl">기계환기</div><div class="dxblock-val">⚠ 기계환기 중 — 보상 공식 해석 주의</div></div>';
   blocks+='</div>';
 
   var finalHtml='<div class="final-card '+fCls+'"><div class="final-hdr"><div class="final-ey">최종 진단 요약</div><h2>'+fullTitle+'</h2></div><div class="final-row"><div class="final-row-t">원인 / 감별</div><p>'+primCause+'</p></div><div class="final-row"><div class="final-row-t">진단 세부 항목</div>'+blocks+'</div></div>';
@@ -1143,7 +1402,10 @@ function run(){
 }
 
 function resetAll(){
-  ['i_ph','i_pco2','i_hco3','i_po2','i_na','i_cl','i_alb','i_sao2','i_lac','i_fio2'].forEach(function(id){
+  ventilated=false;
+  var vrow=document.getElementById('vent_row');
+  if(vrow){vrow.classList.remove('active');document.getElementById('vent_icon').style.display='none';}
+  ['i_ph','i_pco2','i_hco3','i_po2','i_na','i_cl','i_alb','i_sao2','i_lac','i_fio2','i_k','i_glc','i_bun','i_cr'].forEach(function(id){
     var el=document.getElementById(id);if(el){el.value='';el.className='';}
   });
   var out=document.getElementById('out');out.style.display='none';out.innerHTML='';
