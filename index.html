@@ -896,6 +896,33 @@ function run(){
     agBody+=srow('정상 기준','≤ 12 mEq/L');
     agBody+=srow('AG = '+na+'–('+cl+'+'+hco3.toFixed(1)+')',agVal.toFixed(1)+' mEq/L',agVal>12?'r':'g');
     if(alb!==null&&(alb<3.5||alb>5.0)){agBody+=srow('보정 AG (Alb '+alb+')',agEff.toFixed(1)+' mEq/L',agEff>12?'r':'g')+cbox('<p class="mono">보정AG = '+agVal.toFixed(1)+' + 2.5×(4.0–'+alb+') = '+agEff.toFixed(1)+'</p><p style="margin-top:4px">Albumin이 정상 범위(3.5–5.0 g/dL)를 벗어나 보정하였습니다.</p>');}
+
+    /* ── 혈당 ≥ 400: 보정 Na 적용 AG 추가 표시 ── */
+    if(glc!==null&&glc>=400){
+      var naCorr_ag=na+0.024*(glc-100);
+      var agCorr=naCorr_ag-(cl+hco3);
+      var agEffCorr=(alb!==null&&alb<3.5)?agCorr+2.5*(4.0-alb):(alb!==null&&alb>5.0)?agCorr+2.5*(4.0-alb):agCorr;
+      var corrDiff=agEffCorr-agEff;
+      agBody+=srow('보정 Na⁺ 적용 AG',agEffCorr.toFixed(1)+' mEq/L'+(corrDiff>=0?' (+'+corrDiff.toFixed(1)+')'
+        :' ('+corrDiff.toFixed(1)+')'),(agEffCorr>12?'r':'g'));
+      agBody+=cbox('<p><strong>혈당 '+glc.toFixed(0)+' mg/dL ≥ 400 — 고혈당 보정 Na⁺ 적용</strong></p>'
+        +'<p class="mono" style="margin-top:4px">'
+        +'보정 Na⁺ = '+na+' + 0.024×('+glc.toFixed(0)+'−100) = '+naCorr_ag.toFixed(1)+' mEq/L<br>'
+        +'보정 AG = '+naCorr_ag.toFixed(1)+'–('+cl+'+'+hco3.toFixed(1)+') = '+agCorr.toFixed(1)+(agEffCorr!==agCorr?' → Alb 보정 후 '+agEffCorr.toFixed(1):'')
+        +'</p>'
+        +(agEffCorr>12&&agEff<=12
+          ?'<p style="margin-top:6px;font-weight:600;color:var(--red)">⚠ 측정 AG는 정상이지만 보정 Na⁺ 적용 시 고음이온차 — 측정 Na⁺의 희석 효과로 인해 실제 AG 상승이 가려져 있을 수 있습니다.</p>'
+          :agEffCorr<=12&&agEff>12
+          ?'<p style="margin-top:6px">고혈당에 의한 Na⁺ 희석을 보정하면 AG가 정상 범위 내에 해당합니다.</p>'
+          :'<p style="margin-top:6px;color:var(--text3)">보정 전후 판정 일치 (보정량 '+corrDiff.toFixed(1)+' mEq/L).</p>')
+        +'<p style="margin-top:4px;font-size:11px;color:var(--text3)">혈당 400 mg/dL 이상에서 보정 Na⁺를 AG 계산에 반영하였습니다. 이하 수치에서는 보정 효과(≤7 mEq/L)가 임상적으로 무시 가능한 수준입니다.</p>');
+      /* agEff를 보정값으로 업데이트 */
+      agEff=agEffCorr;
+      highAG=agEff>12;
+      agTag2=highAG?(hasMetAcid?'HAGMA':'HAG'):(hasMetAcid?'NAGMA':'NAG');
+      agCls2=highAG?'tag-bad':(hasMetAcid?'tag-warn':'tag-ok');
+      fcData.agStatus=highAG?(hasMetAcid?'hagma':'hag'):(hasMetAcid?'nagma':'nag');fcData.agVal=agEff;
+    }
     agBody+=srow('판정',highAG?(hasMetAcid?'고음이온차 대사성 산증 (HAGMA)':'고음이온차 (HAG)'):(hasMetAcid?'정상음이온차 대사성 산증 (NAGMA)':'정상 음이온차 (NAG)'),highAG?'r':'g');
     agBody+='<div style="border-top:1px dashed var(--border);margin:4px 0"></div>';
 
