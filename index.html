@@ -619,11 +619,11 @@ function buildAGDiagram(na, cl, hco3, agEff, drRatio, pType){
   if(highAG){
     var diagTag, diagTagCls;
     var drIsNeg = (dHCO<0);
-    if(drRatio===null&&drIsNeg) { diagTag='HAGMA+대사알칼리증'; diagTagCls='ag-tag-m'; }
+    if(drRatio===null&&drIsNeg) { diagTag='HAGMA+대사성 알칼리증'; diagTagCls='ag-tag-m'; }
     else if(drRatio===null)     { diagTag='HAGMA'; diagTagCls='ag-tag-h'; }
     else if(drRatio<1)          { diagTag='HAGMA+NAGMA 혼합'; diagTagCls='ag-tag-na'; }
     else if(drRatio<=2)         { diagTag='순수 HAGMA'; diagTagCls='ag-tag-h'; }
-    else                        { diagTag='HAGMA+대사알칼리증 혼합'; diagTagCls='ag-tag-m'; }
+    else                        { diagTag='HAGMA+대사성 알칼리증 혼합'; diagTagCls='ag-tag-m'; }
 
     html += '<div class="ag-row-label">현재 입력값 <span class="ag-tag '+diagTagCls+'">'+diagTag+'</span></div>';
     var clCls = clDiff>0?'ag-s-clh':'ag-s-cl';
@@ -646,10 +646,10 @@ function buildAGDiagram(na, cl, hco3, agEff, drRatio, pType){
         +(drRatio<1?'&lt;':drRatio<=2?'≈':'&gt;')+' ΔHCO₃⁻('+fmt(dHCO)+')</strong>'
         +(drRatio<1?' — HCO₃⁻가 HAGMA 이상으로 감소(NAGMA 동반). Cl⁻ 보상 증가.'
           :drRatio<=2?' — UA 증가만큼 HCO₃⁻가 감소. 순수 HAGMA.'
-          :' — UA 증가에 비해 HCO₃⁻가 덜 감소. 대사알칼리증 기저 HCO₃⁻↑.')
+          :' — UA 증가에 비해 HCO₃⁻가 덜 감소. 대사성 알칼리증 기저 HCO₃⁻↑.')
         +'<br><span class="ag-formula">ratio = '+fmt(dAG)+'÷'+fmt(dHCO)+' = '+drRatio.toFixed(2)+'</span>';
     }else if(drIsNeg){
-      noteText='<strong>HCO₃⁻ '+fmt(hco3)+' &gt; 24</strong> — ΔHCO₃⁻가 음수. 대사알칼리증 혼합으로 delta ratio 계산 불가.';
+      noteText='<strong>HCO₃⁻ '+fmt(hco3)+' &gt; 24</strong> — ΔHCO₃⁻가 음수. 대사성 알칼리증 혼합으로 delta ratio 계산 불가.';
     }else{
       noteText='<strong>AG '+fmt(agEff)+'</strong> — 음이온차 상승. 대사성 산증이 아닌 경우 delta ratio는 산출하지 않습니다.';
     }
@@ -754,8 +754,8 @@ function run(){
     if(hiCO2){pType='resp_acid';pTag='호흡성 산증';pCls='tag-bad';rNote='산혈증(pH↓) → PaCO₂ 증가 → 일차원인이 호흡성';}
     else{pType='met_acid';pTag='대사성 산증';pCls='tag-bad';rNote='산혈증(pH↓) → HCO₃⁻ 감소 → 일차원인이 대사성';}
   }else if(ph>7.45){
-    /* BUG FIX: pH알칼리혈증에서 loCO2여도 hiHCO면 대사알칼리증 일차 + 호흡알칼리증 혼합 */
-    if(hiHCO&&loCO2){pType='met_alk';pTag='대사성 알칼리증';pCls='tag-info';rNote='알칼리증(pH↑) → HCO₃⁻ 증가+PaCO₂ 감소 → 일차원인이 대사성 (PaCO₂ 감소는 보상 또는 호흡알칼리증 혼합)';}
+    /* BUG FIX: pH알칼리혈증에서 loCO2여도 hiHCO면 대사성 알칼리증 일차 + 호흡알칼리증 혼합 */
+    if(hiHCO&&loCO2){pType='met_alk';pTag='대사성 알칼리증';pCls='tag-info';rNote='알칼리증(pH↑) → HCO₃⁻ 증가+PaCO₂ 감소 → 일차원인이 대사성 (PaCO₂ 감소는 보상 또는 호흡성 알칼리증 혼합)';}
     else if(loCO2){pType='resp_alk';pTag='호흡성 알칼리증';pCls='tag-info';rNote='알칼리증(pH↑) → PaCO₂ 감소 → 일차원인이 호흡성';}
     else{pType='met_alk';pTag='대사성 알칼리증';pCls='tag-info';rNote='알칼리증(pH↑) → HCO₃⁻ 증가 → 일차원인이 대사성'+(hiCO2?' (PaCO₂ 상승은 호흡 보상)':'');}
   }else if(phAcidSide){
@@ -811,7 +811,7 @@ function run(){
     else if(dC2<-1&&dC2>=-3){cTag='만성 보상 (예측 범위 부족)';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 만성 예측값 '+cH2.toFixed(1)+'보다 '+Math.abs(dC2).toFixed(1)+' mEq/L 낮습니다. 예측값보다 낮다는 것은 HCO₃⁻를 추가로 소비하는 별도 원인, 즉 <strong style="font-weight:600">대사성 산증 혼합</strong>의 가능성을 시사합니다. AG 결과를 함께 확인하세요.';isChronic=true;compLabel='만성 보상 (예측 범위 부족)';fcData.compStatus='chronic';}
     else if(dC2<-3){cTag='혼합: +대사성 산증';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 만성 예측값 '+cH2.toFixed(1)+'보다 '+Math.abs(dC2).toFixed(1)+' mEq/L 낮음 → 대사성 산증 독립 공존 가능성';isMixed=true;mixComponents=['호흡성 알칼리증','대사성 산증'];compLabel='보상 초과 → 혼합 대사성 산증';fcData.compStatus='mixed_met_acid';}
     else if(dA2>1&&dA2<=3){cTag='급성 반응 (예측 범위 초과)';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성 예측값 '+aH2.toFixed(1)+'보다 '+dA2.toFixed(1)+' mEq/L 높습니다.<br><br>호흡성 알칼리증에서 HCO₃⁻는 감소해야 하는데 감소가 불충분한 상태입니다. 두 가지 가능성을 고려해야 합니다:<br>① <strong style="font-weight:600">대사성 알칼리증 혼합</strong> — HCO₃⁻를 올리는 별도 원인(구토·이뇨제 등)이 공존하여 감소를 상쇄하는 경우<br>② <strong style="font-weight:600">대사성 산증 혼합</strong> — HAGMA 등이 동시에 존재하여 HCO₃⁻를 소비하므로 겉으로는 정상처럼 보이지만 실제로는 두 장애가 상쇄되고 있는 경우<br><br>AG 결과와 임상 맥락을 함께 확인하세요.';isAcute=true;compLabel='급성 반응 (예측 범위 초과)';fcData.compStatus='acute';}
-    /* BUG FIX: resp_alk에서 HCO3가 만성/급성 예측 모두 크게 초과하면 대사알칼리증 동반 */
+    /* BUG FIX: resp_alk에서 HCO3가 만성/급성 예측 모두 크게 초과하면 대사성 알칼리증 동반 */
     else if(dA2>3){cTag='혼합: +대사성 알칼리증';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성/만성 예측 모두 크게 초과 → 대사성 알칼리증 독립 공존 가능성';isMixed=true;mixComponents=['호흡성 알칼리증','대사성 알칼리증'];compLabel='과보상 → 대사성 알칼리증 혼합';fcData.compStatus='mixed_met_alk';}
     else{cTag='보상 범위 이탈';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성/만성 보상 예측 범위 모두 벗어남. 혼합장애 가능성 검토 필요';compLabel='보상 범위 이탈';fcData.compStatus='adequate';}
   }else{cTag='추가 평가 필요';cCls='tag-warn';cNote='일차장애 확정이 어려워 보상 공식 적용이 제한됩니다.';compLabel='판정 보류';cFormula='일차장애 불명확';fcData.compStatus='na';}
@@ -866,7 +866,7 @@ function run(){
       if(dHCO<0){
         drRatio=null;fcData.drVal=null;
         drInterp='HCO₃⁻ '+hco3.toFixed(1)+' > 24 → ΔHCO₃⁻ 음수: 대사성 알칼리증 혼합으로 HCO₃⁻가 정상보다 높아진 상태. Delta ratio 계산 불가';
-        drCls='a';agQualifier='혼합(HAGMA+대사알칼리증)';fcData.drStatus='mixed_met_alk';
+        drCls='a';agQualifier='혼합(HAGMA+대사성 알칼리증)';fcData.drStatus='mixed_met_alk';
         if(!isMixed){isMixed=true;if(mixComponents.length===0&&primaryName)mixComponents=[primaryName];if(mixComponents.indexOf('대사성 알칼리증')===-1)mixComponents.push('대사성 알칼리증 (AG 기반)');}
         agBody+=srow('ΔAG (보정AG–12)',dAG.toFixed(1))+srow('ΔHCO₃⁻ (24–HCO₃⁻)',dHCO.toFixed(1),'r')+srow('Delta ratio','계산 불가 (HCO₃⁻>24)','a');
         agBody+=cbox('<p>'+drInterp+'</p><p class="mono" style="margin-top:4px">HCO₃⁻ > 24인 경우 ΔHCO₃⁻가 음수가 되어 delta ratio를 정상 계산할 수 없습니다. 이 자체가 대사성 알칼리증이 혼합되어 HCO₃⁻가 산증에 의한 소비를 상쇄하고 있음을 의미합니다.</p>');
@@ -874,7 +874,7 @@ function run(){
         drRatio=dAG/dHCO;fcData.drVal=drRatio;
         if(drRatio<1){drInterp='ΔAG < ΔHCO₃⁻ → HAGMA + NAGMA 혼합 가능';drCls='a';agQualifier='혼합(HAGMA+NAGMA)';fcData.drStatus='mixed_nagma';}
         else if(drRatio<=2){drInterp='ΔAG ≈ ΔHCO₃⁻ → 순수 HAGMA';drCls='g';agQualifier='순수';fcData.drStatus='pure';}
-        else{drInterp='ΔAG > 2×ΔHCO₃⁻ → HAGMA + 대사성 알칼리증 혼합 가능';drCls='a';agQualifier='혼합(HAGMA+대사알칼리증)';fcData.drStatus='mixed_met_alk';
+        else{drInterp='ΔAG > 2×ΔHCO₃⁻ → HAGMA + 대사성 알칼리증 혼합 가능';drCls='a';agQualifier='혼합(HAGMA+대사성 알칼리증)';fcData.drStatus='mixed_met_alk';
           if(!isMixed){isMixed=true;if(mixComponents.length===0&&primaryName)mixComponents=[primaryName];if(mixComponents.indexOf('대사성 알칼리증')===-1)mixComponents.push('대사성 알칼리증 (AG 기반)');}}
         agBody+=srow('ΔAG (보정AG–12)',dAG.toFixed(1))+srow('ΔHCO₃⁻ (24–HCO₃⁻)',dHCO.toFixed(1))+srow('Delta ratio',drRatio.toFixed(2),drCls);
         agBody+=cbox('<p class="mono">'+dAG.toFixed(1)+' ÷ '+dHCO.toFixed(1)+' = '+drRatio.toFixed(2)+'</p><p style="margin-top:4px">'+drInterp+'</p><p class="mono" style="margin-top:3px">&lt;1: HAGMA+NAGMA 혼합 / 1–2: 순수 HAGMA / &gt;2: HAGMA+대사성 알칼리증 혼합</p>');
@@ -933,12 +933,97 @@ function run(){
 
   /* STEP 6: O2 */
   var o2Tag,o2Cls,o2Body='';
-  if(po2!==null){
-    if(po2>=80){o2Tag='정상 산소화';o2Cls='tag-ok';}else if(po2>=60){o2Tag='경등도 저산소혈증';o2Cls='tag-warn';}else if(po2>=40){o2Tag='중등도 저산소혈증';o2Cls='tag-bad';}else{o2Tag='중증 저산소혈증';o2Cls='tag-bad';}
-    o2Body=srow('PaO₂',po2.toFixed(1)+' mmHg',po2<60?'r':po2<80?'a':'g');
-    if(sao2!==null)o2Body+=srow('SaO₂',sao2.toFixed(1)+'%',sao2<90?'r':sao2<95?'a':'g');
-    o2Body+=cbox('<p>≥80: 정상 / 60–79: 경등도 / 40–59: 중등도 / &lt;40: 중증</p>');
-  }else{o2Tag='미입력';o2Cls='tag-info';o2Body='<p style="padding:10px 0;color:var(--text3)">PaO₂를 입력하면 산소화 상태를 평가합니다.</p>';}
+  if(po2!==null||sao2!==null){
+
+    // ── PaO2 판정 ──
+    var po2Tag='',po2Cls='',po2Note='';
+    if(po2!==null){
+      if(po2>=80){po2Tag='정상';po2Cls='g';po2Note='PaO₂ '+po2.toFixed(1)+' ≥ 80 mmHg → 정상 산소화';}
+      else if(po2>=60){po2Tag='경등도 저산소혈증';po2Cls='a';po2Note='PaO₂ '+po2.toFixed(1)+' (60–79) → 경등도 저산소혈증';}
+      else if(po2>=40){po2Tag='중등도 저산소혈증';po2Cls='r';po2Note='PaO₂ '+po2.toFixed(1)+' (40–59) → 중등도 저산소혈증';}
+      else{po2Tag='중증 저산소혈증';po2Cls='r';po2Note='PaO₂ '+po2.toFixed(1)+' < 40 mmHg → 중증 저산소혈증';}
+    }
+
+    // ── SaO2 판정 ──
+    var sao2Tag='',sao2Cls='',sao2Note='';
+    if(sao2!==null){
+      if(sao2>=95){sao2Tag='정상';sao2Cls='g';sao2Note='SaO₂ '+sao2.toFixed(1)+'% ≥ 95% → 정상';}
+      else if(sao2>=90){sao2Tag='경등도 감소';sao2Cls='a';sao2Note='SaO₂ '+sao2.toFixed(1)+'% (90–94%) → 경계적 저하. 임상 상황에 따라 산소 보충 고려';}
+      else if(sao2>=85){sao2Tag='중등도 감소';sao2Cls='r';sao2Note='SaO₂ '+sao2.toFixed(1)+'% (85–89%) → 산소 공급 부족. 즉시 평가 필요';}
+      else{sao2Tag='심각한 감소';sao2Cls='r';sao2Note='SaO₂ '+sao2.toFixed(1)+'% < 85% → 심각한 저산소혈증. 긴급 대응 필요';}
+    }
+
+    // ── PaO2-SaO2 일관성 분석 ──
+    // 산소-헤모글로빈 해리곡선 기준 예상값 (간략 추정)
+    // PaO2≥100→SaO2≥98, PaO2≥80→SaO2≥95, PaO2≥60→SaO2≥90, PaO2≥40→SaO2≥75
+    var discNote='', discWarn=false;
+    if(po2!==null&&sao2!==null){
+      // 예상 SaO2 범위 추정 (산소-헤모글로빈 해리곡선 기반)
+      var expectedSao2Min, expectedSao2Max;
+      if(po2>=100){expectedSao2Min=97;expectedSao2Max=100;}
+      else if(po2>=80){expectedSao2Min=95;expectedSao2Max=99;}
+      else if(po2>=70){expectedSao2Min=93;expectedSao2Max=97;}
+      else if(po2>=60){expectedSao2Min=89;expectedSao2Max=95;}
+      else if(po2>=50){expectedSao2Min=83;expectedSao2Max=92;}
+      else if(po2>=40){expectedSao2Min=73;expectedSao2Max=85;}
+      else{expectedSao2Min=50;expectedSao2Max=75;}
+
+      if(sao2>=expectedSao2Min&&sao2<=expectedSao2Max){
+        discNote='PaO₂ '+po2.toFixed(1)+' mmHg에서 예상 SaO₂ '+expectedSao2Min+'–'+expectedSao2Max+'% → 입력 SaO₂ '+sao2.toFixed(1)+'% 일치 (산소-헤모글로빈 해리곡선 부합)';
+      }else{
+        discWarn=true;
+        var discDir=(sao2>expectedSao2Max)?'PaO₂ 대비 SaO₂가 예상보다 높음':'PaO₂ 대비 SaO₂가 예상보다 낮음';
+        discNote='PaO₂ '+po2.toFixed(1)+' mmHg에서 예상 SaO₂ '+expectedSao2Min+'–'+expectedSao2Max+'%, 입력 SaO₂ '+sao2.toFixed(1)+'% → <strong>불일치</strong> ('+discDir+')<br>'
+          +'<br><strong>SaO₂가 예상보다 높은 경우 고려사항:</strong><br>'
+          +'• <strong>일산화탄소(CO) 중독</strong> — COHb를 옥시Hb로 오인, SpO₂ 실제보다 높게 표시<br>'
+          +'• <strong>고산소 흡입 상태</strong> — FiO₂↑로 SaO₂ 유지되면서 PaO₂가 낮은 경우<br>'
+          +'<br><strong>SaO₂가 예상보다 낮은 경우 고려사항:</strong><br>'
+          +'• <strong>메트헤모글로빈혈증</strong> — MetHb 증가 시 SaO₂ ~86%에서 정체<br>'
+          +'• <strong>헤모글로빈 산소 친화도 변화</strong> — pH↓, 체온↑, 2,3-DPG↑ → 해리곡선 우측 이동<br>'
+          +'• <strong>이상헤모글로빈증</strong> — 낫적혈구 등 특수 헤모글로빈<br>'
+          +'• <strong>검체 오류</strong> — 공기 노출, 과도한 지연';
+      }
+    }
+
+    // ── 최종 태그 결정 (PaO2·SaO2 중 더 심한 것 기준) ──
+    if(po2!==null&&sao2!==null){
+      var po2Score=po2>=80?0:po2>=60?1:po2>=40?2:3;
+      var sao2Score=sao2>=95?0:sao2>=90?1:sao2>=85?2:3;
+      var maxScore=Math.max(po2Score,sao2Score);
+      if(maxScore===0){o2Tag='정상 산소화';o2Cls='tag-ok';}
+      else if(maxScore===1){o2Tag='경등도 저산소혈증';o2Cls='tag-warn';}
+      else if(maxScore===2){o2Tag='중등도 저산소혈증';o2Cls='tag-bad';}
+      else{o2Tag='중증 저산소혈증';o2Cls='tag-bad';}
+    }else if(po2!==null){
+      if(po2>=80){o2Tag='정상 산소화';o2Cls='tag-ok';}
+      else if(po2>=60){o2Tag='경등도 저산소혈증';o2Cls='tag-warn';}
+      else if(po2>=40){o2Tag='중등도 저산소혈증';o2Cls='tag-bad';}
+      else{o2Tag='중증 저산소혈증';o2Cls='tag-bad';}
+    }else{
+      if(sao2>=95){o2Tag='정상 (SaO₂)';o2Cls='tag-ok';}
+      else if(sao2>=90){o2Tag='경등도 저산소혈증';o2Cls='tag-warn';}
+      else{o2Tag='저산소혈증';o2Cls='tag-bad';}
+    }
+
+    o2Body='';
+    if(po2!==null) o2Body+=srow('PaO₂',po2.toFixed(1)+' mmHg',po2<60?'r':po2<80?'a':'g')+srow('정상 범위','80–100 mmHg');
+    if(sao2!==null) o2Body+=srow('SaO₂',sao2.toFixed(1)+'%',sao2<90?'r':sao2<95?'a':'g')+srow('정상 범위','95–100%');
+
+    var o2Notes='';
+    if(po2!==null) o2Notes+='<p>'+po2Note+'</p>';
+    if(sao2!==null) o2Notes+='<p style="margin-top:4px">'+sao2Note+'</p>';
+
+    o2Body+=cbox(o2Notes
+      +'<p style="margin-top:6px;font-size:11px;color:var(--text3)">PaO₂ 기준: ≥80 정상 / 60–79 경등도 / 40–59 중등도 / &lt;40 중증<br>SaO₂ 기준: ≥95% 정상 / 90–94% 경계 / 85–89% 중등도 / &lt;85% 심각</p>');
+
+    if(discNote){
+      o2Body+=(discWarn?nw('<p>⚠ <strong>PaO₂–SaO₂ 불일치</strong></p><p style="margin-top:4px">'+discNote+'</p>'):ni('<p>'+discNote+'</p>'));
+    }
+
+  }else{
+    o2Tag='미입력';o2Cls='tag-info';
+    o2Body='<p style="padding:10px 0;color:var(--text3)">PaO₂ 또는 SaO₂를 입력하면 산소화 상태를 평가합니다.</p>';
+  }
   html+=mkStep(6,'#38bdf8','산소화',o2Tag,o2Cls,o2Body);
   html+='</div>'; /* close steps-wrap */
 
@@ -953,7 +1038,7 @@ function run(){
   if(pType==='met_acid'){
     if(highAG&&agQualifier==='순수')primDisplay='순수 고음이온차 대사성 산증 (HAGMA)';
     else if(highAG&&agQualifier==='혼합(HAGMA+NAGMA)')primDisplay='고음이온차+정상음이온차 혼합 대사성 산증';
-    else if(highAG&&agQualifier==='혼합(HAGMA+대사알칼리증)')primDisplay='고음이온차 대사성 산증 + 대사성 알칼리증';
+    else if(highAG&&agQualifier==='혼합(HAGMA+대사성 알칼리증)')primDisplay='고음이온차 대사성 산증 + 대사성 알칼리증';
     else if(na!==null&&cl!==null&&!highAG)primDisplay='정상음이온차 대사성 산증 (NAGMA)';
     else primDisplay='대사성 산증';
   }else if(pType==='met_alk'){primDisplay='대사성 알칼리증';}
@@ -981,7 +1066,7 @@ function run(){
   }else{
     fullTitle=primDisplay;
     if(hagmaCoexist){
-      var agQDesc=agQualifier==='혼합(HAGMA+NAGMA)'?'(HAGMA+NAGMA)':agQualifier==='혼합(HAGMA+대사알칼리증)'?'(HAGMA+대사알칼리증)':'';
+      var agQDesc=agQualifier==='혼합(HAGMA+NAGMA)'?'(HAGMA+NAGMA)':agQualifier==='혼합(HAGMA+대사성 알칼리증)'?'(HAGMA+대사성 알칼리증)':'';
       fullTitle+=' + 고음이온차 대사성 산증 혼합 '+agQDesc;
     }
   }
