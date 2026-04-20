@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#0f172a">
-<title>통합 ABGA 판독기 v3.3</title>
+<title>통합 ABGA 판독기 v3.4</title>
 <style>
 :root {
   --bg: #0f172a;
@@ -349,7 +349,7 @@ body{
 </head>
 <body>
 <header class="app-header">
-  <h1>통합 ABGA 판독기 <span>v3.3</span></h1>
+  <h1>통합 ABGA 판독기 <span>v3.4</span></h1>
 </header>
 
 <main class="main">
@@ -509,7 +509,7 @@ function printResult(){
     }catch(e){}
   }
   var content='<!DOCTYPE html><html><head><meta charset="UTF-8">'
-    +'<title>통합 ABGA 판독기 v3.3 — 판독 결과</title>'
+    +'<title>통합 ABGA 판독기 v3.4 — 판독 결과</title>'
     +'<style>'+styles
     +'body{background:#fff;color:#000;font-family:system-ui,sans-serif;padding:10px 14px;max-width:800px;margin:0 auto}'
     +'.step-body{display:block!important}.drxb,.goldmark-body{display:block!important}'
@@ -1210,13 +1210,21 @@ function run(){
       if(alb===null){drBody+=nw('⚠ 이 계산은 Albumin = 4.0 g/dL을 전제로 합니다.');}
       if(drBody) html+=mkStep(5,'#818cf8','Delta ratio','보상 달성 — 판정 보류','tag-info',drBody);
     }else if(highAG){
-      /* ── HAGMA이지만 met_acid가 일차장애 아님 ── */
+      /* ── met_acid 아닌 일차장애 + highAG ── */
       agQualifier='동반HAGMA';fcData.drStatus='na';
 
       var dAG_mix=agEff-12, dHCO_mix=24-hco3;
       var drMix=null, drMixTag='';
 
-      if(dHCO_mix>0.01){
+      /* 보상 달성 시: DR 미적용, 간단 안내만 */
+      if(compAchieved){
+        agBody+=cbox('<p><strong>AG 상승 — 보상 달성으로 혼합장애 판정 보류</strong></p>'
+          +'<p style="margin-top:4px">보정 AG '+agEff.toFixed(1)+' mEq/L로 상승해 있으나, '
+          +'보상기전이 예측 범위 내에 있어 Delta ratio로 혼합장애를 확정하기 어렵습니다.<br>'
+          +'AG 상승 원인(젖산, 케톤, 신부전 등)을 임상 맥락에 따라 추가 확인하세요.</p>');
+      }else{
+        /* 보상 미달성: DR 계산 및 혼합 판별 진행 */
+        if(dHCO_mix>0.01){
         /* HCO3⁻ < 24: DR 계산 가능 */
         drMix=dAG_mix/dHCO_mix;
         fcData.drVal=drMix;
@@ -1233,54 +1241,52 @@ function run(){
           drMixTag='HAGMA+NAGMA 혼합 가능 (ratio='+drMix.toFixed(2)+')';
           fcData.drStatus='mixed_nagma';
         }
-      }
-      /* GOLDMARK 안내 공통 */
-      var goldmarkNote='<p style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">'
-        +'<strong>⚠ 미측정 음이온(산) 증가 — 추가 평가 권고</strong><br>'
-        +'숨겨진 산의 증가 원인을 찾기 위해 다음 항목 검사를 고려하세요.<br>'
-        +'• <strong>Lactate</strong> — 패혈증·쇼크·조직 저산소증 시 젖산 상승<br>'
-        +'• <strong>Ketone / β-hydroxybutyrate</strong> — 당뇨병성·알코올성·기아성 케톤산증<br>'
-        +'• <strong>BUN / Creatinine</strong> — 요독증(신부전)<br>'
-        +'• <strong>Osmol gap</strong> — 독성 알코올(메탄올, 에틸렌 글리콜) 섭취 의심 시<br>'
-        +'• <strong>Salicylate</strong> — 아스피린 과다 복용 의심 시'
-        +'</p>';
-
-      if(pType==='met_alk'){
-        /* 대사성 알칼리증: HCO3⁻ > 24가 일반적 → DR 계산 불가 경우가 많음 */
-        if(dHCO_mix>0.01){
-          /* HCO3⁻가 우연히 24 미만인 경우 (드묾) */
-          agBody+=cbox('<p><strong>대사성 알칼리증 + HAGMA 동반 가능성 — Delta ratio 확인</strong></p>'
-            +'<p style="margin-top:4px" class="mono">ΔAG='+dAG_mix.toFixed(1)+' / ΔHCO₃⁻='+dHCO_mix.toFixed(1)+' → ratio='+drMix.toFixed(2)+'</p>'
-            +'<p style="margin-top:6px">'+(drMix>2
-              ?'<strong style="color:var(--red)">ratio > 2: 대사성 알칼리증만으로 설명되지 않는 HAGMA 혼합이 확인됩니다.</strong>'
-              :'ratio ≤ 2: AG 상승이 대사성 알칼리증 범위 내로 진짜 HAGMA 가능성은 낮습니다.')
-            +'</p>'+goldmarkNote);
-        }else{
-          /* 전형적: HCO3⁻ ≥ 24 → DR 계산 불가, 알칼리증에 의한 수학적 상승 설명 */
-          agBody+=cbox('<p><strong>대사성 알칼리증에서의 AG 상승 — 해석 주의</strong></p>'
-            +'<p style="margin-top:6px">HCO₃⁻가 24 이상으로 상승해 있어 Delta ratio 계산이 불가합니다. '
-            +'대사성 알칼리증에서는 Cl⁻ 감소로 인해 AG가 수학적으로 상승할 수 있으므로, '
-            +'AG > 12만으로 HAGMA를 확정할 수 없습니다.</p>'
-            +'<p style="margin-top:6px">진짜 HAGMA가 동반되었는지 확인하려면 Lactate, 케톤, BUN/Cr 등 '
-            +'원인 검사가 필요합니다.</p>'+goldmarkNote);
         }
-      }else{
-        /* 호흡성 산증/알칼리증 등: DR로 HAGMA 혼합 여부 판별 */
-        if(dHCO_mix>0.01){
-          agBody+=srow('ΔAG (보정AG–12)',dAG_mix.toFixed(1));
-          agBody+=srow('ΔHCO₃⁻ (24–HCO₃⁻)',dHCO_mix.toFixed(1));
-          agBody+=srow('Delta ratio',drMix.toFixed(2),drMix>2?'r':drMix>=1?'g':'a');
-          agBody+=cbox('<p class="mono">'+dAG_mix.toFixed(1)+' ÷ '+dHCO_mix.toFixed(1)+' = '+drMix.toFixed(2)+'</p>'
-            +'<p style="margin-top:6px">'+(drMix>2
-              ?'<strong style="color:var(--red)">⚠ ratio > 2 — HAGMA가 혼합장애로 동반되어 있습니다.</strong> 일차장애('+({resp_acid:'호흡성 산증',resp_alk:'호흡성 알칼리증',mix:'혼합장애',normal:'정상'}[pType]||pType)+')와 별개로 미측정 음이온 증가가 확인됩니다.'
-              :drMix>=1
-              ?'ratio 1–2: HAGMA 동반 가능성이 있습니다. 임상 맥락을 함께 고려하세요.'
-              :'ratio < 1: HAGMA와 NAGMA가 함께 동반되어 있을 가능성이 있습니다.')
-            +'</p>'+goldmarkNote);
+        /* GOLDMARK 안내 공통 */
+        var goldmarkNote='<p style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">'
+          +'<strong>⚠ 미측정 음이온(산) 증가 — 추가 평가 권고</strong><br>'
+          +'숨겨진 산의 증가 원인을 찾기 위해 다음 항목 검사를 고려하세요.<br>'
+          +'• <strong>Lactate</strong> — 패혈증·쇼크·조직 저산소증 시 젖산 상승<br>'
+          +'• <strong>Ketone / β-hydroxybutyrate</strong> — 당뇨병성·알코올성·기아성 케톤산증<br>'
+          +'• <strong>BUN / Creatinine</strong> — 요독증(신부전)<br>'
+          +'• <strong>Osmol gap</strong> — 독성 알코올(메탄올, 에틸렌 글리콜) 섭취 의심 시<br>'
+          +'• <strong>Salicylate</strong> — 아스피린 과다 복용 의심 시'
+          +'</p>';
+
+        if(pType==='met_alk'){
+          /* 대사성 알칼리증 */
+          if(dHCO_mix>0.01){
+            agBody+=cbox('<p><strong>대사성 알칼리증 + HAGMA 동반 가능성 — Delta ratio 확인</strong></p>'
+              +'<p style="margin-top:4px" class="mono">ΔAG='+dAG_mix.toFixed(1)+' / ΔHCO₃⁻='+dHCO_mix.toFixed(1)+' → ratio='+drMix.toFixed(2)+'</p>'
+              +'<p style="margin-top:6px">'+(drMix>2
+                ?'<strong style="color:var(--red)">ratio > 2: 대사성 알칼리증만으로 설명되지 않는 HAGMA 혼합이 확인됩니다.</strong>'
+                :'ratio ≤ 2: AG 상승이 대사성 알칼리증 범위 내로 진짜 HAGMA 가능성은 낮습니다.')
+              +'</p>'+goldmarkNote);
+          }else{
+            agBody+=cbox('<p><strong>대사성 알칼리증에서의 AG 상승 — 해석 주의</strong></p>'
+              +'<p style="margin-top:6px">HCO₃⁻가 24 이상으로 상승해 있어 Delta ratio 계산이 불가합니다. '
+              +'대사성 알칼리증에서는 Cl⁻ 감소로 인해 AG가 수학적으로 상승할 수 있으므로, '
+              +'AG > 12만으로 HAGMA를 확정할 수 없습니다.</p>'
+              +'<p style="margin-top:6px">진짜 HAGMA가 동반되었는지 확인하려면 Lactate, 케톤, BUN/Cr 등 '
+              +'원인 검사가 필요합니다.</p>'+goldmarkNote);
+          }
         }else{
-          /* HCO3⁻ ≥ 24: DR 계산 불가 */
-          agBody+=cbox('<p>HCO₃⁻ '+hco3.toFixed(1)+' ≥ 24 — ΔHCO₃⁻가 음수이므로 Delta ratio 계산 불가. '
-            +'대사성 알칼리증 혼합으로 HCO₃⁻가 정상보다 높아진 상태입니다.</p>'+goldmarkNote);
+          /* 호흡성 산증/알칼리증 등 */
+          if(dHCO_mix>0.01){
+            agBody+=srow('ΔAG (보정AG–12)',dAG_mix.toFixed(1));
+            agBody+=srow('ΔHCO₃⁻ (24–HCO₃⁻)',dHCO_mix.toFixed(1));
+            agBody+=srow('Delta ratio',drMix.toFixed(2),drMix>2?'r':drMix>=1?'g':'a');
+            agBody+=cbox('<p class="mono">'+dAG_mix.toFixed(1)+' ÷ '+dHCO_mix.toFixed(1)+' = '+drMix.toFixed(2)+'</p>'
+              +'<p style="margin-top:6px">'+(drMix>2
+                ?'<strong style="color:var(--red)">⚠ ratio > 2 — HAGMA가 혼합장애로 동반되어 있습니다.</strong> 일차장애('+({resp_acid:'호흡성 산증',resp_alk:'호흡성 알칼리증',mix:'혼합장애',normal:'정상'}[pType]||pType)+')와 별개로 미측정 음이온 증가가 확인됩니다.'
+                :drMix>=1
+                ?'ratio 1–2: HAGMA 동반 가능성이 있습니다. 임상 맥락을 함께 고려하세요.'
+                :'ratio < 1: HAGMA와 NAGMA가 함께 동반되어 있을 가능성이 있습니다.')
+              +'</p>'+goldmarkNote);
+          }else{
+            agBody+=cbox('<p>HCO₃⁻ '+hco3.toFixed(1)+' ≥ 24 — ΔHCO₃⁻가 음수이므로 Delta ratio 계산 불가. '
+              +'대사성 알칼리증 혼합으로 HCO₃⁻가 정상보다 높아진 상태입니다.</p>'+goldmarkNote);
+          }
         }
       }
     }
@@ -1549,8 +1555,17 @@ function run(){
 
   /* HAGMA 동반 — 일차장애가 met_acid가 아닌 경우에도 AG 상승 시 명시
      단, met_alk + HCO3≥24이면 DR 계산 불가이므로 혼합 확정 불가 */
+  /* hagmaCoexist 조건:
+     - highAG(>17) 확정
+     - met_acid 아님, normal 아님
+     - 혼합장애 아님
+     - met_alk + HCO3>=24 아님 (DR불가)
+     - 보상 달성 시 혼합 판정 억제 (v3.3 신규)
+     - borderAG(14~17) 아님 (v3.3 신규) */
   var hagmaCoexist=(highAG&&pType!=='met_acid'&&pType!=='normal'&&!isMixed
-    &&!(pType==='met_alk'&&hco3>=24));
+    &&!(pType==='met_alk'&&hco3>=24)
+    &&!compAchieved
+    &&!borderAG);
   var fullTitle='';
   if(isMixed&&mixComponents.length>=2){
     var parts=[];
@@ -1633,7 +1648,7 @@ function run(){
   /* 인쇄용 헤더 */
   var now=new Date();
   var ts=now.getFullYear()+'.'+(now.getMonth()+1).toString().padStart(2,'0')+'.'+now.getDate().toString().padStart(2,'0')+' '+now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v3.3 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
+  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v3.4 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
   out.innerHTML=printHdr+html+finalHtml+fcHtml;
   document.getElementById('btn_pdf_wrap').style.display='block';
   out.style.display='block';
