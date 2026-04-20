@@ -1154,7 +1154,7 @@ function run(){
     }
 
     /* 축2: DR 적용 조건 — HAG확정(>17) + met_acid + 보상범위이탈 모두 충족 시만 */
-    var compAchieved=(compTag==='adequate'||compTag==='chronic'||compTag==='acute');
+    var compAchieved=(cTag==='적절한 보상'||cTag==='만성 보상'||cTag==='급성 반응 (완충 단계)');
     if(highAG && pType==='met_acid' && !compAchieved){
       /* ── HAGMA + met_acid + 보상범위이탈: Delta ratio 계산 ── */
       var dAG=agEff-12,dHCO=24-hco3;
