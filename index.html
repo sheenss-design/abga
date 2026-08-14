@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#0f172a">
-<title>통합 ABGA 판독기 v3.4</title>
+<title>통합 ABGA 판독기 v4.0</title>
 <style>
 :root {
   --bg: #0f172a;
@@ -349,7 +349,7 @@ body{
 </head>
 <body>
 <header class="app-header">
-  <h1>통합 ABGA 판독기 <span>v3.4</span></h1>
+  <h1>통합 ABGA 판독기 <span>v4.0</span></h1>
 </header>
 
 <main class="main">
@@ -434,6 +434,16 @@ body{
       <input id="i_cr" type="number" inputmode="decimal" step="0.01">
     </div>
     <div class="field">
+      <div class="field-label">Phosphate <span class="unit">mg/dL</span> <span style="font-size:10px;color:var(--text3)">(Inorganic phosphorus)</span></div>
+      <div class="field-ref">정상 2.5–4.5 | 신기능·요독증</div>
+      <input id="i_phos" type="number" inputmode="decimal" step="0.1">
+    </div>
+    <div class="field">
+      <div class="field-label">Serum Osmolality <span class="unit">mOsm/kg</span></div>
+      <div class="field-ref">정상 275–295 | Osmol gap 계산</div>
+      <input id="i_osm" type="number" inputmode="decimal" step="1">
+    </div>
+    <div class="field">
       <div class="field-label">Albumin <span class="unit">g/dL</span></div>
       <div class="field-ref">정상 3.5–5.0 | AG 보정용</div>
       <input id="i_alb" type="number" inputmode="decimal" step="0.1">
@@ -478,6 +488,7 @@ function buildInputSummary(){
     {id:'i_na',lbl:'Na⁺'},{id:'i_cl',lbl:'Cl⁻'},{id:'i_k',lbl:'K⁺'},
     {id:'i_glc',lbl:'Glucose'},{id:'i_bun',lbl:'BUN'},{id:'i_cr',lbl:'Cr'},
     {id:'i_alb',lbl:'Albumin'},{id:'i_lac',lbl:'Lactate'},
+    {id:'i_phos',lbl:'Phosphate'},{id:'i_osm',lbl:'Serum Osm'},
   ];
   var vent=document.getElementById('vent_row')&&document.getElementById('vent_row').classList.contains('active');
   var items='';
@@ -509,7 +520,7 @@ function printResult(){
     }catch(e){}
   }
   var content='<!DOCTYPE html><html><head><meta charset="UTF-8">'
-    +'<title>통합 ABGA 판독기 v3.4 — 판독 결과</title>'
+    +'<title>통합 ABGA 판독기 v4.0 — 판독 결과</title>'
     +'<style>'+styles
     +'body{background:#fff;color:#000;font-family:system-ui,sans-serif;padding:10px 14px;max-width:800px;margin:0 auto}'
     +'.step-body{display:block!important}.drxb,.goldmark-body{display:block!important}'
@@ -718,16 +729,21 @@ function buildFC(data){
     svg+=rowLabel(R[3],'④ 음이온차 (AG)');
     var hw=(W-PAD*2-g*3)/4;
     var agSub=data.agVal!==null?'AG='+data.agVal.toFixed(1):'';
+    /* 대사성 알칼리증 경계 주석은 최종카드에서 표시 */
     var r3=[
-      {x:PAD,            w:hw,key:'hagma',lbl:'HAGMA', sub:agStatus==='hagma'?agSub:'AG>12+MA'},
-      {x:PAD+hw+g,       w:hw,key:'hag',  lbl:'HAG',   sub:agStatus==='hag'?agSub:'AG>12'},
-      {x:PAD+(hw+g)*2,   w:hw,key:'nagma',lbl:'NAGMA', sub:agStatus==='nagma'?agSub:'AG≤12+MA'},
-      {x:PAD+(hw+g)*3,   w:hw,key:'nag',  lbl:'NAG',   sub:agStatus==='nag'?agSub:'AG≤12'}
+      {x:PAD,            w:hw,key:'hagma', lbl:'HAGMA',  sub:agStatus==='hagma'?agSub:'AG>17+MA'},
+      {x:PAD+hw+g,       w:hw,key:'hag',   lbl:'HAG',    sub:agStatus==='hag'?agSub:'AG>17'},
+      {x:PAD+(hw+g)*2,   w:hw,key:'nagma', lbl:'NAGMA',  sub:agStatus==='nagma'?agSub:'AG≤14+MA'},
+      {x:PAD+(hw+g)*3,   w:hw,key:'nag',   lbl:'NAG',    sub:agStatus==='nag'?agSub:'AG≤14'}
     ];
-    var a3=r3.filter(function(n){return n.key===agStatus;})[0]||r3[1];
+    /* border(경계) 상태이면 HAG 칸 위치에 '경계' 표시 */
+    if(agStatus==='border'){
+      r3[1]={x:PAD+hw+g,w:hw,key:'border',lbl:'경계',sub:'AG 14–17'};
+    }
+    var a3=r3.filter(function(n){return n.key===agStatus;})[0]||r3[3];
     r3.forEach(function(n){
       var isActive=(n.key===agStatus);
-      var col=isActive?(n.key==='hagma'||n.key==='hag'?C.acid:C.alk):C.dim;
+      var col=isActive?(n.key==='hagma'?C.acid:n.key==='hag'||n.key==='border'?C.warn:C.alk):C.dim;
       svg+=box(n.x,bby[3],n.w,col,n.lbl,n.sub);
     });
     var cx3=a3.x+a3.w/2;
@@ -894,6 +910,7 @@ function run(){
   var ph=rd('i_ph'),pco2=rd('i_pco2'),hco3=rd('i_hco3'),po2=rd('i_po2');
   var na=rd('i_na'),cl=rd('i_cl'),alb=rd('i_alb'),sao2=rd('i_sao2'),lac=rd('i_lac'),fio2=rd('i_fio2');
   var k=rd('i_k'),glc=rd('i_glc'),bun=rd('i_bun'),cr=rd('i_cr');
+  var phos=rd('i_phos'),osm=rd('i_osm');
   if(ph===null||pco2===null||hco3===null){alert('pH, PaCO₂, HCO₃⁻는 필수입니다.');return;}
 
   mk('i_ph',ph,7.35,7.45);mk('i_pco2',pco2,35,45);mk('i_hco3',hco3,22,26);
@@ -902,6 +919,8 @@ function run(){
   if(glc!==null)mk('i_glc',glc,70,100);
   if(bun!==null)mk('i_bun',bun,8,20);
   if(cr!==null)mk('i_cr',cr,0.6,1.2);
+  if(phos!==null)mk('i_phos',phos,2.5,4.5);
+  if(osm!==null)mk('i_osm',osm,275,295);
   if(sao2!==null)mk('i_sao2',sao2,95,100);
 
   var html='<div class="steps-wrap">';
@@ -1363,45 +1382,90 @@ function run(){
     html+=mkStep('6-2','#34d399','Glucose',glcTag,glcCls,glcBody);
   }
 
-  /* ── STEP 6-3: BUN / Creatinine ── */
-  if(bun!==null||cr!==null){
+  /* ── STEP 6-3: BUN / Creatinine / Phosphate / Osmol gap ── */
+  if(bun!==null||cr!==null||phos!==null||osm!==null){
     var renTag,renCls,renBody='';
     var ckdWarn=(cr!==null&&cr>1.2);
     var bunHigh=(bun!==null&&bun>20);
+    var phosHigh=(phos!==null&&phos>4.5);
+    var phosLow=(phos!==null&&phos<2.5);
 
+    /* 태그 결정 — Cr > Phos > BUN 우선순위 */
     if(cr!==null&&cr>3.0){renTag='중증 신기능 저하';renCls='tag-bad';}
     else if(cr!==null&&cr>1.2){renTag='신기능 저하';renCls='tag-warn';}
+    else if(phosHigh){renTag='인산혈증';renCls='tag-warn';}
     else if(bun!==null&&bun>20){renTag='BUN 상승';renCls='tag-warn';}
     else{renTag='정상';renCls='tag-ok';}
 
     if(bun!==null) renBody+=srow('BUN',bun.toFixed(0)+' mg/dL',bun>20?'a':'g')+srow('정상 범위','8–20 mg/dL');
     if(cr!==null)  renBody+=srow('Creatinine',cr.toFixed(2)+' mg/dL',cr>1.2?'r':'g')+srow('정상 범위','0.6–1.2 mg/dL');
 
-    // BUN/Cr ratio
+    /* Phosphate */
+    if(phos!==null){
+      renBody+='<div style="border-top:1px dashed var(--border);margin:6px 0 2px"></div>';
+      renBody+=srow('Phosphate (Inorganic P)',phos.toFixed(1)+' mg/dL',phosHigh?'r':phosLow?'a':'g')
+        +srow('정상 범위','2.5–4.5 mg/dL');
+      var phosNote='';
+      if(phosHigh){
+        phosNote='인산혈증 (Hyperphosphatemia). ';
+        if(ckdWarn||cr>3.0) phosNote+='<strong>신부전에 의한 인 배설 감소</strong> — 신부전성 HAGMA의 구성 음이온(인산, 황산)이 AG를 상승시킵니다.';
+        else phosNote+='부갑상선기능저하증, 비타민 D 과잉, 횡문근융해증, 종양용해증후군 등 감별 필요.';
+        if(highAG&&pType==='met_acid') phosNote+='<br><strong>HAGMA + 인산혈증</strong> → GOLDMARK의 R(Renal failure) 가능성 높음.';
+      }else if(phosLow){
+        phosNote='저인산혈증 (Hypophosphatemia). 영양 불량, 흡수 장애, 인슐린 투여(DKA 치료 중), 알코올 남용 감별 필요.';
+      }else{
+        phosNote='인산염 정상 범위.';
+      }
+      renBody+=cbox('<p>'+phosNote+'</p>');
+    }
+
+    /* BUN/Cr ratio */
     var renNote='';
     if(bun!==null&&cr!==null&&cr>0){
       var bunCrRatio=bun/cr;
+      renBody+='<div style="border-top:1px dashed var(--border);margin:6px 0 2px"></div>';
       renBody+=srow('BUN/Cr ratio',bunCrRatio.toFixed(1),bunCrRatio>20?'a':'g');
       renNote='BUN/Cr = '+bunCrRatio.toFixed(1)+'. '+(bunCrRatio>20?'> 20: Pre-renal 원인(탈수·출혈·심부전) 또는 고단백식이 가능성.':'10–20: 정상 범위. Renal(신장 자체) 또는 Post-renal(요로 폐쇄) 원인 감별.');
     }
 
-    // 신부전 + HAGMA 연결
+    /* 신부전 + HAGMA 연결 */
     if(ckdWarn&&highAG&&pType==='met_acid'){
-      renNote+='<br><strong>신기능 저하 + HAGMA + 대사성 산증</strong> → 요독성 산증(Uremic acidosis) 가능성. GOLDMARK의 R(Renal failure) 해당.'+(cr>3.0?' 투석 적응증 평가 고려.':'');
+      renNote+=(renNote?'<br>':'')+'<strong>신기능 저하 + HAGMA + 대사성 산증</strong> → 요독성 산증(Uremic acidosis) 가능성. GOLDMARK의 R(Renal failure) 해당.'+(cr>3.0?' 투석 적응증 평가 고려.':'');
     } else if(ckdWarn){
       renNote+=(renNote?'<br>':'')+'Creatinine 상승: 급성 신손상(AKI) 또는 만성 신질환(CKD) 평가 필요.';
     }
+    if(renNote) renBody+=cbox('<p>'+renNote+'</p>');
 
-    // Osmol gap 계산 (BUN, Glc, Na 모두 있을 때)
+    /* Osmol gap */
     if(na!==null&&bun!==null&&glc!==null){
       var calcOsm=2*na+glc/18+bun/2.8;
       renBody+='<div style="border-top:1px dashed var(--border);margin:6px 0 2px"></div>';
-      renBody+=srow('계산 삼투압',calcOsm.toFixed(0)+' mOsm/kg')+
-        cbox('<p class="mono">계산 삼투압 = 2×Na('+na+') + Glc/18('+((glc/18).toFixed(1))+') + BUN/2.8('+((bun/2.8).toFixed(1))+') = '+calcOsm.toFixed(0)+'</p>'
-          +'<p style="margin-top:4px">측정 삼투압을 입력하면 Osmol gap을 계산할 수 있습니다. Osmol gap &gt;10이면 독성 알코올(메탄올, 에틸렌 글리콜) 섭취를 의심합니다.</p>');
+      renBody+=srow('계산 삼투압',calcOsm.toFixed(0)+' mOsm/kg');
+      if(osm!==null){
+        var osmGap=osm-calcOsm;
+        var osmGapCls=osmGap>20?'r':osmGap>10?'a':'g';
+        var osmGapInterp=osmGap>20
+          ?'<strong style="color:var(--red)">⚠ Osmol gap '+osmGap.toFixed(0)+' > 20 — 독성 알코올 강력 의심</strong><br>에탄올, 메탄올, 에틸렌 글리콜(부동액), 이소프로판올 섭취를 우선 감별하세요. GOLDMARK의 G(Glycols), M(Methanol) 해당.'
+          :osmGap>10
+          ?'<strong>Osmol gap '+osmGap.toFixed(0)+' (10–20) — 경계성 상승</strong><br>독성 알코올 가능성을 배제할 수 없습니다. 임상 맥락(음주력, 시력 변화, 대사성 산증)과 함께 판단하세요.'
+          :'Osmol gap '+osmGap.toFixed(0)+' ≤ 10 — 정상. 독성 알코올에 의한 삼투압 상승은 없습니다.';
+        renBody+=srow('측정 삼투압',osm.toFixed(0)+' mOsm/kg');
+        renBody+=srow('Osmol gap',osmGap.toFixed(0)+' mOsm/kg',osmGapCls);
+        renBody+=cbox('<p class="mono">Osmol gap = 측정('+osm.toFixed(0)+') − 계산('+calcOsm.toFixed(0)+') = '+osmGap.toFixed(0)+'</p>'
+          +'<p style="margin-top:6px">'+osmGapInterp+'</p>'
+          +'<p style="margin-top:4px;font-size:10px;color:var(--text3)">계산 삼투압 = 2×Na('+na+') + Glc/18('+((glc/18).toFixed(1))+') + BUN/2.8('+((bun/2.8).toFixed(1))+') = '+calcOsm.toFixed(0)+'</p>');
+        if(osmGap>10&&highAG) renBody+=nw('⚠ HAGMA + Osmol gap 상승 동반 — 독성 알코올(메탄올·에틸렌 글리콜)이 AG 상승과 삼투압 상승을 동시에 유발할 수 있습니다. GOLDMARK 원인 중 G·M 우선 감별.');
+      }else{
+        renBody+=cbox('<p class="mono">계산 삼투압 = 2×Na('+na+') + Glc/18('+((glc/18).toFixed(1))+') + BUN/2.8('+((bun/2.8).toFixed(1))+') = '+calcOsm.toFixed(0)+'</p>'
+          +'<p style="margin-top:4px">측정 삼투압(Serum Osmolality)을 입력하면 Osmol gap을 계산합니다. Osmol gap &gt;10이면 독성 알코올(메탄올, 에틸렌 글리콜) 섭취를 의심합니다.</p>');
+      }
+    }else if(osm!==null){
+      /* Na/Glc/BUN 일부 없어도 측정 삼투압만 표시 + 계산 불가 안내 */
+      renBody+='<div style="border-top:1px dashed var(--border);margin:6px 0 2px"></div>';
+      renBody+=srow('측정 삼투압',osm.toFixed(0)+' mOsm/kg');
+      renBody+=nw('Osmol gap 계산을 위해 Na⁺, Glucose, BUN을 함께 입력해 주세요. (계산 삼투압 = 2×Na + Glc/18 + BUN/2.8)');
     }
 
-    renBody+=cbox('<p>'+renNote+'</p>');
     html+=mkStep('6-3','#fb7185','BUN / Creatinine',renTag,renCls,renBody);
   }
 
@@ -1591,20 +1655,92 @@ function run(){
     }
   }
 
+  /* ── 패턴 인식: 입력값 조합으로 임상 증후군 감지 ── */
+  var patterns=[];
+
+  // DKA 패턴
+  if(highAG&&pType==='met_acid'&&glc!==null&&glc>=250&&k!==null&&k>=4.5)
+    patterns.push({label:'🔴 DKA 패턴 강력 의심',detail:'HAGMA + 고혈당('+glc.toFixed(0)+') + 고칼륨혈증('+k.toFixed(1)+') — 인슐린 부족에 의한 케톤산증 가능성. 혈중 케톤(β-hydroxybutyrate) 확인 권장.'});
+  else if(highAG&&pType==='met_acid'&&glc!==null&&glc>=250)
+    patterns.push({label:'🟠 DKA 가능성',detail:'HAGMA + 고혈당('+glc.toFixed(0)+') — 당뇨병성 케톤산증 감별 필요. 혈중 케톤 확인.'});
+
+  // 알코올성 케톤산증
+  if(highAG&&pType==='met_acid'&&glc!==null&&glc<100&&lac!==null&&lac<2.0)
+    patterns.push({label:'🟠 알코올성 케톤산증 가능성',detail:'HAGMA + 저혈당/정상혈당 + 젖산 정상 — 알코올성 케톤산증(AKA) 패턴. 음주력 확인.'});
+
+  // 독성 알코올 패턴 — Osmol gap은 Na/Cl 없어도 계산 가능
+  var _calcOsm=(na!==null&&bun!==null&&glc!==null)?(2*na+glc/18+bun/2.8):null;
+  var _osmGap=(osm!==null&&_calcOsm!==null)?(osm-_calcOsm):null;
+  if(_osmGap!==null&&_osmGap>20)
+    patterns.push({label:'🔴 독성 알코올 패턴 (Osmol gap '+_osmGap.toFixed(0)+')',
+      detail:'Osmol gap > 20 — 메탄올·에틸렌 글리콜(부동액)·이소프로판올 중독 강력 의심. '
+        +(highAG?'HAGMA 동반으로 독성 알코올 가능성이 더욱 높습니다. ':'')
+        +'즉각적 해독제(포메피졸) 및 독성학 협진 고려. GOLDMARK G·M 해당.'});
+  else if(_osmGap!==null&&_osmGap>10&&highAG)
+    patterns.push({label:'🟠 Osmol gap 상승 + HAGMA (gap '+_osmGap.toFixed(0)+')',
+      detail:'Osmol gap 10–20 + HAGMA 동반 — 독성 알코올 가능성을 배제할 수 없습니다. 임상 맥락(음주력, 시력 변화)과 함께 판단하세요.'});
+  else if(_osmGap!==null&&_osmGap>10)
+    patterns.push({label:'🟡 Osmol gap 경계성 상승 (gap '+_osmGap.toFixed(0)+')',
+      detail:'Osmol gap 10–20 — 독성 알코올·에탄올·만니톨 등 삼투 활성 물질 존재 가능성. 임상 맥락 확인.'});
+
+  // 요독성 산증
+  if(highAG&&pType==='met_acid'&&cr!==null&&cr>3.0&&phos!==null&&phos>4.5)
+    patterns.push({label:'🔴 요독성 산증 패턴',detail:'HAGMA + 중증 신기능 저하(Cr '+cr.toFixed(2)+') + 인산혈증('+phos.toFixed(1)+') — 인산·황산 등 요독소 축적에 의한 산증. GOLDMARK R 해당. 투석 적응증 평가 필요.'});
+  else if(highAG&&pType==='met_acid'&&cr!==null&&cr>1.2)
+    patterns.push({label:'🟠 요독성 산증 가능성',detail:'HAGMA + 신기능 저하(Cr '+cr.toFixed(2)+') — 신부전성 HAGMA 감별 필요.'});
+
+  // 패혈성 쇼크 / 젖산산증
+  if(highAG&&pType==='met_acid'&&lac!==null&&lac>=4.0&&pfRatio!==null&&pfRatio<=200)
+    patterns.push({label:'🔴 패혈성 쇼크 패턴',detail:'HAGMA + 심각한 젖산산증(Lac '+lac.toFixed(1)+') + 중등도~중증 호흡부전(P/F '+pfRatio.toFixed(0)+') — 조직 저산소증·쇼크 강력 의심. 즉각적 소생 처치 필요.'});
+  else if(highAG&&pType==='met_acid'&&lac!==null&&lac>=4.0)
+    patterns.push({label:'🔴 심각한 젖산산증',detail:'HAGMA + Lactate '+lac.toFixed(1)+' ≥ 4.0 — 쇼크·패혈증·조직 저산소증 우선 감별. GOLDMARK L 해당.'});
+  else if(highAG&&lac!==null&&lac>=2.0)
+    patterns.push({label:'🟡 젖산 상승 + AG 상승',detail:'AG 상승과 젖산 상승이 동반됩니다. 조직 관류 저하 또는 간 기능 저하를 고려하세요.'});
+
+  // 구토·이뇨제 패턴
+  if(pType==='met_alk'&&k!==null&&k<3.5&&cl!==null&&cl<98)
+    patterns.push({label:'🟠 구토·이뇨제 패턴',detail:'대사성 알칼리증 + 저칼륨혈증('+k.toFixed(1)+') + Cl⁻ 감소('+cl+') — 구토·NGT 흡인·이뇨제 사용 전형 패턴. 소변 Cl⁻ < 20이면 Cl⁻ 반응성 알칼리증.'});
+
+  // 패혈증 초기 / SIRS
+  if(pType==='resp_alk'&&lac!==null&&lac>=2.0&&pfRatio!==null&&pfRatio<=300)
+    patterns.push({label:'🟠 패혈증/SIRS 초기 패턴',detail:'호흡성 알칼리증(과호흡) + 젖산 상승('+lac.toFixed(1)+') + 호흡부전(P/F '+pfRatio.toFixed(0)+') — 패혈증 초기 산염기 패턴. qSOFA·SOFA 평가 권장.'});
+  else if(pType==='resp_alk'&&lac!==null&&lac>=2.0)
+    patterns.push({label:'🟡 패혈증/SIRS 가능성',detail:'호흡성 알칼리증(과호흡) + 젖산 경도 상승('+lac.toFixed(1)+') — 패혈증 초기 패턴. 감염 원인 탐색.'});
+
+  // COPD 악화
+  if(pType==='resp_acid'&&(cTag==='만성 보상 (예측 범위 초과)'||cTag==='혼합: +대사성 알칼리증')&&po2!==null&&po2<70)
+    patterns.push({label:'🟠 COPD 만성 악화 패턴',detail:'호흡성 산증 + 대사성 알칼리증 혼합(만성 보상 초과) + 저산소혈증 — COPD 만성 이뇨제 사용 패턴. 이뇨제·저칼륨혈증 확인.'});
+
+  // 삼중 장애 (triple disorder)
+  if(isMixed&&mixComponents.length>=2&&highAG&&hasMetAcid)
+    patterns.push({label:'🟣 삼중 산염기 장애 가능성',detail:'혼합장애('+mixComponents.join('+')+')에 HAGMA가 추가로 동반되어 있습니다. 임상 맥락 종합 해석이 필요합니다.'});
+
+  /* ── 원인/감별 텍스트 ── */
   var primCause='';
-  if(pType==='met_acid'){primCause=agEff!==null?(agEff>17?'HAGMA — GOLDMARK 원인 감별 (Lactic acidosis, DKA, Renal failure, Toxin 등)':(agEff>14?'경계성 AG (14–17) — HAGMA 미확정, Lactate·케톤·BUN/Cr 추가 확인':'NAGMA — 설사·RTA·대량 식염수 투여 등 고려')):'Na/Cl 입력 시 AG 분류 가능';}
-  else if(pType==='met_alk'){primCause='구토·NGT 흡인·이뇨제·저칼륨혈증 등. 소변 Cl⁻ 측정 권장'+(hagmaCoexist?' | AG 상승 원인 추가 감별 필요 (GOLDMARK)':'');}
-  else if(pType==='resp_acid'){primCause='폐·기도 질환·호흡근 피로·중추 호흡억제 감별'+(hagmaCoexist?' | AG 상승 원인 추가 감별 필요 (GOLDMARK)':'');}
-  else if(pType==='resp_alk'){primCause='과호흡 원인 파악 — 통증·불안·패혈증·간부전·폐색전·기계환기 등'+(hagmaCoexist?' | AG 상승 원인 추가 감별 필요 (GOLDMARK)':'');}
-  else if(pType==='normal'){primCause='산염기 이상 없음. AG 및 산소화 수치도 함께 확인하세요.';}
-  else{primCause='이차 지표 및 임상 맥락을 종합하여 원인 감별 필요';}
+  if(patterns.length>0){
+    primCause='<strong>감지된 임상 패턴:</strong><br>'
+      +patterns.map(function(p){return '<span style="font-weight:600">'+p.label+'</span><br><span style="font-size:11px;color:var(--text3)">'+p.detail+'</span>';}).join('<br><br>');
+  }else{
+    if(pType==='met_acid'){primCause=agEff!==null?(agEff>17?'HAGMA — GOLDMARK 원인 감별 (Lactic acidosis, DKA, Renal failure, Toxin 등)':(agEff>14?'경계성 AG (14–17) — HAGMA 미확정, Lactate·케톤·BUN/Cr 추가 확인':'NAGMA — 설사·RTA·대량 식염수 투여 등 고려')):'Na/Cl 입력 시 AG 분류 가능';}
+    else if(pType==='met_alk'){primCause='구토·NGT 흡인·이뇨제·저칼륨혈증 등. 소변 Cl⁻ 측정 권장'+(hagmaCoexist?' | AG 상승 원인 추가 감별 필요 (GOLDMARK)':'');}
+    else if(pType==='resp_acid'){primCause='폐·기도 질환·호흡근 피로·중추 호흡억제 감별'+(hagmaCoexist?' | AG 상승 원인 추가 감별 필요 (GOLDMARK)':'');}
+    else if(pType==='resp_alk'){primCause='과호흡 원인 파악 — 통증·불안·패혈증·간부전·폐색전·기계환기 등'+(hagmaCoexist?' | AG 상승 원인 추가 감별 필요 (GOLDMARK)':'');}
+    else if(pType==='normal'){primCause='산염기 이상 없음. AG 및 산소화 수치도 함께 확인하세요.';}
+    else{primCause='이차 지표 및 임상 맥락을 종합하여 원인 감별 필요';}
+  }
 
   var blocks='<div class="dxblocks">';
   blocks+='<div class="dxblock"><div class="dxblock-lbl">최종 진단</div><div class="dxblock-val">'+fullTitle+'</div></div>';
   var compStr=compLabel+(isAcute?' (급성 반응)':isChronic?' (만성)':'');
   blocks+='<div class="dxblock"><div class="dxblock-lbl">보상</div><div class="dxblock-val">'+compStr+'</div></div>';
   /* ④ AG */
-  if(agEff!==null)blocks+='<div class="dxblock"><div class="dxblock-lbl">음이온차 (AG)</div><div class="dxblock-val">'+(agEff>17?(hasMetAcid?'고음이온차 대사성 산증 (HAGMA)':'고음이온차 (HAG)'):(agEff>14?'경계성 음이온차 상승 ('+agEff.toFixed(1)+' mEq/L, 14–17 미확정)':(hasMetAcid?'정상음이온차 대사성 산증 (NAGMA)':'정상 음이온차 (NAG)')))+' — AG '+agEff.toFixed(1)+' mEq/L</div></div>';
+  if(agEff!==null)blocks+='<div class="dxblock"><div class="dxblock-lbl">음이온차 (AG)</div><div class="dxblock-val">'
+    +(agEff>17?(hasMetAcid?'고음이온차 대사성 산증 (HAGMA)':'고음이온차 (HAG)')
+      :(agEff>14
+        ?'경계성 음이온차 상승 ('+agEff.toFixed(1)+' mEq/L, 14–17 미확정)'
+          +(pType==='met_alk'?'<br><span style="font-size:11px;color:var(--text3)">대사성 알칼리증에서 Cl⁻ 감소·Na⁺ 상승으로 인한 공식상 상승일 수 있습니다. AG > 17이면 HAGMA 동반 적극 감별 필요.</span>':'')
+        :(hasMetAcid?'정상음이온차 대사성 산증 (NAGMA)':'정상 음이온차 (NAG)'))
+    )+' — AG '+agEff.toFixed(1)+' mEq/L</div></div>';
   /* ⑤ Delta ratio */
   if(drRatio!==null)blocks+='<div class="dxblock"><div class="dxblock-lbl">Delta ratio</div><div class="dxblock-val">'+drRatio.toFixed(2)+' → '+(drRatio<1?'HAGMA+NAGMA 혼합':drRatio<=2?'순수 HAGMA':'HAGMA+대사성 알칼리증 혼합')+'</div></div>';
   /* ⑥-1 K⁺ */
@@ -1648,7 +1784,7 @@ function run(){
   /* 인쇄용 헤더 */
   var now=new Date();
   var ts=now.getFullYear()+'.'+(now.getMonth()+1).toString().padStart(2,'0')+'.'+now.getDate().toString().padStart(2,'0')+' '+now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v3.4 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
+  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v4.0 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
   out.innerHTML=printHdr+html+finalHtml+fcHtml;
   document.getElementById('btn_pdf_wrap').style.display='block';
   out.style.display='block';
@@ -1660,7 +1796,7 @@ function resetAll(){
   ventilated=false;
   var vrow=document.getElementById('vent_row');
   if(vrow){vrow.classList.remove('active');document.getElementById('vent_icon').style.display='none';}
-  ['i_ph','i_pco2','i_hco3','i_po2','i_na','i_cl','i_alb','i_sao2','i_lac','i_fio2','i_k','i_glc','i_bun','i_cr'].forEach(function(id){
+  ['i_ph','i_pco2','i_hco3','i_po2','i_na','i_cl','i_alb','i_sao2','i_lac','i_fio2','i_k','i_glc','i_bun','i_cr','i_phos','i_osm'].forEach(function(id){
     var el=document.getElementById(id);if(el){el.value='';el.className='';}
   });
   var out=document.getElementById('out');out.style.display='none';out.innerHTML='';
