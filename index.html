@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#0f172a">
-<title>통합 ABGA 판독기 v4.0</title>
+<title>통합 ABGA 판독기 v5.0</title>
 <style>
 :root {
   --bg: #0f172a;
@@ -95,6 +95,8 @@ body{
 .app-header h1{font-size:17px;font-weight:700;letter-spacing:-0.3px}
 .app-header h1 span{color:var(--accent);font-size:13px;font-weight:500;margin-left:6px}
 .badge{font-size:10px;padding:3px 8px;border-radius:20px;background:var(--accent2);color:#fff;font-weight:600}
+@keyframes spin{to{transform:rotate(360deg)}}
+#modal_settings.open,#modal_vision.open{display:flex!important}
 /* ── main ── */
 .main{padding:16px;max-width:600px;margin:0 auto}
 /* ── section titles ── */
@@ -349,10 +351,72 @@ body{
 </head>
 <body>
 <header class="app-header">
-  <h1>통합 ABGA 판독기 <span>v4.0</span></h1>
+  <h1>통합 ABGA 판독기 <span>v5.0</span></h1>
+  <button id="btn_settings" onclick="window._openSettings()" title="API 키 설정" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text2);opacity:.7;transition:opacity .15s;flex-shrink:0" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </button>
 </header>
 
+<!-- 설정 모달 -->
+<div id="modal_settings" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.5);align-items:center;justify-content:center">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;width:min(420px,92vw);max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h2 style="font-size:16px;font-weight:700;color:var(--text1)">⚙ 설정</h2>
+      <button onclick="window._closeSettings()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:20px;line-height:1;padding:4px">×</button>
+    </div>
+    <div style="margin-bottom:20px">
+      <div style="font-size:13px;font-weight:600;color:var(--text1);margin-bottom:6px">Claude API 키</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.5">
+        API 키를 등록하면 검사 결과 사진을 찍어 자동으로 입력값을 채울 수 있습니다.<br>
+        키는 이 기기 브라우저에만 저장되며 외부 서버로 전송되지 않습니다.
+      </div>
+      <div style="display:flex;gap:8px">
+        <input id="input_apikey" type="password" placeholder="sk-ant-api03-..." style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text1);font-size:13px;font-family:monospace">
+        <button onclick="window._saveApiKey()" style="padding:10px 16px;background:var(--accent2);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">저장</button>
+      </div>
+      <div id="apikey_status" style="font-size:11px;margin-top:8px;color:var(--text3)"></div>
+      <button onclick="window._deleteApiKey()" id="btn_delete_key" style="display:none;margin-top:8px;padding:6px 12px;background:none;border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text3);cursor:pointer">API 키 삭제</button>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:16px">
+      <div style="font-size:11px;color:var(--text3);line-height:1.6">
+        <strong style="color:var(--text2)">API 키 발급 방법</strong><br>
+        1. <a href="https://console.anthropic.com" target="_blank" style="color:var(--accent2)">console.anthropic.com</a> 접속<br>
+        2. 로그인 → API Keys → Create Key<br>
+        3. 생성된 키(sk-ant-...) 복사 후 위에 붙여넣기
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 사진 분석 확인 모달 -->
+<div id="modal_vision" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.5);align-items:center;justify-content:center">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;width:min(480px,95vw);max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h2 style="font-size:15px;font-weight:700;color:var(--text1)">📋 추출된 값 확인</h2>
+      <button onclick="window._closeVision()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:20px;line-height:1;padding:4px">×</button>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:12px">추출된 값을 확인하고 필요하면 수정하세요. 확인 후 입력란에 자동으로 채워집니다.</div>
+    <div id="vision_fields" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px"></div>
+    <div id="vision_status" style="font-size:11px;color:var(--text3);margin-bottom:12px"></div>
+    <div style="display:flex;gap:8px">
+      <button onclick="window._applyVision()" style="flex:1;padding:12px;background:var(--accent2);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">✓ 입력란에 적용</button>
+      <button onclick="window._closeVision()" style="padding:12px 16px;background:none;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text2);cursor:pointer">취소</button>
+    </div>
+  </div>
+</div>
+
 <main class="main">
+  <!-- 사진 자동 입력 버튼 (API 키 있을 때만 표시) -->
+  <div id="vision_btn_wrap" style="display:none;margin-bottom:14px">
+    <label for="input_photo" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:var(--radius);border:1.5px dashed var(--accent2);background:rgba(99,102,241,.06);color:var(--accent2);font-size:14px;font-weight:600;cursor:pointer;box-sizing:border-box;transition:background .15s" onmouseover="this.style.background='rgba(99,102,241,.12)'" onmouseout="this.style.background='rgba(99,102,241,.06)'">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      검사 결과 사진으로 자동 입력
+    </label>
+    <input id="input_photo" type="file" accept="image/*" capture="environment" style="display:none" onchange="window._analyzePhoto(this)">
+    <div id="vision_loading" style="display:none;text-align:center;padding:10px;font-size:12px;color:var(--text3)">
+      <span style="display:inline-block;animation:spin 1s linear infinite">⏳</span> Claude가 결과지를 분석 중입니다...
+    </div>
+  </div>
   <p class="section-title">필수 입력 <span class="badge-req">REQUIRED</span></p>
   <div class="input-grid">
     <div class="field">
@@ -520,7 +584,7 @@ function printResult(){
     }catch(e){}
   }
   var content='<!DOCTYPE html><html><head><meta charset="UTF-8">'
-    +'<title>통합 ABGA 판독기 v4.0 — 판독 결과</title>'
+    +'<title>통합 ABGA 판독기 v5.0 — 판독 결과</title>'
     +'<style>'+styles
     +'body{background:#fff;color:#000;font-family:system-ui,sans-serif;padding:10px 14px;max-width:800px;margin:0 auto}'
     +'.step-body{display:block!important}.drxb,.goldmark-body{display:block!important}'
@@ -1784,7 +1848,7 @@ function run(){
   /* 인쇄용 헤더 */
   var now=new Date();
   var ts=now.getFullYear()+'.'+(now.getMonth()+1).toString().padStart(2,'0')+'.'+now.getDate().toString().padStart(2,'0')+' '+now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v4.0 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
+  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v5.0 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
   out.innerHTML=printHdr+html+finalHtml+fcHtml;
   document.getElementById('btn_pdf_wrap').style.display='block';
   out.style.display='block';
@@ -1809,6 +1873,223 @@ document.getElementById('btn_pdf').addEventListener('click',printResult);
 document.querySelectorAll('input').forEach(function(el){
   el.addEventListener('keydown',function(e){if(e.key==='Enter')run();});
 });
+})();
+</script>
+
+<script>
+// ══════════════════════════════════════════════════
+// Claude Vision 자동 입력 기능
+// ══════════════════════════════════════════════════
+(function(){
+  var STORAGE_KEY='abga_claude_api_key';
+  var _extracted={};
+
+  // ── API 키 관련 ──
+  function getKey(){return localStorage.getItem(STORAGE_KEY)||'';}
+  function updateVisionBtn(){
+    var has=!!getKey();
+    var wrap=document.getElementById('vision_btn_wrap');
+    if(wrap) wrap.style.display=has?'block':'none';
+  }
+
+  window._openSettings=function(){
+    var modal=document.getElementById('modal_settings');
+    var inp=document.getElementById('input_apikey');
+    var st=document.getElementById('apikey_status');
+    var delBtn=document.getElementById('btn_delete_key');
+    var key=getKey();
+    if(key){
+      inp.value=key;
+      st.textContent='✓ API 키가 저장되어 있습니다.';
+      st.style.color='var(--green,#22c55e)';
+      delBtn.style.display='inline-block';
+    }else{
+      inp.value='';
+      st.textContent='API 키가 없습니다. 키를 입력하면 사진 자동 입력 기능이 활성화됩니다.';
+      st.style.color='var(--text3)';
+      delBtn.style.display='none';
+    }
+    modal.classList.add('open');
+  };
+  window._closeSettings=function(){
+    document.getElementById('modal_settings').classList.remove('open');
+  };
+  window._saveApiKey=function(){
+    var val=document.getElementById('input_apikey').value.trim();
+    var st=document.getElementById('apikey_status');
+    var delBtn=document.getElementById('btn_delete_key');
+    if(!val){st.textContent='키를 입력해주세요.';st.style.color='var(--red,#ef4444)';return;}
+    if(!val.startsWith('sk-')){st.textContent='올바른 API 키 형식이 아닙니다. (sk-ant-... 형태)';st.style.color='var(--red,#ef4444)';return;}
+    localStorage.setItem(STORAGE_KEY,val);
+    st.textContent='✓ 저장되었습니다. 사진 자동 입력 기능이 활성화됩니다.';
+    st.style.color='var(--green,#22c55e)';
+    delBtn.style.display='inline-block';
+    updateVisionBtn();
+    setTimeout(window._closeSettings,1200);
+  };
+  window._deleteApiKey=function(){
+    localStorage.removeItem(STORAGE_KEY);
+    document.getElementById('input_apikey').value='';
+    var st=document.getElementById('apikey_status');
+    st.textContent='API 키가 삭제되었습니다.';
+    st.style.color='var(--text3)';
+    document.getElementById('btn_delete_key').style.display='none';
+    updateVisionBtn();
+  };
+
+  // ── 사진 분석 ──
+  window._analyzePhoto=function(input){
+    var file=input.files[0];
+    if(!file) return;
+    var key=getKey();
+    if(!key){alert('API 키를 먼저 설정해주세요.');return;}
+
+    var loading=document.getElementById('vision_loading');
+    loading.style.display='block';
+    input.value='';
+
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var b64=e.target.result.split(',')[1];
+      var mime=file.type||'image/jpeg';
+      callClaudeVision(key,b64,mime,loading);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  function callClaudeVision(key,b64,mime,loading){
+    var prompt='이 이미지는 혈액가스검사(ABG) 또는 혈액 검사 결과지입니다.\n'
+      +'다음 항목의 수치를 찾아 JSON으로만 반환하세요. 없으면 null로 표시하세요.\n'
+      +'반드시 JSON 객체만 반환하고 다른 텍스트는 절대 포함하지 마세요.\n\n'
+      +'{\n'
+      +'  "ph": null,\n'
+      +'  "pco2": null,\n'
+      +'  "hco3": null,\n'
+      +'  "po2": null,\n'
+      +'  "sao2": null,\n'
+      +'  "fio2": null,\n'
+      +'  "na": null,\n'
+      +'  "cl": null,\n'
+      +'  "k": null,\n'
+      +'  "glc": null,\n'
+      +'  "bun": null,\n'
+      +'  "cr": null,\n'
+      +'  "phos": null,\n'
+      +'  "osm": null,\n'
+      +'  "alb": null,\n'
+      +'  "lac": null\n'
+      +'}\n\n'
+      +'주의사항:\n'
+      +'- pH는 소수점 2~3자리 (예: 7.35)\n'
+      +'- PaCO2/pCO2는 mmHg 단위\n'
+      +'- HCO3/Bicarbonate는 mEq/L 단위\n'
+      +'- SaO2/SpO2는 % (0-100 사이 숫자로)\n'
+      +'- FiO2는 소수(0.21~1.0) 또는 %면 100으로 나눠서\n'
+      +'- Glucose/Blood sugar는 mg/dL\n'
+      +'- Lactate/Lactic acid는 mmol/L\n'
+      +'- Albumin은 g/dL\n'
+      +'- Phosphate/Inorganic P는 mg/dL\n'
+      +'- Osmolality는 mOsm/kg';
+
+    fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:500,
+        messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:mime,data:b64}},
+          {type:'text',text:prompt}
+        ]}]
+      })
+    })
+    .then(function(r){return r.json();})
+    .then(function(data){
+      loading.style.display='none';
+      if(data.error){
+        alert('API 오류: '+data.error.message);
+        return;
+      }
+      var text=(data.content&&data.content[0]&&data.content[0].text)||'';
+      // JSON 추출
+      var match=text.match(/\{[\s\S]*\}/);
+      if(!match){alert('결과를 파싱할 수 없습니다. 다시 시도해주세요.');return;}
+      try{
+        _extracted=JSON.parse(match[0]);
+        showVisionModal(_extracted);
+      }catch(e){
+        alert('JSON 파싱 오류: '+e.message);
+      }
+    })
+    .catch(function(e){
+      loading.style.display='none';
+      alert('네트워크 오류: '+e.message);
+    });
+  }
+
+  // ── 확인 모달 ──
+  var FIELD_LABELS={
+    ph:'pH',pco2:'PaCO₂ (mmHg)',hco3:'HCO₃⁻ (mEq/L)',
+    po2:'PaO₂ (mmHg)',sao2:'SaO₂ (%)',fio2:'FiO₂',
+    na:'Na⁺ (mEq/L)',cl:'Cl⁻ (mEq/L)',k:'K⁺ (mEq/L)',
+    glc:'Glucose (mg/dL)',bun:'BUN (mg/dL)',cr:'Creatinine (mg/dL)',
+    phos:'Phosphate (mg/dL)',osm:'Serum Osmolality',
+    alb:'Albumin (g/dL)',lac:'Lactate (mmol/L)'
+  };
+
+  function showVisionModal(vals){
+    var container=document.getElementById('vision_fields');
+    var st=document.getElementById('vision_status');
+    container.innerHTML='';
+    var found=0;
+    Object.keys(FIELD_LABELS).forEach(function(k){
+      var v=vals[k];
+      var hasVal=(v!==null&&v!==undefined&&v!=='');
+      if(hasVal)found++;
+      var div=document.createElement('div');
+      div.style.cssText='display:flex;flex-direction:column;gap:3px';
+      div.innerHTML='<label style="font-size:10px;color:var(--text3)">'+FIELD_LABELS[k]+'</label>'
+        +'<input data-key="'+k+'" type="number" inputmode="decimal" step="any" value="'+(hasVal?v:'')+'" '
+        +'placeholder="미감지" '
+        +'style="padding:7px 10px;border:1.5px solid '+(hasVal?'var(--accent2)':'var(--border)')+';border-radius:8px;background:var(--bg2);color:var(--text1);font-size:13px;font-weight:'+(hasVal?'600':'400')+';width:100%;box-sizing:border-box">';
+      container.appendChild(div);
+    });
+    st.textContent=found+'개 항목이 감지되었습니다. 값을 확인하고 수정 후 적용하세요.';
+    document.getElementById('modal_vision').classList.add('open');
+  }
+
+  window._closeVision=function(){
+    document.getElementById('modal_vision').classList.remove('open');
+    _extracted={};
+  };
+  window._applyVision=function(){
+    var inputs=document.querySelectorAll('#vision_fields input[data-key]');
+    var ID_MAP={ph:'i_ph',pco2:'i_pco2',hco3:'i_hco3',po2:'i_po2',sao2:'i_sao2',fio2:'i_fio2',
+      na:'i_na',cl:'i_cl',k:'i_k',glc:'i_glc',bun:'i_bun',cr:'i_cr',
+      phos:'i_phos',osm:'i_osm',alb:'i_alb',lac:'i_lac'};
+    inputs.forEach(function(inp){
+      var key=inp.getAttribute('data-key');
+      var val=inp.value.trim();
+      var targetId=ID_MAP[key];
+      if(targetId&&val){
+        var el=document.getElementById(targetId);
+        if(el){el.value=val;el.className='';}
+      }
+    });
+    window._closeVision();
+    // 스크롤 맨 위로
+    window.scrollTo({top:0,behavior:'smooth'});
+  };
+
+  // ── 초기화 ──
+  updateVisionBtn();
+
+  // 모달 배경 클릭 시 닫기
+  ['modal_settings','modal_vision'].forEach(function(id){
+    document.getElementById(id).addEventListener('click',function(e){
+      if(e.target===this) this.classList.remove('open');
+    });
+  });
 })();
 </script>
 </body>
