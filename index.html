@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#0f172a">
-<title>통합 ABGA 판독기 v5.1</title>
+<title>통합 ABGA 판독기 v5.2</title>
 <style>
 :root {
   --bg: #0f172a;
@@ -351,7 +351,7 @@ body{
 </head>
 <body>
 <header class="app-header">
-  <h1>통합 ABGA 판독기 <span>v5.1</span></h1>
+  <h1>통합 ABGA 판독기 <span>v5.2</span></h1>
   <button id="btn_settings" onclick="window._openSettings()" title="API 키 설정" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text2);opacity:.7;transition:opacity .15s;flex-shrink:0" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
@@ -639,7 +639,7 @@ function printResult(){
     }catch(e){}
   }
   var content='<!DOCTYPE html><html><head><meta charset="UTF-8">'
-    +'<title>통합 ABGA 판독기 v5.1 — 판독 결과</title>'
+    +'<title>통합 ABGA 판독기 v5.2 — 판독 결과</title>'
     +'<style>'+styles
     +'body{background:#fff;color:#000;font-family:system-ui,sans-serif;padding:10px 14px;max-width:800px;margin:0 auto}'
     +'.step-body{display:block!important}.drxb,.goldmark-body{display:block!important}'
@@ -1903,7 +1903,7 @@ function run(){
   /* 인쇄용 헤더 */
   var now=new Date();
   var ts=now.getFullYear()+'.'+(now.getMonth()+1).toString().padStart(2,'0')+'.'+now.getDate().toString().padStart(2,'0')+' '+now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v5.1 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
+  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v5.2 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
   out.innerHTML=printHdr+html+finalHtml+fcHtml;
   document.getElementById('btn_pdf_wrap').style.display='block';
   out.style.display='block';
@@ -1997,32 +1997,95 @@ document.querySelectorAll('input').forEach(function(el){
 
   window._addCameraPhoto=function(files){
     if(!files||!files.length)return;
-    var file=files[0]; // 카메라는 한 번에 한 장
+    var file=files[0];
+    var idx=_cameraImgs.length;
     _cameraImgs.push(file);
 
     // 미리보기 추가
     var preview=document.getElementById('camera_preview');
     var url=URL.createObjectURL(file);
     var wrap=document.createElement('div');
+    wrap.id='cam_thumb_'+idx;
     wrap.style.cssText='position:relative;display:inline-block';
+
     var img=document.createElement('img');
     img.src=url;
-    img.style.cssText='height:64px;border-radius:6px;border:1.5px solid var(--accent2);object-fit:cover';
+    img.style.cssText='height:72px;border-radius:8px;border:1.5px solid var(--accent2);object-fit:cover;display:block';
+
+    // 번호
     var num=document.createElement('span');
-    num.textContent=_cameraImgs.length;
-    num.style.cssText='position:absolute;top:2px;left:2px;background:var(--accent2);color:#fff;font-size:9px;font-weight:700;border-radius:4px;padding:1px 4px';
-    wrap.appendChild(img);wrap.appendChild(num);
+    num.style.cssText='position:absolute;top:3px;left:3px;background:var(--accent2);color:#fff;font-size:9px;font-weight:700;border-radius:4px;padding:1px 5px;pointer-events:none';
+    num.textContent=idx+1;
+    num.className='cam-num';
+
+    // 삭제 버튼
+    var del=document.createElement('button');
+    del.innerHTML='&times;';
+    del.title='이 사진 삭제';
+    del.style.cssText='position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#ef4444;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;font-family:inherit';
+    del.setAttribute('data-idx',idx);
+    del.onclick=function(e){
+      e.stopPropagation();
+      window._removeCameraPhoto(parseInt(this.getAttribute('data-idx')));
+    };
+
+    wrap.appendChild(img);
+    wrap.appendChild(num);
+    wrap.appendChild(del);
     if(preview)preview.appendChild(wrap);
 
-    // 상태 바 표시
-    var st=document.getElementById('camera_status');
-    var lbl=document.getElementById('camera_count_label');
-    if(st)st.style.display='block';
-    if(lbl)lbl.textContent='📷 '+_cameraImgs.length+'장 촬영됨 — 추가 촬영하거나 분석을 시작하세요';
-
-    // input 초기화 (같은 파일 재선택 가능하도록)
+    _updateCameraStatus();
     document.getElementById('input_camera').value='';
   };
+
+  window._removeCameraPhoto=function(idx){
+    if(idx<0||idx>=_cameraImgs.length)return;
+    // URL 해제 및 배열에서 제거
+    _cameraImgs.splice(idx,1);
+
+    // 미리보기 전체 재렌더링
+    var preview=document.getElementById('camera_preview');
+    preview.innerHTML='';
+    _cameraImgs.forEach(function(f,i){
+      var url=URL.createObjectURL(f);
+      var wrap=document.createElement('div');
+      wrap.id='cam_thumb_'+i;
+      wrap.style.cssText='position:relative;display:inline-block';
+
+      var img=document.createElement('img');
+      img.src=url;
+      img.style.cssText='height:72px;border-radius:8px;border:1.5px solid var(--accent2);object-fit:cover;display:block';
+
+      var num=document.createElement('span');
+      num.style.cssText='position:absolute;top:3px;left:3px;background:var(--accent2);color:#fff;font-size:9px;font-weight:700;border-radius:4px;padding:1px 5px;pointer-events:none';
+      num.textContent=i+1;
+
+      var del=document.createElement('button');
+      del.innerHTML='&times;';
+      del.style.cssText='position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#ef4444;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;font-family:inherit';
+      del.setAttribute('data-idx',i);
+      del.onclick=function(e){
+        e.stopPropagation();
+        window._removeCameraPhoto(parseInt(this.getAttribute('data-idx')));
+      };
+
+      wrap.appendChild(img);wrap.appendChild(num);wrap.appendChild(del);
+      preview.appendChild(wrap);
+    });
+
+    _updateCameraStatus();
+  };
+
+  function _updateCameraStatus(){
+    var st=document.getElementById('camera_status');
+    var lbl=document.getElementById('camera_count_label');
+    if(_cameraImgs.length===0){
+      if(st)st.style.display='none';
+    }else{
+      if(st)st.style.display='block';
+      if(lbl)lbl.textContent='📷 '+_cameraImgs.length+'장 촬영됨 — 추가 촬영하거나 분석을 시작하세요';
+    }
+  }
 
   window._submitCamera=function(){
     if(!_cameraImgs.length)return;
@@ -2035,9 +2098,9 @@ document.querySelectorAll('input').forEach(function(el){
 
   window._cancelCamera=function(){
     _cameraImgs=[];
-    document.getElementById('camera_status').style.display='none';
     document.getElementById('camera_preview').innerHTML='';
     document.getElementById('input_camera').value='';
+    _updateCameraStatus();
   };
 
   // ── 사진 분석 ──
