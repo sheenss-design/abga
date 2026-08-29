@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#0f172a">
-<title>통합 ABGA 판독기 v5.4</title>
+<title>통합 ABGA 판독기 v5.5</title>
 <style>
 :root {
   --bg: #0f172a;
@@ -351,7 +351,7 @@ body{
 </head>
 <body>
 <header class="app-header">
-  <h1>통합 ABGA 판독기 <span>v5.4</span></h1>
+  <h1>통합 ABGA 판독기 <span>v5.5</span></h1>
   <button id="btn_settings" onclick="window._openSettings()" title="API 키 설정" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text2);opacity:.7;transition:opacity .15s;flex-shrink:0" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
@@ -639,7 +639,7 @@ function printResult(){
     }catch(e){}
   }
   var content='<!DOCTYPE html><html><head><meta charset="UTF-8">'
-    +'<title>통합 ABGA 판독기 v5.4 — 판독 결과</title>'
+    +'<title>통합 ABGA 판독기 v5.5 — 판독 결과</title>'
     +'<style>'+styles
     +'body{background:#fff;color:#000;font-family:system-ui,sans-serif;padding:10px 14px;max-width:800px;margin:0 auto}'
     +'.step-body{display:block!important}.drxb,.goldmark-body{display:block!important}'
@@ -855,7 +855,7 @@ function buildFC(data){
       {x:PAD+(hw+g)*3,   w:hw,key:'nag',   lbl:'AG 정상\n(산증 없음)',sub:agStatus==='nag'?agSub:'AG≤12'}
     ];
     /* hag는 hagma로 통합 */
-    var agStatusMapped=(agStatus==='hag')?'hagma':agStatus;
+    var agStatusMapped=(agStatus==='hag')?'hagma':(agStatus==='low'?'nag':agStatus);
     var a3=r3.filter(function(n){return n.key===agStatusMapped;})[0]||r3[3];
     r3.forEach(function(n){
       var isActive=(n.key===agStatusMapped);
@@ -894,131 +894,103 @@ function buildFC(data){
 }
 
 /* ── AG 분포 다이어그램 생성 ── */
-function buildAGDiagram(na, cl, hco3, agEff, drRatio, pType, hasMetAcid){
-  var agRaw = na-cl-hco3;
+function buildAGDiagram(na, cl, hco3, agEff, drRatio, pType, hasMetAcid, agRawIn, alb){
+  var agRaw = (agRawIn!==undefined&&agRawIn!==null) ? agRawIn : na-cl-hco3;
+  var albCorrected = (alb!==null&&alb!==undefined&&Math.abs(alb-4.0)>0.05);
+  // 그래프 기준: Na = Cl + HCO3 + AG(raw)로 전기적 중성 유지
+  // 단, AG 레이블에는 보정값(agEff) 표시
   var dAG = agEff-12;
   var dHCO = 24-hco3;
   var highAG = agEff>12;
   var total = na;
 
-  function pct(v){ return Math.max(v/total*100, 1).toFixed(1)+'%'; }
-
-  // 색상 바 세그먼트
-  function colorSeg(cls, w){
-    if(w<=0) return '';
-    return '<div class="ag-seg '+cls+'" style="width:'+pct(w)+'"></div>';
-  }
-  // 레이블 세그먼트 — 바와 동일한 width로 위치 정렬
-  function lblSeg(w, name, val){
-    if(w<=0) return '';
-    return '<div class="ag-seg-lbl" style="width:'+pct(w)+'">'
-      +'<span class="sln">'+name+'</span>'
-      +(val?'<span class="slv">'+val+'</span>':'')
-      +'</div>';
-  }
-
   var naRef=140, clRef=104, hcoRef=24, agRef=12;
-  var total = naRef;  // 비율 기준은 항상 정상 Na=140
-  var naDiff = na - naRef;
-  var clDiff = cl - clRef;
-  var hcoDiff = hco3 - hcoRef;
-  var agDiff = agEff - agRef;
+  var naDiff=na-naRef, clDiff=cl-clRef, hcoDiff=hco3-hcoRef;
+  var agRawDiff=agRaw-agRef, agEffDiff=agEff-agRef;
 
-  // 소숫점이 .0이면 정수로, 아니면 소숫점 1자리
-  function fmt(v){ return (v % 1 === 0) ? String(Math.round(v)) : v.toFixed(1); }
-  function diffStr(v){ return (v>=0?'(+'+fmt(v)+')':'('+fmt(v)+')');}
+  function fmt(v){ return (v%1===0)?String(Math.round(v)):v.toFixed(1); }
+  function diffStr(v){ return v===0?'':' ('+(v>0?'+':'')+fmt(v)+')'; }
 
-  var html = '<div class="ag-diag-wrap">';
+  var lowAG=(agEff<6); // 태그 결정 전에 먼저 계산
 
-  // 범례
-  html += '<div class="ag-legend">'
-    +'<div class="ag-leg-item"><div class="ag-leg-dot" style="background:#bfdbfe"></div>Na⁺</div>'
-    +'<div class="ag-leg-item"><div class="ag-leg-dot" style="background:#bbf7d0"></div>Cl⁻</div>'
-    +'<div class="ag-leg-item"><div class="ag-leg-dot" style="background:#a5f3fc"></div>HCO₃⁻</div>'
-    +'<div class="ag-leg-item"><div class="ag-leg-dot" style="background:#e0e7ff"></div>AG</div>'
-    +'</div>';
-
-  // ── 정상 기준 바 (Na=140 고정) ──
-  html += '<div class="ag-row-label">정상 기준 <span class="ag-tag ag-tag-n">기준</span></div>';
-  html += '<div class="ag-bar-row">'
-    +colorSeg('ag-s-na',  naRef)
-    +colorSeg('ag-s-cl',  clRef)
-    +colorSeg('ag-s-hco3',hcoRef)
-    +colorSeg('ag-s-ag',  agRef)
-    +'</div>';
-  html += '<div class="ag-label-row">'
-    +lblSeg(naRef,  'Na⁺',   naRef)
-    +lblSeg(clRef,  'Cl⁻',   clRef)
-    +lblSeg(hcoRef, 'HCO₃⁻', hcoRef)
-    +lblSeg(agRef,  'AG',    agRef)
-    +'</div>';
-
-  var agBarW = Math.max(agEff, 4);
-
+  // 태그 결정
+  var diagTag, diagTagCls;
   if(highAG){
-    var diagTag, diagTagCls;
-    var drIsNeg = (dHCO<0);
-    if(pType!=='met_acid'){
-      // 일차장애가 대사성 산증이 아님 → DR 미계산, hasMetAcid로 표시 구분
-      diagTag=hasMetAcid?'HAGMA':'HAG'; diagTagCls='ag-tag-h';
-    } else if(drRatio===null&&drIsNeg) { diagTag='HAGMA+대사성 알칼리증'; diagTagCls='ag-tag-m'; }
-    else if(drRatio===null)     { diagTag='HAGMA'; diagTagCls='ag-tag-h'; }
-    else if(drRatio<1)          { diagTag='HAGMA+NAGMA 혼합'; diagTagCls='ag-tag-na'; }
-    else if(drRatio<=2)         { diagTag='순수 HAGMA'; diagTagCls='ag-tag-h'; }
-    else                        { diagTag='HAGMA+대사성 알칼리증 혼합'; diagTagCls='ag-tag-m'; }
-
-    html += '<div class="ag-row-label">현재 입력값 <span class="ag-tag '+diagTagCls+'">'+diagTag+'</span></div>';
-    var clCls = clDiff>0?'ag-s-clh':'ag-s-cl';
-    html += '<div class="ag-bar-row">'
-      +colorSeg('ag-s-na', na)
-      +colorSeg(clCls, cl)
-      +colorSeg('ag-s-hco3', hco3)
-      +colorSeg('ag-s-ag', agBarW)
-      +'</div>';
-    html += '<div class="ag-label-row">'
-      +lblSeg(na,      'Na⁺',   na+(naDiff!==0?diffStr(naDiff):''))
-      +lblSeg(cl,      'Cl⁻',   cl+''+diffStr(clDiff))
-      +lblSeg(hco3,    'HCO₃⁻', fmt(hco3)+''+diffStr(hcoDiff))
-      +lblSeg(agBarW,  'AG',    fmt(agEff)+''+diffStr(agDiff))
-      +'</div>';
-
-    var noteText='';
-    if(drRatio!==null){
-      noteText='<strong>ΔAG('+fmt(dAG)+') '
-        +(drRatio<1?'&lt;':drRatio<=2?'≈':'&gt;')+' ΔHCO₃⁻('+fmt(dHCO)+')</strong>'
-        +(drRatio<1?' — HCO₃⁻가 HAGMA 이상으로 감소(NAGMA 동반). Cl⁻ 보상 증가.'
-          :drRatio<=2?' — UA 증가만큼 HCO₃⁻가 감소. 순수 HAGMA.'
-          :' — UA 증가에 비해 HCO₃⁻가 덜 감소. 대사성 알칼리증 기저 HCO₃⁻↑.')
-        +'<br><span class="ag-formula">ratio = '+fmt(dAG)+'÷'+fmt(dHCO)+' = '+drRatio.toFixed(2)+'</span>';
-    }else if(pType!=='met_acid'){
-      // 일차장애가 대사성 산증이 아닌 경우 — HCO3>24 여부와 무관하게 동일 메시지
-      noteText='';
-    }else if(drIsNeg){
-      noteText='<strong>HCO₃⁻ '+fmt(hco3)+' &gt; 24</strong> — ΔHCO₃⁻가 음수. 대사성 알칼리증 혼합으로 delta ratio 계산 불가.';
-    }else{
-      noteText='';
-    }
-    /* noteText 다이어그램 하단 note 삭제 */
-
+    if(pType!=='met_acid'){ diagTag=hasMetAcid?'HAGMA':'HAG'; diagTagCls='ag-tag-h'; }
+    else if(drRatio===null&&hco3>24){ diagTag='HAGMA+대사성 알칼리증'; diagTagCls='ag-tag-m'; }
+    else if(drRatio===null){ diagTag='HAGMA'; diagTagCls='ag-tag-h'; }
+    else if(drRatio<1){ diagTag='HAGMA+NAGMA 혼합'; diagTagCls='ag-tag-na'; }
+    else if(drRatio<=2){ diagTag='순수 HAGMA'; diagTagCls='ag-tag-h'; }
+    else{ diagTag='HAGMA+대사성 알칼리증 혼합'; diagTagCls='ag-tag-m'; }
   }else{
-    html += '<div class="ag-row-label">현재 입력값 <span class="ag-tag ag-tag-na">'+(hasMetAcid?'NAGMA':'NAG')+'</span></div>';
-    var clCls2 = clDiff>0?'ag-s-clh':'ag-s-cl';
-    var agBarW2 = Math.max(agRaw, 2);
-    html += '<div class="ag-bar-row">'
-      +colorSeg('ag-s-na',  na)
-      +colorSeg(clCls2, cl)
-      +colorSeg('ag-s-hco3', hco3)
-      +colorSeg('ag-s-ag', agBarW2)
-      +'</div>';
-    html += '<div class="ag-label-row">'
-      +lblSeg(na,      'Na⁺',   na+(naDiff!==0?diffStr(naDiff):''))
-      +lblSeg(cl,      'Cl⁻',   cl+''+diffStr(clDiff))
-      +lblSeg(hco3,    'HCO₃⁻', fmt(hco3)+''+diffStr(hcoDiff))
-      +lblSeg(agBarW2, 'AG',    fmt(agEff)+''+diffStr(agDiff))
+    diagTag=lowAG?'Low AG (< 6)':(hasMetAcid?'NAGMA':'NAG');
+    diagTagCls=lowAG?'ag-tag-m':(hasMetAcid?'ag-tag-na':'ag-tag-na');
+  }
+
+  // AG 바 너비: raw값 기준 (전기적 중성 유지), 최소 1
+  var agBarW=Math.max(agRaw, 1);
+  var agBg='#a78bfa'; // AG 항상 보라색
+  // 판정 표시: 테두리 색 + 레이블 색
+  var agBorderStyle=highAG?'box-shadow:inset 0 0 0 2.5px #ef4444;'
+    :agEff<6?'box-shadow:inset 0 0 0 2.5px #f97316;':'';
+  var agValCol=highAG?'#fecaca':agEff<6?'#fed7aa':'rgba(255,255,255,.9)';
+
+  function barRow(label, segs){
+    var cells=segs.map(function(s){
+      var w=Math.max(s.v/total*100, 0.5);
+      var extraStyle=s.borderStyle||'';
+      return '<div style="width:'+w.toFixed(2)+'%;background:'+s.bg
+        +';display:flex;flex-direction:column;align-items:center;justify-content:center'
+        +';padding:3px 2px;box-sizing:border-box;min-width:0;overflow:hidden;'+extraStyle+'">'
+        +'<span style="font-size:10px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">'+s.name+'</span>'
+        +(s.val?'<span style="font-size:9px;color:'+(s.valCol||'rgba(255,255,255,.9)')+';white-space:nowrap">'+s.val+'</span>':'')
+        +'</div>';
+    }).join('');
+    return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
+      +'<div style="width:32px;font-size:10px;font-weight:600;color:var(--text3);text-align:right;flex-shrink:0">'+label+'</div>'
+      +'<div style="flex:1;display:flex;height:44px;border-radius:8px;overflow:hidden;border:1px solid var(--border)">'+cells+'</div>'
       +'</div>';
   }
 
-  html += '</div>';
+  var html='<div style="margin-top:10px">';
+  html+='<div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:4px">전해질 균형도</div>';
+
+  // 기준 행
+  html+=barRow('기준',
+    [{v:naRef, bg:'#3b82f6', name:'Na⁺', val:naRef},
+     {v:clRef,  bg:'#22c55e', name:'Cl⁻', val:clRef},
+     {v:hcoRef, bg:'#0891b2', name:'HCO₃⁻', val:hcoRef},
+     {v:agRef,  bg:'#a78bfa', name:'AG', val:agRef}]);
+
+  // 양이온 행
+  html+=barRow('양이온',
+    [{v:na, bg:'#3b82f6', name:'Na⁺', val:fmt(na)+diffStr(naDiff)}]);
+
+  // 음이온 행 — AG 바 너비는 raw, 레이블은 보정값
+  var clBg='#22c55e';
+  var agLabel=albCorrected
+    ? fmt(agEff)+'*'+diffStr(agEffDiff)
+    : fmt(agRaw)+diffStr(agRawDiff);
+  html+=barRow('음이온',
+    [{v:cl, bg:clBg, name:'Cl⁻', val:fmt(cl)+diffStr(clDiff)},
+     {v:hco3, bg:'#0891b2', name:'HCO₃⁻', val:fmt(hco3)+diffStr(hcoDiff)},
+     {v:agBarW, bg:agBg, name:'AG', val:agLabel, borderStyle:agBorderStyle, valCol:agValCol}]);
+
+  // 보정 주석
+  if(albCorrected){
+    html+='<div style="margin-top:4px;font-size:10px;color:var(--text3)">'
+      +'* AG '+fmt(agRaw)+' → Albumin 보정('+fmt(alb)+' g/dL) → <strong>보정 AG '+fmt(agEff)+'</strong>'
+      +' (바 너비는 측정 AG '+fmt(agRaw)+' 기준, 판정은 보정값 적용)'
+      +'</div>';
+  }
+
+  // 태그
+  html+='<div style="margin-top:6px;display:flex;align-items:center;gap:6px">'
+    +'<span style="font-size:10px;color:var(--text3)">현재 입력값</span>'
+    +'<span class="ag-tag '+diagTagCls+'">'+diagTag+'</span>'
+    +'</div>';
+
+  html+='</div>';
   return html;
 }
 
@@ -1176,11 +1148,12 @@ function run(){
        borderAG: 경계성(12<AG≤17) / highAG: AG>12 전체 */
     var borderAG=(agEff>12&&agEff<=17);
     highAG=agEff>12;
+    var lowAG=(agEff<6);
     var hasMetAcid=(pType==='met_acid'||(isMixed&&mixComponents.indexOf('대사성 산증')!==-1));
-    agTag2=(highAG&&!borderAG)?(hasMetAcid?'HAGMA':'HAG'):borderAG?(hasMetAcid?'HAGMA(경계)':'HAG(경계)'):(hasMetAcid?'NAGMA':'NAG');
-    agCls2=(highAG&&!borderAG)?'tag-bad':(borderAG?'tag-warn':(hasMetAcid?'tag-warn':'tag-ok'));
-    fcData.agStatus=(highAG&&!borderAG)?(hasMetAcid?'hagma':'hag'):(borderAG?'border':(hasMetAcid?'nagma':'nag'));fcData.agVal=agEff;
-    agBody+=srow('정상 기준','≤ 12 mEq/L (경계: 12.1–17, 확정 상승: > 17)');
+    agTag2=(highAG&&!borderAG)?(hasMetAcid?'HAGMA':'HAG'):borderAG?(hasMetAcid?'HAGMA(경계)':'HAG(경계)'):lowAG?'Low AG':(hasMetAcid?'NAGMA':'NAG');
+    agCls2=(highAG&&!borderAG)?'tag-bad':(borderAG?'tag-warn':lowAG?'tag-warn':(hasMetAcid?'tag-warn':'tag-ok'));
+    fcData.agStatus=(highAG&&!borderAG)?(hasMetAcid?'hagma':'hag'):(borderAG?'border':lowAG?'low':(hasMetAcid?'nagma':'nag'));fcData.agVal=agEff;
+    agBody+=srow('정상 기준','6–12 mEq/L (경계 상승: 12–17, 확정 상승: > 17, 저하: < 6)');
     agBody+=srow('AG = '+na+'–('+cl+'+'+hco3.toFixed(1)+')',agVal.toFixed(1)+' mEq/L',agVal>12?'r':'g');
     if(alb!==null&&Math.abs(alb-4.0)>0.05){
       var albCorr=2.5*(4.0-alb);
@@ -1221,11 +1194,12 @@ function run(){
       agEff=agEffCorr;
       borderAG=(agEff>12&&agEff<=17);
       highAG=agEff>12;
+      var lowAG=(agEff<6);
       agTag2=(highAG&&!borderAG)?(hasMetAcid?'HAGMA':'HAG'):borderAG?(hasMetAcid?'HAGMA(경계)':'HAG(경계)'):(hasMetAcid?'NAGMA':'NAG');
       agCls2=(highAG&&!borderAG)?'tag-bad':(borderAG?'tag-warn':(hasMetAcid?'tag-warn':'tag-ok'));
       fcData.agStatus=(highAG&&!borderAG)?(hasMetAcid?'hagma':'hag'):(borderAG?'border':(hasMetAcid?'nagma':'nag'));fcData.agVal=agEff;
     }
-    agBody+=srow('판정',(highAG&&!borderAG)?(hasMetAcid?'고음이온차 대사성 산증 (HAGMA)':'고음이온차 (HAG)'):borderAG?(hasMetAcid?'경계성 고음이온차 대사성 산증 (HAGMA 경계)':'경계성 고음이온차 (HAG 경계, 12–17)'):(hasMetAcid?'정상음이온차 대사성 산증 (NAGMA)':'정상 음이온차 (NAG)'),(highAG&&!borderAG)?'r':borderAG?'a':'g');
+    agBody+=srow('판정',(highAG&&!borderAG)?(hasMetAcid?'고음이온차 대사성 산증 (HAGMA)':'고음이온차 (HAG)'):borderAG?(hasMetAcid?'경계성 고음이온차 대사성 산증 (HAGMA 경계)':'경계성 고음이온차 (HAG 경계, 12–17)'):lowAG?'저음이온차 (Low AG, < 6)':(hasMetAcid?'정상음이온차 대사성 산증 (NAGMA)':'정상 음이온차 (NAG)'),(highAG&&!borderAG)?'r':borderAG?'a':lowAG?'a':'g');
     agBody+='<div style="border-top:1px dashed var(--border);margin:4px 0"></div>';
 
     /* ── 판정 직후: AG 상태별 설명 (경계성 포함) ── */
@@ -1282,19 +1256,63 @@ function run(){
         +'<div style="padding:8px 10px;background:var(--bg3);border-radius:6px"><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px">Renal tubular acidosis (신세뇨관 산증)</div><div style="font-size:11px;color:var(--text3)">HCO₃⁻의 재흡수 장애 또는 H⁺의 배출 장애 발생 시</div></div>'
         +'<div style="padding:8px 10px;background:var(--bg3);border-radius:6px"><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px">Large volume Normal Saline infusion (대량 생리식염수 투여)</div><div style="font-size:11px;color:var(--text3)">0.9% NaCl 다량 투여 시 Cl⁻ 과부하로 NAGMA 유발</div></div>'
         +'</div>');
+    }else if(lowAG){
+      /* Low AG: < 6 mEq/L — 저알부민혈증 또는 파라단백질혈증 */
+      agBody+=cbox('<p><strong>저음이온차 (Low AG &lt; 6 mEq/L)</strong></p>'
+        +'<p style="margin-top:6px">보정 AG '+agEff.toFixed(1)+' mEq/L로 정상 하한(6 mEq/L) 미만입니다. '
+        +'AG는 항상 양수(정상 6–12)이므로 이 수준은 병적 의미를 가질 수 있습니다.</p>'
+        +'<p style="margin-top:8px;font-weight:600">Low AG의 원인</p>'
+        +'<p style="margin-top:4px">① <strong>저알부민혈증</strong> (가장 흔함) — Albumin은 주요 미측정 음이온입니다. '
+        +(alb!==null
+          ?'현재 Albumin '+alb.toFixed(1)+' g/dL'+(alb<3.5?' (저알부민혈증)':'')
+            +'로 보정 AG = '+agVal.toFixed(1)+' + 2.5×(4.0−'+alb.toFixed(1)+') = '+agEff.toFixed(1)+' mEq/L입니다. '
+            +(agEff<6?'<strong>보정 후에도 6 미만</strong> — 저알부민혈증만으로 설명되지 않으므로 아래 원인을 추가 감별하세요.':'보정 AG가 6 이상이면 저알부민혈증이 주 원인일 수 있습니다.')
+          :'Albumin 입력 시 보정 후 Low AG 여부를 재확인할 수 있습니다.')+'<br>'
+        +'② <strong>고면역글로불린혈증·파라단백질혈증</strong> — 양이온성 면역글로불린(IgG 등) 증가. 다발성 골수종, MGUS 감별<br>'
+        +'③ <strong>고마그네슘혈증·고칼슘혈증</strong> — 측정 양이온 증가로 AG 감소<br>'
+        +'④ <strong>리튬 복용</strong> — Li⁺는 측정 양이온에 포함되지 않아 미측정 양이온 증가<br>'
+        +'⑤ <strong>측정 오류</strong> — Na⁺ 과소 측정 또는 Cl⁻ 과다 측정'
+        +'</p>'
+        +(alb===null?'<p style="margin-top:8px;color:var(--text3);font-size:11px">⚠ Albumin을 입력하면 보정 AG를 계산하여 저알부민혈증 기여분을 확인할 수 있습니다.</p>':''));
     }else{
       /* NAG: 정상 음이온차 + 대사성 산증 없음 — HCO3/Cl 패턴에 따라 동적 설명 */
       var nagPat='';
-      if(cl!==null&&hco3>24){
-        nagPat='<p style="margin-top:6px"><strong>현재 패턴: HCO₃⁻↑ Cl⁻↓</strong> — '
-          +'대사성 알칼리증(구토·이뇨제 등) 또는 호흡성 산증에 대한 신장 보상에서 나타나는 패턴입니다. '
-          +'Cl⁻ 감소가 HCO₃⁻ 증가를 상쇄하여 AG는 정상으로 유지됩니다.</p>';
-      }else if(cl!==null&&hco3<22){
-        nagPat='<p style="margin-top:6px"><strong>현재 패턴: HCO₃⁻↓ Cl⁻↑</strong> — '
-          +'HCO₃⁻ 감소를 Cl⁻ 증가가 보상하고 있습니다. '
-          +'일차장애가 대사성 산증으로 분류되지 않더라도 NAGMA 동반 가능성을 임상적으로 확인하세요.</p>';
+      if(cl!==null){
+        var clHigh=cl>108, clLow=cl<98;
+        var hco3High=hco3>26, hco3Low=hco3<22;
+        if(hco3High&&clLow){
+          /* 전형적 대사알칼리증/호흡산증 보상 패턴 */
+          nagPat='<p style="margin-top:6px"><strong>현재 패턴: HCO₃⁻↑ Cl⁻↓</strong> — '
+            +'대사성 알칼리증(구토·이뇨제 등) 또는 호흡성 산증에 대한 신장 보상에서 나타나는 패턴입니다. '
+            +'Cl⁻ 감소가 HCO₃⁻ 증가를 상쇄하여 AG는 정상으로 유지됩니다.</p>';
+        }else if(hco3High&&clHigh){
+          /* HCO3도 높고 Cl도 높음 → AG가 낮게 계산됨 */
+          nagPat='<p style="margin-top:6px"><strong>현재 패턴: HCO₃⁻↑ Cl⁻↑</strong> — '
+            +'HCO₃⁻와 Cl⁻가 모두 상승하여 AG가 낮게 계산됩니다. '
+            +'이 패턴은 호흡성 산증에 대한 신장 보상(HCO₃⁻↑)과 고염소혈증이 동반된 경우, '
+            +'또는 대량 생리식염수 투여(Cl⁻↑) 후 신장 보상이 남아있는 경우에 나타날 수 있습니다. '
+            +'임상 맥락에 따라 원인을 확인하세요.</p>';
+        }else if(hco3High&&!clHigh&&!clLow){
+          /* HCO3만 높고 Cl은 정상 */
+          nagPat='<p style="margin-top:6px"><strong>현재 패턴: HCO₃⁻↑ Cl⁻ 정상</strong> — '
+            +'HCO₃⁻ 상승에도 Cl⁻가 정상 범위로, 두 값이 함께 증가하여 AG는 정상으로 유지됩니다. '
+            +'호흡성 산증에 대한 신장 보상 또는 초기 대사성 알칼리증을 고려하세요.</p>';
+        }else if(hco3Low&&clHigh){
+          /* NAGMA 전형 패턴 */
+          nagPat='<p style="margin-top:6px"><strong>현재 패턴: HCO₃⁻↓ Cl⁻↑</strong> — '
+            +'HCO₃⁻ 감소를 Cl⁻ 증가가 보상하고 있습니다. '
+            +'일차장애가 대사성 산증으로 분류되지 않더라도 NAGMA 동반 가능성을 임상적으로 확인하세요.</p>';
+        }else{
+          nagPat='<p style="margin-top:6px">HCO₃⁻와 Cl⁻ 모두 정상 범위 내에 있습니다.</p>';
+        }
       }else{
-        nagPat='<p style="margin-top:6px">HCO₃⁻와 Cl⁻ 모두 정상 범위 내에 있습니다.</p>';
+        if(hco3>24){
+          nagPat='<p style="margin-top:6px">HCO₃⁻가 상승해 있습니다. Cl⁻ 입력 시 더 정확한 패턴 분석이 가능합니다.</p>';
+        }else if(hco3<22){
+          nagPat='<p style="margin-top:6px">HCO₃⁻가 감소해 있습니다. Cl⁻ 입력 시 더 정확한 패턴 분석이 가능합니다.</p>';
+        }else{
+          nagPat='<p style="margin-top:6px">HCO₃⁻가 정상 범위 내에 있습니다.</p>';
+        }
       }
       agBody+=cbox('<p><strong>정상 음이온차 (NAG)</strong></p>'
         +'<p style="margin-top:4px">미측정 음이온(산)이 증가하지 않은 상태입니다. '
@@ -1490,7 +1508,7 @@ function run(){
 
     /* ── 다이어그램 (항상 마지막) ── */
     agBody+='<div style="border-top:1px dashed var(--border);margin:8px 0 4px"></div>';
-    agBody+=buildAGDiagram(na,cl,hco3,agEff,drRatio,pType,hasMetAcid);
+    agBody+=buildAGDiagram(na,cl,hco3,agEff,drRatio,pType,hasMetAcid,agVal,alb);
     html+=mkStep(4,'#fb923c','음이온차 (AG)',agTag2,agCls2,agBody);
     if(drBody) html+=mkStep(5,'#818cf8','Delta ratio',
       (drRatio!==null?(drRatio<1?'HAGMA+NAGMA 혼합':drRatio<=2?'순수 HAGMA':'HAGMA+대사성 알칼리증 혼합'):'계산 불가'),
@@ -1898,7 +1916,7 @@ function run(){
     primCause='<strong>감지된 임상 패턴:</strong><br>'
       +patterns.map(function(p){return '<span style="font-weight:600">'+p.label+'</span><br><span style="font-size:11px;color:var(--text3)">'+p.detail+'</span>';}).join('<br><br>');
   }else{
-    if(pType==='met_acid'){primCause=agEff!==null?(agEff>17?'HAGMA — GOLDMARK 원인 감별 (Lactic acidosis, DKA, Renal failure, Toxin 등)':(agEff>12?'경계성 HAG (12–17) — HAGMA 가능성, Lactate·케톤·BUN/Cr 추가 확인 권고':'NAGMA — 설사·RTA·대량 식염수 투여 등 고려')):'Na/Cl 입력 시 AG 분류 가능';}
+    if(pType==='met_acid'){primCause=agEff!==null?(agEff>17?'HAGMA — GOLDMARK 원인 감별 (Lactic acidosis, DKA, Renal failure, Toxin 등)':(agEff>12?'경계성 HAG (12–17) — HAGMA 가능성, Lactate·케톤·BUN/Cr 추가 확인 권고':agEff<6?'Low AG (< 6) — 저알부민혈증·파라단백질혈증·측정 오류 감별 필요':'NAGMA — 설사·RTA·대량 식염수 투여 등 고려')):'Na/Cl 입력 시 AG 분류 가능';}
     else if(pType==='met_alk'){primCause='구토·NGT 흡인·이뇨제·저칼륨혈증 등. 소변 Cl⁻ 측정 권장'+(hagmaCoexist?' | AG 상승 원인 추가 감별 필요 (GOLDMARK)':'');}
     else if(pType==='resp_acid'){primCause='폐·기도 질환·호흡근 피로·중추 호흡억제 감별'+(hagmaCoexist?' | AG 상승 원인 추가 감별 필요 (GOLDMARK)':'');}
     else if(pType==='resp_alk'){primCause='과호흡 원인 파악 — 통증·불안·패혈증·간부전·폐색전·기계환기 등'+(hagmaCoexist?' | AG 상승 원인 추가 감별 필요 (GOLDMARK)':'');}
@@ -1913,11 +1931,12 @@ function run(){
   /* ④ AG */
   if(agEff!==null)blocks+='<div class="dxblock"><div class="dxblock-lbl">음이온차 (AG)</div><div class="dxblock-val">'
     +(agEff>17?(hasMetAcid?'고음이온차 대사성 산증 (HAGMA)':'고음이온차 (HAG)')
-      :(agEff>14
-        ?'경계성 음이온차 상승 ('+agEff.toFixed(1)+' mEq/L, 14–17 미확정)'
+      :(agEff>12
+        ?'경계성 음이온차 상승 ('+agEff.toFixed(1)+' mEq/L, 12–17 경계)'
           +(pType==='met_alk'?'<br><span style="font-size:11px;color:var(--text3)">대사성 알칼리증에서 Cl⁻ 감소·Na⁺ 상승으로 인한 공식상 상승일 수 있습니다. AG > 17이면 HAGMA 동반 적극 감별 필요.</span>':'')
-        
-        :(hasMetAcid?'정상음이온차 대사성 산증 (NAGMA)':'정상 음이온차 (NAG)'))
+        :agEff<6
+          ?'저음이온차 (Low AG, '+agEff.toFixed(1)+' mEq/L) — 저알부민혈증·파라단백질 감별'
+          :(hasMetAcid?'정상음이온차 대사성 산증 (NAGMA)':'정상 음이온차 (NAG)'))
     )+' — AG '+agEff.toFixed(1)+' mEq/L</div></div>';
   /* ⑤ Delta ratio */
   if(drRatio!==null)blocks+='<div class="dxblock"><div class="dxblock-lbl">Delta ratio</div><div class="dxblock-val">'+drRatio.toFixed(2)+' → '+(drRatio<1?'HAGMA+NAGMA 혼합':drRatio<=2?'순수 HAGMA':'HAGMA+대사성 알칼리증 혼합')+'</div></div>';
@@ -1962,7 +1981,7 @@ function run(){
   /* 인쇄용 헤더 */
   var now=new Date();
   var ts=now.getFullYear()+'.'+(now.getMonth()+1).toString().padStart(2,'0')+'.'+now.getDate().toString().padStart(2,'0')+' '+now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v5.4 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
+  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v5.5 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
   out.innerHTML=printHdr+html+finalHtml+fcHtml;
   document.getElementById('btn_pdf_wrap').style.display='block';
   out.style.display='block';
