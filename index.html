@@ -1121,21 +1121,49 @@ function run(){
     phCNote);
 
   /* STEP 3: compensation */
-  var cTag,cCls,cNote,cFormula='';
+  var cTag,cCls,cNote,cFormula='',cFormulaDetail='';
   var primaryName=(pType==='met_acid'?'대사성 산증':pType==='met_alk'?'대사성 알칼리증':pType==='resp_acid'?'호흡성 산증':pType==='resp_alk'?'호흡성 알칼리증':'');
   if(pType==='met_acid'){
-    var e1=1.5*hco3+8,l1=e1-2,h1=e1+2;cFormula='Winters: PaCO₂ = 1.5×'+hco3.toFixed(1)+'+8 = '+e1.toFixed(1)+'±2';
+    var e1=1.5*hco3+8,l1=e1-2,h1=e1+2;
+    cFormula='Winters 공식 (대사성 산증 → 호흡 보상)';
+    cFormulaDetail='<div style="background:var(--bg2);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:12px">'
+      +'<div style="font-weight:600;color:var(--text2);margin-bottom:6px">📐 보상 공식</div>'
+      +'<div style="font-family:monospace;color:var(--text1)">예측 PaCO₂ = 1.5 × HCO₃⁻ + 8 ± 2</div>'
+      +'<div style="margin-top:6px;font-family:monospace;color:var(--accent2)">'
+      +'= 1.5 × '+hco3.toFixed(1)+' + 8 = '+e1.toFixed(1)+' ± 2</div>'
+      +'<div style="margin-top:4px;font-family:monospace;color:var(--text2)">→ 정상 보상 범위: <strong>'+l1.toFixed(1)+' – '+h1.toFixed(1)+' mmHg</strong></div>'
+      +'<div style="margin-top:6px;font-size:11px;color:var(--text3)">실제 PaCO₂ = '+pco2.toFixed(1)+' mmHg</div>'
+      +'</div>';
     if(pco2>=l1&&pco2<=h1){cTag='적절한 보상';cCls='tag-ok';cNote='PaCO₂ '+pco2.toFixed(1)+' → 예측 '+l1.toFixed(1)+'–'+h1.toFixed(1)+' 내 → 대사성 산증에 대한 호흡 보상 적절';compLabel='적절한 호흡 보상';fcData.compStatus='adequate';}
     else if(pco2<l1){cTag='혼합: +호흡성 알칼리증';cCls='tag-warn';cNote='PaCO₂ '+pco2.toFixed(1)+' < 예측 하한 '+l1.toFixed(1)+' → 보상보다 PaCO₂가 더 떨어진 상태 → 호흡성 알칼리증 공존 가능성';compLabel='과보상 → 호흡성 알칼리증 혼합';isMixed=true;mixComponents=['대사성 산증','호흡성 알칼리증'];fcData.compStatus='mixed_resp_alk';}
     else{cTag='혼합: +호흡성 산증';cCls='tag-bad';cNote='PaCO₂ '+pco2.toFixed(1)+' > 예측 상한 '+h1.toFixed(1)+' → 보상보다 PaCO₂가 덜 떨어진 상태 → 호흡성 산증 공존 가능성';compLabel='저보상 → 호흡성 산증 혼합';isMixed=true;mixComponents=['대사성 산증','호흡성 산증'];fcData.compStatus='mixed_resp_acid';}
   }else if(pType==='met_alk'){
-    var e2=0.7*hco3+21,l2=e2-2,h2=e2+2;cFormula='Javaheri: PaCO₂ = 0.7×'+hco3.toFixed(1)+'+21 = '+e2.toFixed(1)+'±2';
+    var e2=0.7*hco3+21,l2=e2-2,h2=e2+2;
+    cFormula='Javaheri 공식 (대사성 알칼리증 → 호흡 보상)';
+    cFormulaDetail='<div style="background:var(--bg2);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:12px">'
+      +'<div style="font-weight:600;color:var(--text2);margin-bottom:6px">📐 보상 공식</div>'
+      +'<div style="font-family:monospace;color:var(--text1)">예측 PaCO₂ = 0.7 × HCO₃⁻ + 21 ± 2</div>'
+      +'<div style="margin-top:6px;font-family:monospace;color:var(--accent2)">'
+      +'= 0.7 × '+hco3.toFixed(1)+' + 21 = '+e2.toFixed(1)+' ± 2</div>'
+      +'<div style="margin-top:4px;font-family:monospace;color:var(--text2)">→ 정상 보상 범위: <strong>'+l2.toFixed(1)+' – '+h2.toFixed(1)+' mmHg</strong></div>'
+      +'<div style="margin-top:6px;font-size:11px;color:var(--text3)">실제 PaCO₂ = '+pco2.toFixed(1)+' mmHg</div>'
+      +'</div>';
     if(pco2>=l2&&pco2<=h2){cTag='적절한 보상';cCls='tag-ok';cNote='PaCO₂ '+pco2.toFixed(1)+' → 예측 '+l2.toFixed(1)+'–'+h2.toFixed(1)+' 내';compLabel='적절한 호흡 보상';fcData.compStatus='adequate';}
     else if(pco2<l2){cTag='혼합: +호흡성 알칼리증';cCls='tag-warn';cNote='PaCO₂ '+pco2.toFixed(1)+' < 예측 하한 '+l2.toFixed(1);isMixed=true;mixComponents=['대사성 알칼리증','호흡성 알칼리증'];compLabel='저보상 → 호흡성 알칼리증 혼합';fcData.compStatus='mixed_resp_alk';}
     else{cTag='혼합: +호흡성 산증';cCls='tag-bad';cNote='PaCO₂ '+pco2.toFixed(1)+' > 예측 상한 '+h2.toFixed(1);isMixed=true;mixComponents=['대사성 알칼리증','호흡성 산증'];compLabel='과보상 → 호흡성 산증 혼합';fcData.compStatus='mixed_resp_acid';}
   }else if(pType==='resp_acid'){
     var d1=pco2-40,aH=24+d1*0.1,cH=24+d1*0.35;
-    cFormula='급성: HCO₃⁻≈'+aH.toFixed(1)+' | 만성: HCO₃⁻≈'+cH.toFixed(1);
+    cFormula='호흡성 산증 보상 공식 (급성/만성)';
+    cFormulaDetail='<div style="background:var(--bg2);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:12px">'
+      +'<div style="font-weight:600;color:var(--text2);margin-bottom:6px">📐 보상 공식 (PaCO₂ 상승 → 신장에서 HCO₃⁻↑)</div>'
+      +'<div style="font-family:monospace;color:var(--text1)">급성: HCO₃⁻ ≈ 24 + 0.1 × ΔPaCO₂</div>'
+      +'<div style="font-family:monospace;color:var(--text1);margin-top:2px">만성: HCO₃⁻ ≈ 24 + 0.35 × ΔPaCO₂</div>'
+      +'<div style="margin-top:8px;color:var(--text3);font-size:11px">ΔPaCO₂ = '+pco2.toFixed(1)+' − 40 = '+d1.toFixed(1)+' mmHg</div>'
+      +'<div style="margin-top:4px;font-family:monospace;color:var(--accent2)">'
+      +'급성 예측: 24 + 0.1×'+d1.toFixed(1)+' = <strong>'+aH.toFixed(1)+' mEq/L</strong> (±2)<br>'
+      +'만성 예측: 24 + 0.35×'+d1.toFixed(1)+' = <strong>'+cH.toFixed(1)+' mEq/L</strong> (±2)</div>'
+      +'<div style="margin-top:6px;font-size:11px;color:var(--text3)">실제 HCO₃⁻ = '+hco3.toFixed(1)+' mEq/L</div>'
+      +'</div>';
     var dC=hco3-cH, dA=hco3-aH;
     if(Math.abs(dC)<=2){cTag='만성 보상';cCls='tag-info';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 만성 예측값 '+cH.toFixed(1)+' (차이 '+dC.toFixed(1)+') → 적절한 만성 대사 보상';isChronic=true;compLabel='만성 대사 보상';fcData.compStatus='chronic';}
     else if(Math.abs(dA)<=2){cTag='급성 반응 (완충 단계)';cCls='tag-ok';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성 예측값 '+aH.toFixed(1)+' (차이 '+dA.toFixed(1)+') — 예측 범위 내입니다.<br><br>급성 호흡성 산증에서 HCO₃⁻의 소폭 증가는 <strong style="font-weight:600">신장 보상이 아닌 CO₂ 증가에 의한 단순 physicochemical 완충 반응</strong>입니다. 신장 보상(HCO₃⁻ 재흡수 증가)은 6–12시간 이후부터 시작되며, 수일에 걸쳐 만성 보상 수준에 도달합니다.';isAcute=true;compLabel='급성 반응 (완충 단계)';fcData.compStatus='acute';}
@@ -1145,19 +1173,28 @@ function run(){
     else{cTag='혼합: +대사성 산증';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성 예측값 '+aH.toFixed(1)+'보다 '+Math.abs(dA).toFixed(1)+' mEq/L 낮음 → 대사성 산증 독립 공존 가능성';isMixed=true;mixComponents=['호흡성 산증','대사성 산증'];compLabel='보상 부족 → 대사성 산증 혼합';fcData.compStatus='mixed_met_acid';}
   }else if(pType==='resp_alk'){
     var d2=40-pco2,aH2=24-d2*0.2,cH2=24-d2*0.45;
-    cFormula='급성: HCO₃⁻≈'+aH2.toFixed(1)+' | 만성: HCO₃⁻≈'+cH2.toFixed(1);
+    cFormula='호흡성 알칼리증 보상 공식 (급성/만성)';
+    cFormulaDetail='<div style="background:var(--bg2);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:12px">'
+      +'<div style="font-weight:600;color:var(--text2);margin-bottom:6px">📐 보상 공식 (PaCO₂ 감소 → 신장에서 HCO₃⁻↓)</div>'
+      +'<div style="font-family:monospace;color:var(--text1)">급성: HCO₃⁻ ≈ 24 − 0.2 × ΔPaCO₂</div>'
+      +'<div style="font-family:monospace;color:var(--text1);margin-top:2px">만성: HCO₃⁻ ≈ 24 − 0.45 × ΔPaCO₂</div>'
+      +'<div style="margin-top:8px;color:var(--text3);font-size:11px">ΔPaCO₂ = 40 − '+pco2.toFixed(1)+' = '+d2.toFixed(1)+' mmHg</div>'
+      +'<div style="margin-top:4px;font-family:monospace;color:var(--accent2)">'
+      +'급성 예측: 24 − 0.2×'+d2.toFixed(1)+' = <strong>'+aH2.toFixed(1)+' mEq/L</strong> (±2)<br>'
+      +'만성 예측: 24 − 0.45×'+d2.toFixed(1)+' = <strong>'+cH2.toFixed(1)+' mEq/L</strong> (±2)</div>'
+      +'<div style="margin-top:6px;font-size:11px;color:var(--text3)">실제 HCO₃⁻ = '+hco3.toFixed(1)+' mEq/L</div>'
+      +'</div>';
     var dC2=hco3-cH2, dA2=hco3-aH2;
     if(Math.abs(dC2)<=2){cTag='만성 보상';cCls='tag-info';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 만성 예측값 '+cH2.toFixed(1)+' (차이 '+dC2.toFixed(1)+') → 적절한 만성 대사 보상';isChronic=true;compLabel='만성 대사 보상';fcData.compStatus='chronic';}
     else if(Math.abs(dA2)<=2){cTag='급성 반응 (완충 단계)';cCls='tag-ok';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성 예측값 '+aH2.toFixed(1)+' (차이 '+dA2.toFixed(1)+') — 예측 범위 내입니다.<br><br>급성 호흡성 알칼리증에서 HCO₃⁻의 소폭 감소는 <strong style="font-weight:600">신장 보상이 아닌 PaCO₂ 감소에 의한 단순 physicochemical 완충 반응</strong>입니다. 신장 보상(HCO₃⁻ 재흡수 억제 및 배출 증가)은 4–12시간 이후부터 시작되며, 수일에 걸쳐 만성 보상 수준에 도달합니다.';isAcute=true;compLabel='급성 반응 (완충 단계)';fcData.compStatus='acute';}
     else if(dC2<-2&&dC2>=-4){cTag='만성 보상 (예측 범위 부족)';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 만성 예측값 '+cH2.toFixed(1)+'보다 '+Math.abs(dC2).toFixed(1)+' mEq/L 낮습니다. 예측값보다 낮다는 것은 HCO₃⁻를 추가로 소비하는 별도 원인, 즉 <strong style="font-weight:600">대사성 산증 혼합</strong>의 가능성을 시사합니다. AG 결과를 함께 확인하세요.';isChronic=true;compLabel='만성 보상 (예측 범위 부족)';fcData.compStatus='chronic';}
     else if(dC2<-4){cTag='혼합: +대사성 산증';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 만성 예측값 '+cH2.toFixed(1)+'보다 '+Math.abs(dC2).toFixed(1)+' mEq/L 낮음 → 대사성 산증 독립 공존 가능성';isMixed=true;mixComponents=['호흡성 알칼리증','대사성 산증'];compLabel='보상 초과 → 혼합 대사성 산증';fcData.compStatus='mixed_met_acid';}
     else if(dA2>2&&dA2<=4){cTag='급성 반응 (예측 범위 초과)';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성 예측값 '+aH2.toFixed(1)+'보다 '+dA2.toFixed(1)+' mEq/L 높습니다.<br><br>호흡성 알칼리증에서 HCO₃⁻는 감소해야 하는데 감소가 불충분한 상태입니다. 두 가지 가능성을 고려해야 합니다:<br>① <strong style="font-weight:600">대사성 알칼리증 혼합</strong> — HCO₃⁻를 올리는 별도 원인(구토·이뇨제 등)이 공존하여 감소를 상쇄하는 경우<br>② <strong style="font-weight:600">대사성 산증 혼합</strong> — HAGMA 등이 동시에 존재하여 HCO₃⁻를 소비하므로 겉으로는 정상처럼 보이지만 실제로는 두 장애가 상쇄되고 있는 경우<br><br>AG 결과와 임상 맥락을 함께 확인하세요.';isAcute=true;compLabel='급성 반응 (예측 범위 초과)';fcData.compStatus='acute';}
-    /* BUG FIX: resp_alk에서 HCO3가 만성/급성 예측 모두 크게 초과하면 대사성 알칼리증 동반 */
     else if(dA2>4){cTag='혼합: +대사성 알칼리증';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성/만성 예측 모두 크게 초과 → 대사성 알칼리증 독립 공존 가능성';isMixed=true;mixComponents=['호흡성 알칼리증','대사성 알칼리증'];compLabel='과보상 → 대사성 알칼리증 혼합';fcData.compStatus='mixed_met_alk';}
     else{cTag='보상 범위 이탈';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성/만성 보상 예측 범위 모두 벗어남. 혼합장애 가능성 검토 필요';compLabel='보상 범위 이탈';fcData.compStatus='adequate';}
-  }else{cTag='추가 평가 필요';cCls='tag-warn';cNote='일차장애 확정이 어려워 보상 공식 적용이 제한됩니다.';compLabel='판정 보류';cFormula='일차장애 불명확';fcData.compStatus='na';}
+  }else{cTag='추가 평가 필요';cCls='tag-warn';cNote='일차장애 확정이 어려워 보상 공식 적용이 제한됩니다.';compLabel='판정 보류';cFormula='일차장애 불명확';cFormulaDetail='';fcData.compStatus='na';}
   html+=mkStep(3,'#34d399','보상기전 평가',cTag,cCls,
-    srow('예측 보상식',cFormula)+srow('실제 값','CO₂ '+pco2.toFixed(1)+' / HCO₃⁻ '+hco3.toFixed(1))+cbox('<p>'+cNote+'</p>'+(ventilated?'<p style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-weight:600;color:var(--warn-text)">⚠ 기계환기 중: 환기량이 설정값에 의해 조절되므로 자발 호흡 보상이 제한됩니다. 보상 공식(Winters 등)은 자발 호흡을 전제로 하므로 이 결과를 주의하여 해석하세요.</p>':'')));
+    cFormulaDetail+srow('실제 값','CO₂ '+pco2.toFixed(1)+' / HCO₃⁻ '+hco3.toFixed(1))+cbox('<p>'+cNote+'</p>'+(ventilated?'<p style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-weight:600;color:var(--warn-text)">⚠ 기계환기 중: 환기량이 설정값에 의해 조절되므로 자발 호흡 보상이 제한됩니다. 보상 공식(Winters 등)은 자발 호흡을 전제로 하므로 이 결과를 주의하여 해석하세요.</p>':'')));
 
   /* STEP 4: AG */
   var agVal=null,agEff=null,highAG=false,drRatio=null,drInterp='',drCls='',agQualifier='';
