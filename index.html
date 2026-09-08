@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#0f172a">
-<title>통합 ABGA 판독기 v5.6</title>
+<title>통합 ABGA 판독기 v5.7</title>
 <style>
 :root {
   --bg: #0f172a;
@@ -351,7 +351,7 @@ body{
 </head>
 <body>
 <header class="app-header">
-  <h1>통합 ABGA 판독기 <span>v5.6</span></h1>
+  <h1>통합 ABGA 판독기 <span>v5.7</span></h1>
   <button id="btn_settings" onclick="window._openSettings()" title="API 키 설정" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text2);opacity:.7;transition:opacity .15s;flex-shrink:0" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
@@ -472,26 +472,7 @@ body{
       <span id="vision_loading_msg">Claude가 결과지를 분석 중입니다...</span>
     </div>
   </div>
-  <p class="section-title">필수 입력 <span class="badge-req">REQUIRED</span></p>
-  <div class="input-grid">
-    <div class="field">
-      <div class="field-label">pH</div>
-      <div class="field-ref">정상 7.35–7.45</div>
-      <input id="i_ph" type="number" inputmode="decimal" step="0.01">
-    </div>
-    <div class="field">
-      <div class="field-label">PaCO₂ <span class="unit">mmHg</span></div>
-      <div class="field-ref">정상 35–45</div>
-      <input id="i_pco2" type="number" inputmode="decimal" step="0.1">
-    </div>
-    <div class="field">
-      <div class="field-label">HCO₃⁻ / tCO₂ <span class="unit">mEq/L = mmol/L</span></div>
-      <div class="field-ref">HCO₃⁻ 22–26 | tCO₂ 23–27</div>
-      <input id="i_hco3" type="number" inputmode="decimal" step="0.1">
-    </div>
-  </div>
-
-  <p class="section-title">산소화 <span class="badge-opt">선택</span></p>
+  <p class="section-title">I. 산소화 지표 <span class="badge-opt">선택</span></p>
   <div class="input-grid">
     <div class="field">
       <div class="field-label">PaO₂ <span class="unit">mmHg</span></div>
@@ -520,7 +501,26 @@ body{
     </div>
   </div>
 
-  <p class="section-title">전해질 및 임상화학 <span class="badge-opt">선택</span></p>
+  <p class="section-title">II. 산-염기 지표 <span class="badge-req">REQUIRED</span></p>
+  <div class="input-grid">
+    <div class="field">
+      <div class="field-label">pH</div>
+      <div class="field-ref">정상 7.35–7.45</div>
+      <input id="i_ph" type="number" inputmode="decimal" step="0.01">
+    </div>
+    <div class="field">
+      <div class="field-label">PaCO₂ <span class="unit">mmHg</span></div>
+      <div class="field-ref">정상 35–45</div>
+      <input id="i_pco2" type="number" inputmode="decimal" step="0.1">
+    </div>
+    <div class="field">
+      <div class="field-label">HCO₃⁻ / tCO₂ <span class="unit">mEq/L = mmol/L</span></div>
+      <div class="field-ref">HCO₃⁻ 22–26 | tCO₂ 23–27</div>
+      <input id="i_hco3" type="number" inputmode="decimal" step="0.1">
+    </div>
+  </div>
+
+  <p class="section-title">III. 전해질 및 임상화학 지표 <span class="badge-opt">선택</span></p>
   <div class="input-grid">
     <div class="field">
       <div class="field-label">Na⁺ <span class="unit">mEq/L = mmol/L</span></div>
@@ -639,7 +639,7 @@ function printResult(){
     }catch(e){}
   }
   var content='<!DOCTYPE html><html><head><meta charset="UTF-8">'
-    +'<title>통합 ABGA 판독기 v5.6 — 판독 결과</title>'
+    +'<title>통합 ABGA 판독기 v5.7 — 판독 결과</title>'
     +'<style>'+styles
     +'body{background:#fff;color:#000;font-family:system-ui,sans-serif;padding:10px 14px;max-width:800px;margin:0 auto}'
     +'.step-body{display:block!important}.drxb,.goldmark-body{display:block!important}'
@@ -1038,6 +1038,179 @@ function run(){
 
   /* ── Henderson-Hasselbalch 입력값 일관성 확인 ── */
   var hhCalc = 6.1 + Math.log10(hco3 / (0.0307 * pco2));
+  var pfRatio=null,pfTag='',pfCls='',pfNote='',pfWarn=false;
+  if(po2!==null||sao2!==null){
+
+    // ── PaO2 판정 ──
+    var po2Tag='',po2Cls='',po2Note='';
+    if(po2!==null){
+      if(po2>=80){po2Tag='정상';po2Cls='g';po2Note='PaO₂ '+po2.toFixed(1)+' ≥ 80 mmHg → 정상 산소화';}
+      else if(po2>=60){po2Tag='경도 저산소혈증';po2Cls='a';po2Note='PaO₂ '+po2.toFixed(1)+' (60–79) → 경도 저산소혈증';}
+      else if(po2>=40){po2Tag='중등도 저산소혈증';po2Cls='r';po2Note='PaO₂ '+po2.toFixed(1)+' (40–59) → 중등도 저산소혈증';}
+      else{po2Tag='중증 저산소혈증';po2Cls='r';po2Note='PaO₂ '+po2.toFixed(1)+' < 40 mmHg → 중증 저산소혈증';}
+    }
+
+    // ── SaO2 판정 ──
+    var sao2Tag='',sao2Cls='',sao2Note='';
+    if(sao2!==null){
+      if(sao2>=95){sao2Tag='정상';sao2Cls='g';sao2Note='SaO₂ '+sao2.toFixed(1)+'% ≥ 95% → 정상';}
+      else if(sao2>=90){sao2Tag='경도 감소';sao2Cls='a';sao2Note='SaO₂ '+sao2.toFixed(1)+'% (90–94%) → 경계적 저하. 임상 상황에 따라 산소 보충 고려';}
+      else if(sao2>=85){sao2Tag='중등도 감소';sao2Cls='r';sao2Note='SaO₂ '+sao2.toFixed(1)+'% (85–89%) → 산소 공급 부족. 즉시 평가 필요';}
+      else{sao2Tag='심각한 감소';sao2Cls='r';sao2Note='SaO₂ '+sao2.toFixed(1)+'% < 85% → 심각한 저산소혈증. 긴급 대응 필요';}
+    }
+
+    // ── PaO2-SaO2 일관성 분석 ──
+    // 산소-헤모글로빈 해리곡선 기준 예상값 (간략 추정)
+    // PaO2≥100→SaO2≥98, PaO2≥80→SaO2≥95, PaO2≥60→SaO2≥90, PaO2≥40→SaO2≥75
+    var discNote=''; discWarn=false;
+    if(po2!==null&&sao2!==null){
+      // 예상 SaO2 범위 추정 (산소-헤모글로빈 해리곡선 기반)
+      var expectedSao2Min, expectedSao2Max;
+      if(po2>=100){expectedSao2Min=97;expectedSao2Max=100;}
+      else if(po2>=80){expectedSao2Min=95;expectedSao2Max=99;}
+      else if(po2>=70){expectedSao2Min=93;expectedSao2Max=97;}
+      else if(po2>=60){expectedSao2Min=89;expectedSao2Max=95;}
+      else if(po2>=50){expectedSao2Min=83;expectedSao2Max=92;}
+      else if(po2>=40){expectedSao2Min=73;expectedSao2Max=85;}
+      else{expectedSao2Min=50;expectedSao2Max=75;}
+
+      if(sao2>=expectedSao2Min&&sao2<=expectedSao2Max){
+        discNote='PaO₂ '+po2.toFixed(1)+' mmHg에서 예상 SaO₂ '+expectedSao2Min+'–'+expectedSao2Max+'% → 입력 SaO₂ '+sao2.toFixed(1)+'% 일치 (산소-헤모글로빈 해리곡선 부합)';
+      }else{
+        discWarn=true;
+        var discDir=(sao2>expectedSao2Max)?'PaO₂ 대비 SaO₂가 예상보다 높음':'PaO₂ 대비 SaO₂가 예상보다 낮음';
+        discNote='PaO₂ '+po2.toFixed(1)+' mmHg에서 예상 SaO₂ '+expectedSao2Min+'–'+expectedSao2Max+'%, 입력 SaO₂ '+sao2.toFixed(1)+'% → <strong>불일치</strong> ('+discDir+')<br>'
+          +'<br><strong>SaO₂가 예상보다 높은 경우 고려사항:</strong><br>'
+          +'• <strong>일산화탄소(CO) 중독</strong> — COHb를 옥시Hb로 오인, SpO₂ 실제보다 높게 표시<br>'
+          +'• <strong>고산소 흡입 상태</strong> — FiO₂↑로 SaO₂ 유지되면서 PaO₂가 낮은 경우<br>'
+          +'<br><strong>SaO₂가 예상보다 낮은 경우 고려사항:</strong><br>'
+          +'• <strong>메트헤모글로빈혈증</strong> — MetHb 증가 시 SaO₂ ~86%에서 정체<br>'
+          +'• <strong>헤모글로빈 산소 친화도 변화</strong> — pH↓, 체온↑, 2,3-DPG↑ → 해리곡선 우측 이동<br>'
+          +'• <strong>이상헤모글로빈증</strong> — 낫적혈구 등 특수 헤모글로빈<br>'
+          +'• <strong>검체 오류</strong> — 공기 노출, 과도한 지연';
+      }
+    }
+
+    // ── 최종 태그 결정 (PaO2·SaO2 중 더 심한 것 기준) ──
+    if(po2!==null&&sao2!==null){
+      var po2Score=po2>=80?0:po2>=60?1:po2>=40?2:3;
+      var sao2Score=sao2>=95?0:sao2>=90?1:sao2>=85?2:3;
+      var maxScore=Math.max(po2Score,sao2Score);
+      if(maxScore===0){o2Tag='정상 산소화';o2Cls='tag-ok';}
+      else if(maxScore===1){o2Tag='경도 저산소혈증';o2Cls='tag-warn';}
+      else if(maxScore===2){o2Tag='중등도 저산소혈증';o2Cls='tag-bad';}
+      else{o2Tag='중증 저산소혈증';o2Cls='tag-bad';}
+    }else if(po2!==null){
+      if(po2>=80){o2Tag='정상 산소화';o2Cls='tag-ok';}
+      else if(po2>=60){o2Tag='경도 저산소혈증';o2Cls='tag-warn';}
+      else if(po2>=40){o2Tag='중등도 저산소혈증';o2Cls='tag-bad';}
+      else{o2Tag='중증 저산소혈증';o2Cls='tag-bad';}
+    }else{
+      if(sao2>=95){o2Tag='정상 (SaO₂)';o2Cls='tag-ok';}
+      else if(sao2>=90){o2Tag='경도 저산소혈증';o2Cls='tag-warn';}
+      else{o2Tag='저산소혈증';o2Cls='tag-bad';}
+    }
+
+    // ── D(A-a)O₂ 계산 (PaO2, FiO2, PaCO2 모두 있을 때) ──
+    var dAAO2=null,dAAO2Tag='',dAAO2Cls='',dAAO2BoxType='',dAAO2BoxMsg='';
+    var dAAO2NoPco2=(po2!==null&&fio2!==null&&pco2===null);
+    if(po2!==null&&fio2!==null&&pco2!==null){
+      var PAO2=fio2*(713)-pco2/0.8;
+      dAAO2=PAO2-po2;
+      var dAAO2Norm=fio2<=0.21?15:(fio2<=0.40?30:(fio2<=0.60?50:100));
+      var hypoxic=(po2!==null&&po2<80)||(sao2!==null&&sao2<95);
+
+      if(dAAO2<0){
+        dAAO2Tag='계산 오류';dAAO2Cls='a';
+        dAAO2BoxType='warn';
+        dAAO2BoxMsg='D(A-a)O₂가 음수입니다. 입력값을 확인해주세요.';
+      }else if(dAAO2<=dAAO2Norm){
+        /* 정상 D(A-a)O2 */
+        dAAO2Tag='정상';dAAO2Cls='g';
+        if(hypoxic){
+          /* 저산소혈증 있는데 D(A-a)O2 정상 → 환기 저하/흡입산소 부족 */
+          dAAO2BoxType='info';
+          dAAO2BoxMsg='<strong>저산소혈증이 있으나 D(A-a)O₂는 정상</strong>'
+            +(fio2>0.21?' (FiO₂ '+fio2.toFixed(2)+' 적용 기준)':'')+'<br>'
+            +'폐 자체의 가스교환 장애보다 '
+            +'<strong>환기 저하(hypoventilation)</strong> 또는 '
+            +'<strong>흡입 산소 부족</strong>이 저산소혈증의 원인일 가능성이 높습니다.'
+            +(fio2>0.21?'<br><span style="font-size:11px;color:var(--text3)">※ FiO₂ > 0.21에서는 정상이어도 D(A-a)O₂가 커질 수 있으므로 임상 맥락과 함께 해석하세요.</span>':'');
+        }
+        /* 정상 산소화 + D(A-a)O2 정상 → 박스 없음 */
+      }else{
+        /* D(A-a)O2 상승 */
+        dAAO2Tag='상승';dAAO2Cls='r';
+        dAAO2BoxType='warn';
+        dAAO2BoxMsg='<strong>D(A-a)O₂ 상승 — 폐 내 가스교환 장애를 시사합니다</strong>'
+          +(fio2>0.21?'<br><span style="font-size:11px;color:var(--text3)">⚠ FiO₂ '+fio2.toFixed(2)+': FiO₂ 상승 자체로도 D(A-a)O₂가 증가할 수 있어 단독 해석에 주의하세요.</span>':'')+'<br>'
+          +(hypoxic?'':'현재 산소화는 유지되고 있으나 폐 가스교환 장애가 존재합니다. 주의 깊은 모니터링이 필요합니다.<br>')
+          +'감별이 필요한 원인:<br>'
+          +'• <strong>V/Q 불일치</strong> — 폐렴, 무기폐, 폐색전증<br>'
+          +'• <strong>확산 장애</strong> — 간질성 폐질환, 폐부종<br>'
+          +'• <strong>단락(shunt)</strong> — ARDS, 무기폐, 심내 우→좌 단락';
+      }
+    }
+
+    // ── P/F ratio 계산 (FiO2 입력 시) ──
+    if(po2!==null&&fio2!==null&&fio2>0){
+      pfRatio=po2/fio2;
+      if(pfRatio>400){pfTag='정상';pfCls='g';pfNote='폐 가스교환 정상.';}
+      else if(pfRatio>300){pfTag='경계 (400 미만)';pfCls='a';pfNote='정상 하한에 근접. 폐 기능 주의 모니터링 필요.';}
+      else if(pfRatio>200){pfTag='경도 호흡부전';pfCls='a';pfNote='P/F ratio 201–300: 경도 호흡부전. 산소 보충 강화 및 원인 평가 필요.';pfWarn=true;}
+      else if(pfRatio>100){pfTag='중등도 호흡부전';pfCls='r';pfNote='P/F ratio 101–200: 중등도 호흡부전. PEEP 조정 및 폐보호환기 적용 고려.';pfWarn=true;}
+      else{pfTag='중증 호흡부전';pfCls='r';pfNote='P/F ratio ≤100: 중증 호흡부전. 복와위 환기, ECMO 등 구제 치료 고려.';pfWarn=true;}
+    }
+
+    o2Body='';
+    if(po2!==null) o2Body+=srow('PaO₂',po2.toFixed(1)+' mmHg',po2<60?'r':po2<80?'a':'g')+srow('정상 범위','80–100 mmHg');
+    if(sao2!==null) o2Body+=srow('SaO₂',sao2.toFixed(1)+'%',sao2<90?'r':sao2<95?'a':'g')+srow('정상 범위','95–100%');
+    if(fio2!==null) o2Body+=srow('FiO₂',fio2.toFixed(2)+(fio2===0.21?' (실내공기)':''));
+    if(pfRatio!==null||dAAO2!==null||dAAO2NoPco2){
+      o2Body+='<div style="border-top:1px dashed var(--border);margin:4px 0"></div>';
+    }
+    if(dAAO2NoPco2){
+      o2Body+=ni('<p>D(A-a)O₂ 계산을 위해 <strong>II. 산-염기 지표의 PaCO₂</strong>를 입력해주세요.<br><span style="font-size:11px;color:var(--text3)">D(A-a)O₂ = PAO₂ − PaO₂, PAO₂ 계산에 PaCO₂가 필요합니다.</span></p>');
+    }
+    if(dAAO2!==null&&dAAO2>=0){
+      o2Body+=srow('D(A-a)O₂',dAAO2.toFixed(1)+' mmHg',dAAO2Cls);
+      o2Body+=cbox(
+        '<p><strong>D(A-a)O₂ = PAO₂ − PaO₂</strong></p>'
+        +'<p style="margin-top:4px;font-size:11px;font-family:monospace">'
+        +'PAO₂ = FiO₂ × 713 − PaCO₂ / 0.8<br>'
+        +'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= '+fio2.toFixed(2)+' × 713 − '+pco2.toFixed(1)+' / 0.8<br>'
+        +'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= '+(fio2*713).toFixed(1)+' − '+(pco2/0.8).toFixed(1)+' = '+(fio2*713-pco2/0.8).toFixed(1)+' mmHg<br>'
+        +'D(A-a)O₂ = '+(fio2*713-pco2/0.8).toFixed(1)+' − '+po2.toFixed(1)+' = <strong>'+dAAO2.toFixed(1)+' mmHg</strong>'
+        +'</p>'
+        +'<p style="margin-top:6px;font-size:11px;color:var(--text3)">해수면 기준 (Patm=760 mmHg). 정상범위: FiO₂ 0.21 → ≤15 mmHg (연령↑ 시 증가). FiO₂ 상승 시 허용 범위 넓어짐.</p>'
+      );
+      /* 상황별 강조 박스 */
+      if(dAAO2BoxType==='warn') o2Body+=nw('<p>'+dAAO2BoxMsg+'</p>');
+      else if(dAAO2BoxType==='info') o2Body+=ni('<p>'+dAAO2BoxMsg+'</p>');
+    }
+    if(pfRatio!==null){
+      o2Body+=srow('P/F ratio (PaO₂÷FiO₂)',pfRatio.toFixed(0)+' mmHg',pfCls)+srow('판정',pfTag,pfCls);
+    }
+
+    var o2Notes='';
+    if(po2!==null) o2Notes+='<p>'+po2Note+'</p>';
+    if(sao2!==null) o2Notes+='<p style="margin-top:4px">'+sao2Note+'</p>';
+
+    o2Body+=cbox(o2Notes
+      +'<p style="margin-top:6px;font-size:11px;color:var(--text3)">PaO₂ 기준: ≥80 정상 / 60–79 경도 / 40–59 중등도 / &lt;40 중증<br>SaO₂ 기준: ≥95% 정상 / 90–94% 경계 / 85–89% 중등도 / &lt;85% 심각</p>'
+      +(pfRatio!==null?'<p style="margin-top:6px;font-size:11px;color:var(--text3)">P/F ratio = PaO₂ ÷ FiO₂ (Berlin ARDS 정의 기준)<br>&gt;400 정상 / 301–400 경계 / 201–300 경도 호흡부전 / 101–200 중등도 호흡부전 / ≤100 중증 호흡부전</p>':''))
+    +(pfRatio!==null&&pfWarn?nw('<p><strong>⚠ P/F ratio '+pfRatio.toFixed(0)+'</strong> — '+pfNote+'</p><p style="margin-top:4px;font-size:11px;color:var(--text3)">※ Berlin 정의는 PEEP ≥5 cmH₂O 조건을 요구합니다. 임상 판단과 함께 해석하세요.</p>'):pfRatio!==null?ni('<p>P/F ratio '+pfRatio.toFixed(0)+' — '+pfNote+'</p>'):'');
+
+    if(discNote){
+      o2Body+=(discWarn?nw('<p>⚠ <strong>PaO₂–SaO₂ 불일치</strong></p><p style="margin-top:4px">'+discNote+'</p>'):ni('<p>'+discNote+'</p>'));
+    }
+
+  }else{
+    o2Tag='미입력';o2Cls='tag-info';
+    o2Body='<p style="padding:10px 0;color:var(--text3)">PaO₂ 또는 SaO₂를 입력하면 산소화 상태를 평가합니다.</p>';
+  }
+  html+=mkStep('I','#38bdf8','산소화',o2Tag,o2Cls,o2Body);
+
   var hhDiff = Math.abs(ph - hhCalc);
   var hhTag, hhCls, hhNote, hhNoteExtra='';
   if(hhDiff <= 0.03){
@@ -1052,7 +1225,7 @@ function run(){
     hhNote='계산 pH와 입력 pH 사이에 유의한 차이가 있습니다.';
     hhNoteExtra='⚠ 세 값(pH, PaCO₂, HCO₃⁻) 중 하나 이상이 잘못 입력되었을 가능성이 있습니다. 이후 결과의 신뢰도가 낮을 수 있습니다.';
   }
-  html+=mkStep('H','#a78bfa','Henderson-Hasselbalch 확인',hhTag,hhCls,
+  html+=mkStep('II-H','#a78bfa','Henderson-Hasselbalch 확인',hhTag,hhCls,
     srow('계산식','pH = 6.1 + log₁₀( HCO₃⁻ ÷ (0.0307 × PaCO₂) )')+
     srow('계산 pH',hhCalc.toFixed(3),hhDiff>0.05?'r':hhDiff>0.03?'a':'g')+
     srow('입력 pH',ph,hhDiff>0.05?'r':hhDiff>0.03?'a':'g')+
@@ -1080,7 +1253,7 @@ function run(){
   else if(phAcidSide){phTag='정상 (산성 쪽)';phCls='tag-warn';phNote='pH '+ph+' → 정상 범위이나 7.40보다 낮음. 혼합장애에서 산증 우세 시 pH가 정상으로 보일 수 있습니다.';fcData.phStatus='normal_acid';}
   else if(phAlkSide){phTag='정상 (알칼리 쪽)';phCls='tag-warn';phNote='pH '+ph+' → 정상 범위이나 7.40보다 높음. 혼합장애에서 알칼리증 우세 시 pH가 정상으로 보일 수 있습니다.';fcData.phStatus='normal_alk';}
   else{phTag='정상 (중립)';phCls='tag-ok';phNote='pH '+ph+' = 7.40 → 생리적 중립값';fcData.phStatus='neutral';}
-  html+=mkStep(1,'#818cf8','pH 평가',phTag,phCls,
+  html+=mkStep('II-1','#818cf8','pH 평가',phTag,phCls,
     srow('정상 범위','7.35–7.45 (중립 7.40)')+
     srow('입력 pH',ph,ph<7.35?'r':ph>7.45?'r':ph<7.40?'a':'g')+
     cbox('<p>'+phNote+'</p><p class="mono" style="margin-top:4px">pH&lt;7.35=Acidemia / pH&gt;7.45=Alkalemia</p><p class="mono">7.35–7.40=산성 쪽 / 7.40–7.45=알칼리 쪽</p>'));
@@ -1115,7 +1288,7 @@ function run(){
   }
   fcData.primaryType=pType;
   var phCNote=phNormal?cbox('<p>pH가 정상 범위이므로 이차 지표(PaCO₂, HCO₃⁻) 방향과 7.40 기준 편향을 함께 고려하여 일차장애를 추정합니다.</p><p style="margin-top:4px">→ '+rNote+'</p>'):cbox('<p>→ '+rNote+'</p>');
-  html+=mkStep(2,'#c084fc','일차장애 결정',pTag,pCls,
+  html+=mkStep('II-2','#c084fc','일차장애 결정',pTag,pCls,
     srow('PaCO₂',pco2.toFixed(1)+' mmHg',hiCO2?'r':loCO2?'a':'g')+
     srow('HCO₃⁻',hco3.toFixed(1)+' mEq/L',loHCO?'r':hiHCO?'a':'g')+
     phCNote);
@@ -1193,7 +1366,7 @@ function run(){
     else if(dA2>4){cTag='혼합: +대사성 알칼리증';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성/만성 예측 모두 크게 초과 → 대사성 알칼리증 독립 공존 가능성';isMixed=true;mixComponents=['호흡성 알칼리증','대사성 알칼리증'];compLabel='과보상 → 대사성 알칼리증 혼합';fcData.compStatus='mixed_met_alk';}
     else{cTag='보상 범위 이탈';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성/만성 보상 예측 범위 모두 벗어남. 혼합장애 가능성 검토 필요';compLabel='보상 범위 이탈';fcData.compStatus='adequate';}
   }else{cTag='추가 평가 필요';cCls='tag-warn';cNote='일차장애 확정이 어려워 보상 공식 적용이 제한됩니다.';compLabel='판정 보류';cFormula='일차장애 불명확';cFormulaDetail='';fcData.compStatus='na';}
-  html+=mkStep(3,'#34d399','보상기전 평가',cTag,cCls,
+  html+=mkStep('II-3','#34d399','보상기전 평가',cTag,cCls,
     cFormulaDetail+srow('실제 값','CO₂ '+pco2.toFixed(1)+' / HCO₃⁻ '+hco3.toFixed(1))+cbox('<p>'+cNote+'</p>'+(ventilated?'<p style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-weight:600;color:var(--warn-text)">⚠ 기계환기 중: 환기량이 설정값에 의해 조절되므로 자발 호흡 보상이 제한됩니다. 보상 공식(Winters 등)은 자발 호흡을 전제로 하므로 이 결과를 주의하여 해석하세요.</p>':'')));
 
   /* STEP 4: AG */
@@ -1568,12 +1741,12 @@ function run(){
     /* ── 다이어그램 (항상 마지막) ── */
     agBody+='<div style="border-top:1px dashed var(--border);margin:8px 0 4px"></div>';
     agBody+=buildAGDiagram(na,cl,hco3,agEff,drRatio,pType,hasMetAcid,agVal,alb);
-    html+=mkStep(4,'#fb923c','음이온차 (AG)',agTag2,agCls2,agBody);
-    if(drBody) html+=mkStep(5,'#818cf8','Delta ratio',
+    html+=mkStep('II-4','#fb923c','음이온차 (AG)',agTag2,agCls2,agBody);
+    if(drBody) html+=mkStep('II-5','#818cf8','Delta ratio',
       (drRatio!==null?(drRatio<1?'HAGMA+NAGMA 혼합':drRatio<=2?'순수 HAGMA':'HAGMA+대사성 알칼리증 혼합'):'계산 불가'),
       (drRatio!==null?(drRatio<1?'tag-warn':drRatio<=2?'tag-ok':'tag-warn'):'tag-info'),drBody);
   }else{
-    html+=mkStep(4,'#fb923c','음이온차 (AG)','Na/Cl 미입력','tag-info','<p style="padding:10px 0;color:var(--text3)">Na⁺와 Cl⁻를 입력하면 AG 및 delta ratio를 자동 계산합니다.</p>');
+    html+=mkStep('II-4','#fb923c','음이온차 (AG)','Na/Cl 미입력','tag-info','<p style="padding:10px 0;color:var(--text3)">Na⁺와 Cl⁻를 입력하면 AG 및 delta ratio를 자동 계산합니다.</p>');
   }
 
   /* ── STEP 6-1: K⁺ ── */
@@ -1600,7 +1773,7 @@ function run(){
       kNote='칼륨 정상.';
     }
     kBody+=cbox('<p>'+kNote+'</p>');
-    html+=mkStep('6-1','#a78bfa','K⁺',kTag,kCls,kBody);
+    html+=mkStep('III-1','#a78bfa','K⁺',kTag,kCls,kBody);
   }
   if(glc!==null){
     var glcTag,glcCls;
@@ -1634,7 +1807,7 @@ function run(){
     }
 
     glcBody+=cbox((corrNaNote?'<p>'+corrNaNote+'</p>':'')+(glcNote||''));
-    html+=mkStep('6-2','#34d399','Glucose',glcTag,glcCls,glcBody);
+    html+=mkStep('III-2','#34d399','Glucose',glcTag,glcCls,glcBody);
   }
 
   /* ── STEP 6-3: BUN / Creatinine / Phosphate / Osmol gap ── */
@@ -1721,7 +1894,7 @@ function run(){
       renBody+=nw('Osmol gap 계산을 위해 Na⁺, Glucose, BUN을 함께 입력해 주세요. (계산 삼투압 = 2×Na + Glc/18 + BUN/2.8)');
     }
 
-    html+=mkStep('6-3','#fb7185','BUN / Creatinine',renTag,renCls,renBody);
+    html+=mkStep('III-3','#fb7185','BUN / Creatinine',renTag,renCls,renBody);
   }
 
   /* ── STEP 6-4: Lactic acid ── */
@@ -1735,121 +1908,11 @@ function run(){
       cbox('<p>'+lacNote+'</p>'+
         (highAG&&lac>=2?'<p style="margin-top:4px;font-weight:600;color:var(--text)">HAGMA + 젖산 상승: L-Lactate가 AG 증가의 원인일 가능성이 높습니다. 조직 관류 개선이 최우선 치료입니다.</p>':'')+
         '<p style="margin-top:4px" class="mono">1 mmol/L = 1 mEq/L (젖산은 1가 산)</p>');
-    html+=mkStep('6-4','#f472b6','Lactic acid',lacTag,lacCls,lacBody);
+    html+=mkStep('III-4','#f472b6','Lactic acid',lacTag,lacCls,lacBody);
   }
 
   /* STEP 6: O2 */
   var o2Tag,o2Cls,o2Body='',discWarn=false;
-  var pfRatio=null,pfTag='',pfCls='',pfNote='',pfWarn=false;
-  if(po2!==null||sao2!==null){
-
-    // ── PaO2 판정 ──
-    var po2Tag='',po2Cls='',po2Note='';
-    if(po2!==null){
-      if(po2>=80){po2Tag='정상';po2Cls='g';po2Note='PaO₂ '+po2.toFixed(1)+' ≥ 80 mmHg → 정상 산소화';}
-      else if(po2>=60){po2Tag='경도 저산소혈증';po2Cls='a';po2Note='PaO₂ '+po2.toFixed(1)+' (60–79) → 경도 저산소혈증';}
-      else if(po2>=40){po2Tag='중등도 저산소혈증';po2Cls='r';po2Note='PaO₂ '+po2.toFixed(1)+' (40–59) → 중등도 저산소혈증';}
-      else{po2Tag='중증 저산소혈증';po2Cls='r';po2Note='PaO₂ '+po2.toFixed(1)+' < 40 mmHg → 중증 저산소혈증';}
-    }
-
-    // ── SaO2 판정 ──
-    var sao2Tag='',sao2Cls='',sao2Note='';
-    if(sao2!==null){
-      if(sao2>=95){sao2Tag='정상';sao2Cls='g';sao2Note='SaO₂ '+sao2.toFixed(1)+'% ≥ 95% → 정상';}
-      else if(sao2>=90){sao2Tag='경도 감소';sao2Cls='a';sao2Note='SaO₂ '+sao2.toFixed(1)+'% (90–94%) → 경계적 저하. 임상 상황에 따라 산소 보충 고려';}
-      else if(sao2>=85){sao2Tag='중등도 감소';sao2Cls='r';sao2Note='SaO₂ '+sao2.toFixed(1)+'% (85–89%) → 산소 공급 부족. 즉시 평가 필요';}
-      else{sao2Tag='심각한 감소';sao2Cls='r';sao2Note='SaO₂ '+sao2.toFixed(1)+'% < 85% → 심각한 저산소혈증. 긴급 대응 필요';}
-    }
-
-    // ── PaO2-SaO2 일관성 분석 ──
-    // 산소-헤모글로빈 해리곡선 기준 예상값 (간략 추정)
-    // PaO2≥100→SaO2≥98, PaO2≥80→SaO2≥95, PaO2≥60→SaO2≥90, PaO2≥40→SaO2≥75
-    var discNote=''; discWarn=false;
-    if(po2!==null&&sao2!==null){
-      // 예상 SaO2 범위 추정 (산소-헤모글로빈 해리곡선 기반)
-      var expectedSao2Min, expectedSao2Max;
-      if(po2>=100){expectedSao2Min=97;expectedSao2Max=100;}
-      else if(po2>=80){expectedSao2Min=95;expectedSao2Max=99;}
-      else if(po2>=70){expectedSao2Min=93;expectedSao2Max=97;}
-      else if(po2>=60){expectedSao2Min=89;expectedSao2Max=95;}
-      else if(po2>=50){expectedSao2Min=83;expectedSao2Max=92;}
-      else if(po2>=40){expectedSao2Min=73;expectedSao2Max=85;}
-      else{expectedSao2Min=50;expectedSao2Max=75;}
-
-      if(sao2>=expectedSao2Min&&sao2<=expectedSao2Max){
-        discNote='PaO₂ '+po2.toFixed(1)+' mmHg에서 예상 SaO₂ '+expectedSao2Min+'–'+expectedSao2Max+'% → 입력 SaO₂ '+sao2.toFixed(1)+'% 일치 (산소-헤모글로빈 해리곡선 부합)';
-      }else{
-        discWarn=true;
-        var discDir=(sao2>expectedSao2Max)?'PaO₂ 대비 SaO₂가 예상보다 높음':'PaO₂ 대비 SaO₂가 예상보다 낮음';
-        discNote='PaO₂ '+po2.toFixed(1)+' mmHg에서 예상 SaO₂ '+expectedSao2Min+'–'+expectedSao2Max+'%, 입력 SaO₂ '+sao2.toFixed(1)+'% → <strong>불일치</strong> ('+discDir+')<br>'
-          +'<br><strong>SaO₂가 예상보다 높은 경우 고려사항:</strong><br>'
-          +'• <strong>일산화탄소(CO) 중독</strong> — COHb를 옥시Hb로 오인, SpO₂ 실제보다 높게 표시<br>'
-          +'• <strong>고산소 흡입 상태</strong> — FiO₂↑로 SaO₂ 유지되면서 PaO₂가 낮은 경우<br>'
-          +'<br><strong>SaO₂가 예상보다 낮은 경우 고려사항:</strong><br>'
-          +'• <strong>메트헤모글로빈혈증</strong> — MetHb 증가 시 SaO₂ ~86%에서 정체<br>'
-          +'• <strong>헤모글로빈 산소 친화도 변화</strong> — pH↓, 체온↑, 2,3-DPG↑ → 해리곡선 우측 이동<br>'
-          +'• <strong>이상헤모글로빈증</strong> — 낫적혈구 등 특수 헤모글로빈<br>'
-          +'• <strong>검체 오류</strong> — 공기 노출, 과도한 지연';
-      }
-    }
-
-    // ── 최종 태그 결정 (PaO2·SaO2 중 더 심한 것 기준) ──
-    if(po2!==null&&sao2!==null){
-      var po2Score=po2>=80?0:po2>=60?1:po2>=40?2:3;
-      var sao2Score=sao2>=95?0:sao2>=90?1:sao2>=85?2:3;
-      var maxScore=Math.max(po2Score,sao2Score);
-      if(maxScore===0){o2Tag='정상 산소화';o2Cls='tag-ok';}
-      else if(maxScore===1){o2Tag='경도 저산소혈증';o2Cls='tag-warn';}
-      else if(maxScore===2){o2Tag='중등도 저산소혈증';o2Cls='tag-bad';}
-      else{o2Tag='중증 저산소혈증';o2Cls='tag-bad';}
-    }else if(po2!==null){
-      if(po2>=80){o2Tag='정상 산소화';o2Cls='tag-ok';}
-      else if(po2>=60){o2Tag='경도 저산소혈증';o2Cls='tag-warn';}
-      else if(po2>=40){o2Tag='중등도 저산소혈증';o2Cls='tag-bad';}
-      else{o2Tag='중증 저산소혈증';o2Cls='tag-bad';}
-    }else{
-      if(sao2>=95){o2Tag='정상 (SaO₂)';o2Cls='tag-ok';}
-      else if(sao2>=90){o2Tag='경도 저산소혈증';o2Cls='tag-warn';}
-      else{o2Tag='저산소혈증';o2Cls='tag-bad';}
-    }
-
-    // ── P/F ratio 계산 (FiO2 입력 시) ──
-    if(po2!==null&&fio2!==null&&fio2>0){
-      pfRatio=po2/fio2;
-      if(pfRatio>400){pfTag='정상';pfCls='g';pfNote='폐 가스교환 정상.';}
-      else if(pfRatio>300){pfTag='경계 (400 미만)';pfCls='a';pfNote='정상 하한에 근접. 폐 기능 주의 모니터링 필요.';}
-      else if(pfRatio>200){pfTag='경도 호흡부전';pfCls='a';pfNote='P/F ratio 201–300: 경도 호흡부전. 산소 보충 강화 및 원인 평가 필요.';pfWarn=true;}
-      else if(pfRatio>100){pfTag='중등도 호흡부전';pfCls='r';pfNote='P/F ratio 101–200: 중등도 호흡부전. PEEP 조정 및 폐보호환기 적용 고려.';pfWarn=true;}
-      else{pfTag='중증 호흡부전';pfCls='r';pfNote='P/F ratio ≤100: 중증 호흡부전. 복와위 환기, ECMO 등 구제 치료 고려.';pfWarn=true;}
-    }
-
-    o2Body='';
-    if(po2!==null) o2Body+=srow('PaO₂',po2.toFixed(1)+' mmHg',po2<60?'r':po2<80?'a':'g')+srow('정상 범위','80–100 mmHg');
-    if(sao2!==null) o2Body+=srow('SaO₂',sao2.toFixed(1)+'%',sao2<90?'r':sao2<95?'a':'g')+srow('정상 범위','95–100%');
-    if(fio2!==null) o2Body+=srow('FiO₂',fio2.toFixed(2)+(fio2===0.21?' (실내공기)':''));
-    if(pfRatio!==null){
-      o2Body+='<div style="border-top:1px dashed var(--border);margin:4px 0"></div>';
-      o2Body+=srow('P/F ratio (PaO₂÷FiO₂)',pfRatio.toFixed(0)+' mmHg',pfCls)+srow('판정',pfTag,pfCls);
-    }
-
-    var o2Notes='';
-    if(po2!==null) o2Notes+='<p>'+po2Note+'</p>';
-    if(sao2!==null) o2Notes+='<p style="margin-top:4px">'+sao2Note+'</p>';
-
-    o2Body+=cbox(o2Notes
-      +'<p style="margin-top:6px;font-size:11px;color:var(--text3)">PaO₂ 기준: ≥80 정상 / 60–79 경도 / 40–59 중등도 / &lt;40 중증<br>SaO₂ 기준: ≥95% 정상 / 90–94% 경계 / 85–89% 중등도 / &lt;85% 심각</p>'
-      +(pfRatio!==null?'<p style="margin-top:6px;font-size:11px;color:var(--text3)">P/F ratio = PaO₂ ÷ FiO₂ (Berlin ARDS 정의 기준)<br>&gt;400 정상 / 301–400 경계 / 201–300 경도 호흡부전 / 101–200 중등도 호흡부전 / ≤100 중증 호흡부전</p>':''))
-    +(pfRatio!==null&&pfWarn?nw('<p><strong>⚠ P/F ratio '+pfRatio.toFixed(0)+'</strong> — '+pfNote+'</p><p style="margin-top:4px;font-size:11px;color:var(--text3)">※ Berlin 정의는 PEEP ≥5 cmH₂O 조건을 요구합니다. 임상 판단과 함께 해석하세요.</p>'):pfRatio!==null?ni('<p>P/F ratio '+pfRatio.toFixed(0)+' — '+pfNote+'</p>'):'');
-
-    if(discNote){
-      o2Body+=(discWarn?nw('<p>⚠ <strong>PaO₂–SaO₂ 불일치</strong></p><p style="margin-top:4px">'+discNote+'</p>'):ni('<p>'+discNote+'</p>'));
-    }
-
-  }else{
-    o2Tag='미입력';o2Cls='tag-info';
-    o2Body='<p style="padding:10px 0;color:var(--text3)">PaO₂ 또는 SaO₂를 입력하면 산소화 상태를 평가합니다.</p>';
-  }
-  html+=mkStep(7,'#38bdf8','산소화',o2Tag,o2Cls,o2Body);
   html+='</div>'; /* close steps-wrap */
 
   /* FINAL CARD */
@@ -2051,7 +2114,7 @@ function run(){
   /* 인쇄용 헤더 */
   var now=new Date();
   var ts=now.getFullYear()+'.'+(now.getMonth()+1).toString().padStart(2,'0')+'.'+now.getDate().toString().padStart(2,'0')+' '+now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v5.6 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
+  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v5.7 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
   out.innerHTML=printHdr+html+finalHtml+fcHtml;
   document.getElementById('btn_pdf_wrap').style.display='block';
   out.style.display='block';
