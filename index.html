@@ -855,7 +855,7 @@ function buildFC(data){
       {x:PAD+(hw+g)*3,   w:hw,key:'nag',   lbl:'AG 정상\n(산증 없음)',sub:agStatus==='nag'?agSub:'AG≤12'}
     ];
     /* hag는 hagma로 통합 */
-    var agStatusMapped=(agStatus==='hag')?'hagma':(agStatus==='low'?'nag':(agStatus==='hag_uncertain'?'hag':'agStatus'));
+    var agStatusMapped=(agStatus==='hag')?'hagma':(agStatus==='low'?'nag':(agStatus==='hag_uncertain'?'hag_uncertain':agStatus));
     /* hag_uncertain: HAG 칸을 주황 점선 테두리로 표시, HAGMA 칸은 비활성 */
     var isHagUncertain=(agStatus==='hag_uncertain');
     if(isHagUncertain) agStatusMapped='hag_uncertain';
