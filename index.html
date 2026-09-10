@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#0f172a">
-<title>통합 ABGA 판독기 v5.8</title>
+<title>통합 ABGA 판독기 v5.10</title>
 <style>
 :root {
   --bg: #0f172a;
@@ -358,7 +358,7 @@ body{
 </head>
 <body>
 <header class="app-header">
-  <h1>통합 ABGA 판독기 <span>v5.8</span></h1>
+  <h1>통합 ABGA 판독기 <span>v5.10</span></h1>
   <button id="btn_settings" onclick="window._openSettings()" title="API 키 설정" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text2);opacity:.7;transition:opacity .15s;flex-shrink:0" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
@@ -645,7 +645,7 @@ function printResult(){
     }catch(e){}
   }
   var content='<!DOCTYPE html><html><head><meta charset="UTF-8">'
-    +'<title>통합 ABGA 판독기 v5.8 — 판독 결과</title>'
+    +'<title>통합 ABGA 판독기 v5.10 — 판독 결과</title>'
     +'<style>'+styles
     +'body{background:#fff;color:#000;font-family:system-ui,sans-serif;padding:10px 14px;max-width:800px;margin:0 auto}'
     +'.step-body{display:block!important}.drxb,.goldmark-body{display:block!important}'
@@ -747,6 +747,8 @@ function buildFC(data){
   }
 
   var pType=data.primaryType, cStatus=data.compStatus, agStatus=data.agStatus, drStatus=data.drStatus;
+  var cUncertain=(cStatus==='chronic_uncertain'||cStatus==='acute_uncertain');
+  var cStatusNorm=(cStatus==='chronic_uncertain')?'chronic':(cStatus==='acute_uncertain')?'acute':cStatus;
   var phAcid=(data.phStatus==='acidemia'||data.phStatus==='normal_acid');
   var phAlk=(data.phStatus==='alkalemia'||data.phStatus==='normal_alk');
   var phNeut=(data.phStatus==='neutral');
@@ -829,23 +831,24 @@ function buildFC(data){
     ];
   }else if(pType==='resp_acid'||pType==='resp_alk'){
     r2=[
-      {x:PAD,          w:w4,key:'acute',         lbl:'급성 반응',             sub:cStatus==='acute'?          'HCO₃⁻ '+data.hco3.toFixed(1):'완충 단계'},
-      {x:PAD+w4+g,     w:w4,key:'chronic',       lbl:'만성 보상',             sub:cStatus==='chronic'?        'HCO₃⁻ '+data.hco3.toFixed(1):'>72h'},
+      {x:PAD,          w:w4,key:'acute',         lbl:(cStatus==='acute_uncertain'?'급성 반응?':'급성 반응'),             sub:cStatusNorm==='acute'?          (cUncertain?'HCO₃⁻ '+data.hco3.toFixed(1)+' (혼합?)':'HCO₃⁻ '+data.hco3.toFixed(1)):'완충 단계'},
+      {x:PAD+w4+g,     w:w4,key:'chronic',       lbl:(cStatus==='chronic_uncertain'?'만성 보상?':'만성 보상'),             sub:cStatusNorm==='chronic'?        (cUncertain?'HCO₃⁻ '+data.hco3.toFixed(1)+' (혼합?)':'HCO₃⁻ '+data.hco3.toFixed(1)):'>72h'},
       {x:PAD+2*(w4+g), w:w4,key:'mixed_met_alk', lbl:'대사성\n알칼리증 혼합',sub:cStatus==='mixed_met_alk'?  'HCO₃⁻ '+data.hco3.toFixed(1):'HCO₃⁻↑↑'},
       {x:PAD+3*(w4+g), w:w4,key:'mixed_met_acid',lbl:'대사성\n산증 혼합',    sub:cStatus==='mixed_met_acid'? 'HCO₃⁻ '+data.hco3.toFixed(1):'HCO₃⁻↓↓'}
     ];
   }else{
     r2=[{x:PAD,w:W-PAD*2,key:'na',lbl:'보상 평가 불가',sub:'일차장애 불명확'}];
   }
-  var a2=r2.filter(function(n){return n.key===cStatus;})[0]||r2[0];
+  var a2=r2.filter(function(n){return n.key===cStatusNorm;})[0]||r2[0];
   r2.forEach(function(n){
     var isMix=n.key.indexOf('mixed')===0;
-    var col=(n.key===cStatus)?(isMix?C.warn:(n.key==='adequate'||n.key==='acute'||n.key==='chronic'?C.ok:C.dim)):C.dim;
+    var isActive=(n.key===cStatusNorm);
+    var col=isActive?((isMix||cUncertain)?C.warn:(n.key==='adequate'||n.key==='acute'||n.key==='chronic'?C.ok:C.dim)):C.dim;
     svg+=box(n.x,bby[2],n.w,col,n.lbl,n.sub);
   });
   var cx2=a2.x+a2.w/2;
   svg+=arr(cx1,bby[1]+BH,cx2,bby[2],true);
-  r2.forEach(function(n){if(n.key!==cStatus)svg+=arr(cx1,bby[1]+BH,n.x+n.w/2,bby[2],false);});
+  r2.forEach(function(n){if(n.key!==cStatusNorm)svg+=arr(cx1,bby[1]+BH,n.x+n.w/2,bby[2],false);});
 
   /* ── ROW 3: AG ── (Na/Cl 미입력 시 생략) */
 
@@ -1282,6 +1285,7 @@ function run(){
     if(loHCO&&loCO2){pType='met_acid';pTag='대사성 산증 (추정)';pCls='tag-warn';rNote='pH 정상 산성쪽 → HCO₃⁻↓ + PaCO₂↓ → 일차원인이 대사성 (PaCO₂ 감소는 호흡 보상)';}
     else if(loHCO){pType='met_acid';pTag='대사성 산증 (추정)';pCls='tag-warn';rNote='pH 정상 산성쪽 → HCO₃⁻↓ → 일차원인이 대사성 (PaCO₂ 보상은 정상 범위 내)';}
     else if(hiHCO&&hiCO2){pType='resp_acid';pTag='호흡성 산증 (추정)';pCls='tag-warn';rNote='pH 정상 산성쪽 → PaCO₂↑ + HCO₃⁻↑ → 일차원인이 호흡성 (HCO₃⁻ 증가는 신장 보상)';}
+    else if(hiCO2){pType='resp_acid';pTag='호흡성 산증 (추정)';pCls='tag-warn';rNote='pH 정상 산성쪽 → PaCO₂↑ → 일차원인이 호흡성 (HCO₃⁻가 아직 정상 범위인 것은 신장 보상이 완전하지 않거나 급성 단계임을 시사 — 보상기전 평가에서 급성/만성 여부를 확인하세요)';}
     else if(allNormal){pType='normal';pTag='정상';pCls='tag-ok';rNote='pH, PaCO₂, HCO₃⁻ 모두 정상 범위 — 산염기 이상 없음';}
     else{pType='mix_norm_acid';pTag='혼합장애 의심';pCls='tag-warn';rNote='pH 정상 산성쪽이나 PaCO₂·HCO₃⁻ 방향이 일치하지 않아 혼합장애 가능성';}
   }else{
@@ -1289,6 +1293,7 @@ function run(){
     else if(hiHCO&&hiCO2){pType='met_alk';pTag='대사성 알칼리증 (추정)';pCls='tag-warn';rNote='pH 정상 알칼리쪽 → HCO₃⁻↑ + PaCO₂↑ → 일차원인이 대사성 (PaCO₂ 증가는 호흡 보상)';}
     else if(hiHCO){pType='met_alk';pTag='대사성 알칼리증 (추정)';pCls='tag-warn';rNote='pH 정상 알칼리쪽 → HCO₃⁻↑ → 일차원인이 대사성 (PaCO₂ 보상은 정상 범위 내)';}
     else if(loHCO&&loCO2){pType='resp_alk';pTag='호흡성 알칼리증 (추정)';pCls='tag-warn';rNote='pH 정상 알칼리쪽 → PaCO₂↓ + HCO₃⁻↓ → 일차원인이 호흡성 (HCO₃⁻ 감소는 신장 보상)';}
+    else if(loCO2){pType='resp_alk';pTag='호흡성 알칼리증 (추정)';pCls='tag-warn';rNote='pH 정상 알칼리쪽 → PaCO₂↓ → 일차원인이 호흡성 (HCO₃⁻가 아직 정상 범위인 것은 신장 보상이 완전하지 않거나 급성 단계임을 시사 — 보상기전 평가에서 급성/만성 여부를 확인하세요)';}
     else if(allNormal){pType='normal';pTag='정상';pCls='tag-ok';rNote='pH, PaCO₂, HCO₃⁻ 모두 정상 범위 — 산염기 이상 없음';}
     else{pType='mix_norm_alk';pTag='혼합장애 의심';pCls='tag-warn';rNote='pH 정상 알칼리쪽이나 PaCO₂·HCO₃⁻ 방향이 일치하지 않아 혼합장애 가능성';}
   }
@@ -1346,9 +1351,9 @@ function run(){
     var dC=hco3-cH, dA=hco3-aH;
     if(Math.abs(dC)<=2){cTag='만성 보상';cCls='tag-info';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 만성 예측값 '+cH.toFixed(1)+' (차이 '+dC.toFixed(1)+') → 적절한 만성 대사 보상';isChronic=true;compLabel='만성 대사 보상';fcData.compStatus='chronic';}
     else if(Math.abs(dA)<=2){cTag='급성 반응 (완충 단계)';cCls='tag-ok';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성 예측값 '+aH.toFixed(1)+' (차이 '+dA.toFixed(1)+') — 예측 범위 내입니다.<br><br>급성 호흡성 산증에서 HCO₃⁻의 소폭 증가는 <strong style="font-weight:600">신장 보상이 아닌 CO₂ 증가에 의한 단순 physicochemical 완충 반응</strong>입니다. 신장 보상(HCO₃⁻ 재흡수 증가)은 6–12시간 이후부터 시작되며, 수일에 걸쳐 만성 보상 수준에 도달합니다.';isAcute=true;compLabel='급성 반응 (완충 단계)';fcData.compStatus='acute';}
-    else if(dC>2&&dC<=4){cTag='만성 보상 (예측 범위 초과)';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 만성 예측값 '+cH.toFixed(1)+'보다 '+dC.toFixed(1)+' mEq/L 높습니다. 예측값보다 높다는 것은 HCO₃⁻가 더 올라가게 만드는 별도 원인, 즉 <strong style="font-weight:600">대사성 알칼리증 혼합</strong>(예: 이뇨제·구토)을 임상적으로 확인하세요.';isChronic=true;compLabel='만성 보상 (예측 범위 초과)';fcData.compStatus='chronic';}
+    else if(dC>2&&dC<=4){cTag='만성 보상 (예측 범위 초과)';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 만성 예측값 '+cH.toFixed(1)+'보다 '+dC.toFixed(1)+' mEq/L 높습니다. 예측값보다 높다는 것은 HCO₃⁻가 더 올라가게 만드는 별도 원인, 즉 <strong style="font-weight:600">대사성 알칼리증 혼합</strong>(예: 이뇨제·구토)을 임상적으로 확인하세요.';compLabel='보상 판정 불확실 — 만성 보상 또는 혼합장애 가능성 (임상 확인 필요)';fcData.compStatus='chronic_uncertain';}
     else if(dC>4){cTag='혼합: +대사성 알칼리증';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 만성 예측값 '+cH.toFixed(1)+'보다 '+dC.toFixed(1)+' mEq/L 높음 → 대사성 알칼리증 독립 공존 가능성';isMixed=true;mixComponents=['호흡성 산증','대사성 알칼리증'];compLabel='보상 초과 → 대사성 알칼리증 혼합';fcData.compStatus='mixed_met_alk';}
-    else if(dA<-2&&dA>=-4){cTag='급성 반응 (예측 범위 부족)';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성 예측값 '+aH.toFixed(1)+'보다 '+Math.abs(dA).toFixed(1)+' mEq/L 낮습니다. 예측값보다 낮다는 것은 HCO₃⁻를 추가로 소비하는 별도 원인, 즉 <strong style="font-weight:600">대사성 산증 혼합</strong>의 가능성을 시사합니다. AG 결과를 함께 확인하세요.';isAcute=true;compLabel='급성 반응 (예측 범위 부족)';fcData.compStatus='acute';}
+    else if(dA<-2&&dA>=-4){cTag='급성 반응 (예측 범위 부족)';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성 예측값 '+aH.toFixed(1)+'보다 '+Math.abs(dA).toFixed(1)+' mEq/L 낮습니다. 예측값보다 낮다는 것은 HCO₃⁻를 추가로 소비하는 별도 원인, 즉 <strong style="font-weight:600">대사성 산증 혼합</strong>의 가능성을 시사합니다. AG 결과를 함께 확인하세요.';compLabel='보상 판정 불확실 — 급성 반응 또는 혼합장애 가능성 (임상 확인 필요)';fcData.compStatus='acute_uncertain';}
     else{cTag='혼합: +대사성 산증';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성 예측값 '+aH.toFixed(1)+'보다 '+Math.abs(dA).toFixed(1)+' mEq/L 낮음 → 대사성 산증 독립 공존 가능성';isMixed=true;mixComponents=['호흡성 산증','대사성 산증'];compLabel='보상 부족 → 대사성 산증 혼합';fcData.compStatus='mixed_met_acid';}
   }else if(pType==='resp_alk'){
     var d2=40-pco2,aH2=24-d2*0.2,cH2=24-d2*0.45;
@@ -1366,9 +1371,9 @@ function run(){
     var dC2=hco3-cH2, dA2=hco3-aH2;
     if(Math.abs(dC2)<=2){cTag='만성 보상';cCls='tag-info';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 만성 예측값 '+cH2.toFixed(1)+' (차이 '+dC2.toFixed(1)+') → 적절한 만성 대사 보상';isChronic=true;compLabel='만성 대사 보상';fcData.compStatus='chronic';}
     else if(Math.abs(dA2)<=2){cTag='급성 반응 (완충 단계)';cCls='tag-ok';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성 예측값 '+aH2.toFixed(1)+' (차이 '+dA2.toFixed(1)+') — 예측 범위 내입니다.<br><br>급성 호흡성 알칼리증에서 HCO₃⁻의 소폭 감소는 <strong style="font-weight:600">신장 보상이 아닌 PaCO₂ 감소에 의한 단순 physicochemical 완충 반응</strong>입니다. 신장 보상(HCO₃⁻ 재흡수 억제 및 배출 증가)은 4–12시간 이후부터 시작되며, 수일에 걸쳐 만성 보상 수준에 도달합니다.';isAcute=true;compLabel='급성 반응 (완충 단계)';fcData.compStatus='acute';}
-    else if(dC2<-2&&dC2>=-4){cTag='만성 보상 (예측 범위 부족)';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 만성 예측값 '+cH2.toFixed(1)+'보다 '+Math.abs(dC2).toFixed(1)+' mEq/L 낮습니다. 예측값보다 낮다는 것은 HCO₃⁻를 추가로 소비하는 별도 원인, 즉 <strong style="font-weight:600">대사성 산증 혼합</strong>의 가능성을 시사합니다. AG 결과를 함께 확인하세요.';isChronic=true;compLabel='만성 보상 (예측 범위 부족)';fcData.compStatus='chronic';}
+    else if(dC2<-2&&dC2>=-4){cTag='만성 보상 (예측 범위 부족)';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 만성 예측값 '+cH2.toFixed(1)+'보다 '+Math.abs(dC2).toFixed(1)+' mEq/L 낮습니다. 예측값보다 낮다는 것은 HCO₃⁻를 추가로 소비하는 별도 원인, 즉 <strong style="font-weight:600">대사성 산증 혼합</strong>의 가능성을 시사합니다. AG 결과를 함께 확인하세요.';compLabel='보상 판정 불확실 — 만성 보상 또는 혼합장애 가능성 (임상 확인 필요)';fcData.compStatus='chronic_uncertain';}
     else if(dC2<-4){cTag='혼합: +대사성 산증';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 만성 예측값 '+cH2.toFixed(1)+'보다 '+Math.abs(dC2).toFixed(1)+' mEq/L 낮음 → 대사성 산증 독립 공존 가능성';isMixed=true;mixComponents=['호흡성 알칼리증','대사성 산증'];compLabel='보상 초과 → 혼합 대사성 산증';fcData.compStatus='mixed_met_acid';}
-    else if(dA2>2&&dA2<=4){cTag='급성 반응 (예측 범위 초과)';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성 예측값 '+aH2.toFixed(1)+'보다 '+dA2.toFixed(1)+' mEq/L 높습니다.<br><br>호흡성 알칼리증에서 HCO₃⁻는 감소해야 하는데 감소가 불충분한 상태입니다. 두 가지 가능성을 고려해야 합니다:<br>① <strong style="font-weight:600">대사성 알칼리증 혼합</strong> — HCO₃⁻를 올리는 별도 원인(구토·이뇨제 등)이 공존하여 감소를 상쇄하는 경우<br>② <strong style="font-weight:600">대사성 산증 혼합</strong> — HAGMA 등이 동시에 존재하여 HCO₃⁻를 소비하므로 겉으로는 정상처럼 보이지만 실제로는 두 장애가 상쇄되고 있는 경우<br><br>AG 결과와 임상 맥락을 함께 확인하세요.';isAcute=true;compLabel='급성 반응 (예측 범위 초과)';fcData.compStatus='acute';}
+    else if(dA2>2&&dA2<=4){cTag='급성 반응 (예측 범위 초과)';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성 예측값 '+aH2.toFixed(1)+'보다 '+dA2.toFixed(1)+' mEq/L 높습니다.<br><br>호흡성 알칼리증에서 HCO₃⁻는 감소해야 하는데 감소가 불충분한 상태입니다. 두 가지 가능성을 고려해야 합니다:<br>① <strong style="font-weight:600">대사성 알칼리증 혼합</strong> — HCO₃⁻를 올리는 별도 원인(구토·이뇨제 등)이 공존하여 감소를 상쇄하는 경우<br>② <strong style="font-weight:600">대사성 산증 혼합</strong> — HAGMA 등이 동시에 존재하여 HCO₃⁻를 소비하므로 겉으로는 정상처럼 보이지만 실제로는 두 장애가 상쇄되고 있는 경우<br><br>AG 결과와 임상 맥락을 함께 확인하세요.';compLabel='보상 판정 불확실 — 급성 반응 또는 혼합장애 가능성 (임상 확인 필요)';fcData.compStatus='acute_uncertain';}
     else if(dA2>4){cTag='혼합: +대사성 알칼리증';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성/만성 예측 모두 크게 초과 → 대사성 알칼리증 독립 공존 가능성';isMixed=true;mixComponents=['호흡성 알칼리증','대사성 알칼리증'];compLabel='과보상 → 대사성 알칼리증 혼합';fcData.compStatus='mixed_met_alk';}
     else{cTag='보상 범위 이탈';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성/만성 보상 예측 범위 모두 벗어남. 혼합장애 가능성 검토 필요';compLabel='보상 범위 이탈';fcData.compStatus='adequate';}
   }else{cTag='추가 평가 필요';cCls='tag-warn';cNote='일차장애 확정이 어려워 보상 공식 적용이 제한됩니다.';compLabel='판정 보류';cFormula='일차장애 불명확';cFormulaDetail='';fcData.compStatus='na';}
@@ -2061,7 +2066,7 @@ function run(){
 
   var blocks='<div class="dxblocks">';
   blocks+='<div class="dxblock"><div class="dxblock-lbl">최종 진단</div><div class="dxblock-val">'+fullTitle+'</div></div>';
-  var compStr=compLabel+(isAcute?' (급성 반응)':isChronic?' (만성)':'');
+  var compStr=compLabel;
   blocks+='<div class="dxblock"><div class="dxblock-lbl">보상</div><div class="dxblock-val">'+compStr+'</div></div>';
   /* ④ AG */
   if(agEff!==null)blocks+='<div class="dxblock"><div class="dxblock-lbl">음이온차 (AG)</div><div class="dxblock-val">'
@@ -2120,7 +2125,7 @@ function run(){
   /* 인쇄용 헤더 */
   var now=new Date();
   var ts=now.getFullYear()+'.'+(now.getMonth()+1).toString().padStart(2,'0')+'.'+now.getDate().toString().padStart(2,'0')+' '+now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v5.8 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
+  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v5.10 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
   out.innerHTML=printHdr+html+finalHtml+fcHtml;
   document.getElementById('btn_pdf_wrap').style.display='block';
   out.style.display='block';
