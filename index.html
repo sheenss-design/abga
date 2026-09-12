@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#0f172a">
-<title>통합 ABGA 판독기 v5.10</title>
+<title>통합 ABGA 판독기 v5.11</title>
 <style>
 :root {
   --bg: #0f172a;
@@ -358,7 +358,7 @@ body{
 </head>
 <body>
 <header class="app-header">
-  <h1>통합 ABGA 판독기 <span>v5.10</span></h1>
+  <h1>통합 ABGA 판독기 <span>v5.11</span></h1>
   <button id="btn_settings" onclick="window._openSettings()" title="API 키 설정" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text2);opacity:.7;transition:opacity .15s;flex-shrink:0" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
@@ -645,7 +645,7 @@ function printResult(){
     }catch(e){}
   }
   var content='<!DOCTYPE html><html><head><meta charset="UTF-8">'
-    +'<title>통합 ABGA 판독기 v5.10 — 판독 결과</title>'
+    +'<title>통합 ABGA 판독기 v5.11 — 판독 결과</title>'
     +'<style>'+styles
     +'body{background:#fff;color:#000;font-family:system-ui,sans-serif;padding:10px 14px;max-width:800px;margin:0 auto}'
     +'.step-body{display:block!important}.drxb,.goldmark-body{display:block!important}'
@@ -2125,7 +2125,7 @@ function run(){
   /* 인쇄용 헤더 */
   var now=new Date();
   var ts=now.getFullYear()+'.'+(now.getMonth()+1).toString().padStart(2,'0')+'.'+now.getDate().toString().padStart(2,'0')+' '+now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v5.10 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
+  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v5.11 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
   out.innerHTML=printHdr+html+finalHtml+fcHtml;
   document.getElementById('btn_pdf_wrap').style.display='block';
   out.style.display='block';
@@ -2217,11 +2217,40 @@ document.querySelectorAll('input').forEach(function(el){
   // ── 카메라 누적 촬영 ──
   var _cameraImgs=[];
 
+  // 촬영 직후 즉시 리사이즈(최대 1600px, 품질 0.85) — "분석 시작" 시점에 몰리지 않도록 미리 처리
+  function _compressImage(file,maxDim,quality){
+    return new Promise(function(resolve){
+      var img=new Image();
+      var url=URL.createObjectURL(file);
+      img.onload=function(){
+        var w=img.width,h=img.height;
+        if(w>maxDim||h>maxDim){
+          if(w>h){h=Math.round(h*maxDim/w);w=maxDim;}
+          else{w=Math.round(w*maxDim/h);h=maxDim;}
+        }
+        var canvas=document.createElement('canvas');
+        canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        canvas.toBlob(function(blob){
+          URL.revokeObjectURL(url);
+          resolve(blob||file);
+        },'image/jpeg',quality);
+      };
+      img.onerror=function(){URL.revokeObjectURL(url);resolve(file);};
+      img.src=url;
+    });
+  }
+
   window._addCameraPhoto=function(files){
     if(!files||!files.length)return;
     var file=files[0];
     var idx=_cameraImgs.length;
     _cameraImgs.push(file);
+    // 백그라운드에서 즉시 압축, 완료되면 해당 파일을 압축본으로 교체 (삭제로 인덱스가 밀려도 안전하도록 참조로 탐색)
+    _compressImage(file,1600,0.85).then(function(blob){
+      var pos=_cameraImgs.indexOf(file);
+      if(pos!==-1) _cameraImgs[pos]=blob;
+    });
 
     // 미리보기 추가
     var preview=document.getElementById('camera_preview');
