@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#0f172a">
-<title>통합 ABGA 판독기 v5.13</title>
+<title>통합 ABGA 판독기 v5.11</title>
 <style>
 :root {
   --bg: #0f172a;
@@ -358,42 +358,8 @@ body{
 </head>
 <body>
 <header class="app-header">
-  <h1>통합 ABGA 판독기 <span>v5.13</span></h1>
-  <button id="btn_settings" onclick="window._openSettings()" title="API 키 설정" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text2);opacity:.7;transition:opacity .15s;flex-shrink:0" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-  </button>
+  <h1>통합 ABGA 판독기 <span>v5.12 · 무료 OCR</span></h1>
 </header>
-
-<!-- 설정 모달 -->
-<div id="modal_settings" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.5);align-items:center;justify-content:center">
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;width:min(420px,92vw);max-height:90vh;overflow-y:auto">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <h2 style="font-size:16px;font-weight:700;color:var(--text1)">⚙ 설정</h2>
-      <button onclick="window._closeSettings()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:20px;line-height:1;padding:4px">×</button>
-    </div>
-    <div style="margin-bottom:20px">
-      <div style="font-size:13px;font-weight:600;color:var(--text1);margin-bottom:6px">Claude API 키</div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.5">
-        API 키를 등록하면 검사 결과 사진을 찍어 자동으로 입력값을 채울 수 있습니다.<br>
-        키는 이 기기 브라우저에만 저장되며 외부 서버로 전송되지 않습니다.
-      </div>
-      <div style="display:flex;gap:8px">
-        <input id="input_apikey" type="password" placeholder="sk-ant-api03-..." style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text1);font-size:13px;font-family:monospace">
-        <button onclick="window._saveApiKey()" style="padding:10px 16px;background:var(--accent2);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">저장</button>
-      </div>
-      <div id="apikey_status" style="font-size:11px;margin-top:8px;color:var(--text3)"></div>
-      <button onclick="window._deleteApiKey()" id="btn_delete_key" style="display:none;margin-top:8px;padding:6px 12px;background:none;border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text3);cursor:pointer">API 키 삭제</button>
-    </div>
-    <div style="border-top:1px solid var(--border);padding-top:16px">
-      <div style="font-size:11px;color:var(--text3);line-height:1.6">
-        <strong style="color:var(--text2)">API 키 발급 방법</strong><br>
-        1. <a href="https://console.anthropic.com" target="_blank" style="color:var(--accent2)">console.anthropic.com</a> 접속<br>
-        2. 로그인 → API Keys → Create Key<br>
-        3. 생성된 키(sk-ant-...) 복사 후 위에 붙여넣기
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- 사진 분석 확인 모달 -->
 <div id="modal_vision" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.5);align-items:center;justify-content:center">
@@ -413,8 +379,8 @@ body{
 </div>
 
 <main class="main">
-  <!-- 사진 자동 입력 (API 키 있을 때만 표시) -->
-  <div id="vision_btn_wrap" style="display:none;margin-bottom:14px">
+  <!-- 무료 로컬 OCR 사진 자동 입력 -->
+  <div id="vision_btn_wrap" style="margin-bottom:14px">
 
     <!-- 3가지 입력 방법 버튼 -->
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
@@ -434,7 +400,7 @@ body{
         <span>파일 선택</span>
         <span style="font-size:10px;font-weight:400;color:var(--text3)">드래그&드롭 가능</span>
       </label>
-      <input id="input_photo" type="file" accept="image/*" multiple style="display:none" onchange="window._analyzePhoto(this.files)">
+      <input id="input_photo" type="file" accept="image/*" multiple style="display:none" onchange="window._queuePhotoFiles(this.files)">
 
       <!-- 클립보드 붙여넣기 -->
       <button onclick="window._triggerPaste()" id="btn_io_paste" class="io-btn" style="font-family:inherit">
@@ -475,7 +441,7 @@ body{
 
     <div id="vision_loading" style="display:none;text-align:center;padding:10px;font-size:12px;color:var(--text3)">
       <span style="display:inline-block;animation:spin 1s linear infinite">⏳</span>
-      <span id="vision_loading_msg">Claude가 결과지를 분석 중입니다...</span>
+      <span id="vision_loading_msg">무료 로컬 OCR이 결과지를 분석 중입니다...</span>
     </div>
   </div>
   <p class="section-title">I. 산소화 지표 <span class="badge-opt">선택</span></p>
@@ -507,7 +473,7 @@ body{
     </div>
   </div>
 
-  <p class="section-title">II. 산-염기 지표 <span class="badge-req">필수</span></p>
+  <p class="section-title">II. 산-염기 지표 <span class="badge-req">REQUIRED</span></p>
   <div class="input-grid">
     <div class="field">
       <div class="field-label">pH</div>
@@ -645,7 +611,7 @@ function printResult(){
     }catch(e){}
   }
   var content='<!DOCTYPE html><html><head><meta charset="UTF-8">'
-    +'<title>통합 ABGA 판독기 v5.13 — 판독 결과</title>'
+    +'<title>통합 ABGA 판독기 v5.11 — 판독 결과</title>'
     +'<style>'+styles
     +'body{background:#fff;color:#000;font-family:system-ui,sans-serif;padding:10px 14px;max-width:800px;margin:0 auto}'
     +'.step-body{display:block!important}.drxb,.goldmark-body{display:block!important}'
@@ -2125,7 +2091,7 @@ function run(){
   /* 인쇄용 헤더 */
   var now=new Date();
   var ts=now.getFullYear()+'.'+(now.getMonth()+1).toString().padStart(2,'0')+'.'+now.getDate().toString().padStart(2,'0')+' '+now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v5.13 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
+  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v5.11 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
   out.innerHTML=printHdr+html+finalHtml+fcHtml;
   document.getElementById('btn_pdf_wrap').style.display='block';
   out.style.display='block';
@@ -2153,481 +2119,38 @@ document.querySelectorAll('input').forEach(function(el){
 })();
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script>
-// ══════════════════════════════════════════════════
-// Claude Vision 자동 입력 기능
-// ══════════════════════════════════════════════════
 (function(){
-  var STORAGE_KEY='abga_claude_api_key';
-  var _extracted={};
-
-  // ── API 키 관련 ──
-  function getKey(){return localStorage.getItem(STORAGE_KEY)||'';}
-  function updateVisionBtn(){
-    var has=!!getKey();
-    var wrap=document.getElementById('vision_btn_wrap');
-    if(wrap) wrap.style.display=has?'block':'none';
-  }
-
-  window._openSettings=function(){
-    var modal=document.getElementById('modal_settings');
-    var inp=document.getElementById('input_apikey');
-    var st=document.getElementById('apikey_status');
-    var delBtn=document.getElementById('btn_delete_key');
-    var key=getKey();
-    if(key){
-      inp.value=key;
-      st.textContent='✓ API 키가 저장되어 있습니다.';
-      st.style.color='var(--green,#22c55e)';
-      delBtn.style.display='inline-block';
-    }else{
-      inp.value='';
-      st.textContent='API 키가 없습니다. 키를 입력하면 사진 자동 입력 기능이 활성화됩니다.';
-      st.style.color='var(--text3)';
-      delBtn.style.display='none';
-    }
-    modal.classList.add('open');
-  };
-  window._closeSettings=function(){
-    document.getElementById('modal_settings').classList.remove('open');
-  };
-  window._saveApiKey=function(){
-    var val=document.getElementById('input_apikey').value.trim();
-    var st=document.getElementById('apikey_status');
-    var delBtn=document.getElementById('btn_delete_key');
-    if(!val){st.textContent='키를 입력해주세요.';st.style.color='var(--red,#ef4444)';return;}
-    if(!val.startsWith('sk-')){st.textContent='올바른 API 키 형식이 아닙니다. (sk-ant-... 형태)';st.style.color='var(--red,#ef4444)';return;}
-    localStorage.setItem(STORAGE_KEY,val);
-    st.textContent='✓ 저장되었습니다. 사진 자동 입력 기능이 활성화됩니다.';
-    st.style.color='var(--green,#22c55e)';
-    delBtn.style.display='inline-block';
-    updateVisionBtn();
-    setTimeout(window._closeSettings,1200);
-  };
-  window._deleteApiKey=function(){
-    localStorage.removeItem(STORAGE_KEY);
-    document.getElementById('input_apikey').value='';
-    var st=document.getElementById('apikey_status');
-    st.textContent='API 키가 삭제되었습니다.';
-    st.style.color='var(--text3)';
-    document.getElementById('btn_delete_key').style.display='none';
-    updateVisionBtn();
-  };
-
-  // ── 카메라 누적 촬영 ──
-  var _cameraImgs=[];
-
-  // 촬영 직후 즉시 리사이즈(최대 1600px, 품질 0.85) — "분석 시작" 시점에 몰리지 않도록 미리 처리
-  function _compressImage(file,maxDim,quality){
-    return new Promise(function(resolve){
-      var img=new Image();
-      var url=URL.createObjectURL(file);
-      img.onload=function(){
-        var w=img.width,h=img.height;
-        if(w>maxDim||h>maxDim){
-          if(w>h){h=Math.round(h*maxDim/w);w=maxDim;}
-          else{w=Math.round(w*maxDim/h);h=maxDim;}
-        }
-        var canvas=document.createElement('canvas');
-        canvas.width=w;canvas.height=h;
-        canvas.getContext('2d').drawImage(img,0,0,w,h);
-        canvas.toBlob(function(blob){
-          URL.revokeObjectURL(url);
-          resolve(blob||file);
-        },'image/jpeg',quality);
-      };
-      img.onerror=function(){URL.revokeObjectURL(url);resolve(file);};
-      img.src=url;
-    });
-  }
-
-  window._addCameraPhoto=function(files){
-    if(!files||!files.length)return;
-    var file=files[0];
-    var idx=_cameraImgs.length;
-    _cameraImgs.push(file);
-    // 백그라운드에서 즉시 압축, 완료되면 해당 파일을 압축본으로 교체 (삭제로 인덱스가 밀려도 안전하도록 참조로 탐색)
-    _compressImage(file,1600,0.85).then(function(blob){
-      var pos=_cameraImgs.indexOf(file);
-      if(pos!==-1) _cameraImgs[pos]=blob;
-    });
-
-    // 미리보기 추가
-    var preview=document.getElementById('camera_preview');
-    var url=URL.createObjectURL(file);
-    var wrap=document.createElement('div');
-    wrap.id='cam_thumb_'+idx;
-    wrap.style.cssText='position:relative;display:inline-block';
-
-    var img=document.createElement('img');
-    img.src=url;
-    img.style.cssText='height:72px;border-radius:8px;border:1.5px solid var(--accent2);object-fit:cover;display:block';
-
-    // 번호
-    var num=document.createElement('span');
-    num.style.cssText='position:absolute;top:3px;left:3px;background:var(--accent2);color:#fff;font-size:9px;font-weight:700;border-radius:4px;padding:1px 5px;pointer-events:none';
-    num.textContent=idx+1;
-    num.className='cam-num';
-
-    // 삭제 버튼
-    var del=document.createElement('button');
-    del.innerHTML='&times;';
-    del.title='이 사진 삭제';
-    del.style.cssText='position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#ef4444;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;font-family:inherit';
-    del.setAttribute('data-idx',idx);
-    del.onclick=function(e){
-      e.stopPropagation();
-      window._removeCameraPhoto(parseInt(this.getAttribute('data-idx')));
-    };
-
-    wrap.appendChild(img);
-    wrap.appendChild(num);
-    wrap.appendChild(del);
-    if(preview)preview.appendChild(wrap);
-
-    _updateCameraStatus();
-    document.getElementById('input_camera').value='';
-  };
-
-  window._removeCameraPhoto=function(idx){
-    if(idx<0||idx>=_cameraImgs.length)return;
-    // URL 해제 및 배열에서 제거
-    _cameraImgs.splice(idx,1);
-
-    // 미리보기 전체 재렌더링
-    var preview=document.getElementById('camera_preview');
-    preview.innerHTML='';
-    _cameraImgs.forEach(function(f,i){
-      var url=URL.createObjectURL(f);
-      var wrap=document.createElement('div');
-      wrap.id='cam_thumb_'+i;
-      wrap.style.cssText='position:relative;display:inline-block';
-
-      var img=document.createElement('img');
-      img.src=url;
-      img.style.cssText='height:72px;border-radius:8px;border:1.5px solid var(--accent2);object-fit:cover;display:block';
-
-      var num=document.createElement('span');
-      num.style.cssText='position:absolute;top:3px;left:3px;background:var(--accent2);color:#fff;font-size:9px;font-weight:700;border-radius:4px;padding:1px 5px;pointer-events:none';
-      num.textContent=i+1;
-
-      var del=document.createElement('button');
-      del.innerHTML='&times;';
-      del.style.cssText='position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#ef4444;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;font-family:inherit';
-      del.setAttribute('data-idx',i);
-      del.onclick=function(e){
-        e.stopPropagation();
-        window._removeCameraPhoto(parseInt(this.getAttribute('data-idx')));
-      };
-
-      wrap.appendChild(img);wrap.appendChild(num);wrap.appendChild(del);
-      preview.appendChild(wrap);
-    });
-
-    _updateCameraStatus();
-  };
-
-  function _updateCameraStatus(){
-    var st=document.getElementById('camera_status');
-    var lbl=document.getElementById('camera_count_label');
-    var btn=document.getElementById('btn_io_camera');
-    if(_cameraImgs.length===0){
-      if(st)st.style.display='none';
-      if(btn)btn.classList.remove('active');
-    }else{
-      if(st)st.style.display='block';
-      if(lbl)lbl.textContent='📷 '+_cameraImgs.length+'장 촬영됨 — 추가 촬영하거나 분석을 시작하세요';
-      if(btn)btn.classList.add('active');
-    }
-  }
-
-  window._submitCamera=function(){
-    if(!_cameraImgs.length)return;
-    var files=_cameraImgs.slice();
-    _cameraImgs=[];
-    document.getElementById('camera_preview').innerHTML='';
-    _updateCameraStatus();
-    window._analyzePhoto(files);
-  };
-
-  window._cancelCamera=function(){
-    _cameraImgs=[];
-    document.getElementById('camera_preview').innerHTML='';
-    document.getElementById('input_camera').value='';
-    _updateCameraStatus();
-  };
-
-  // ── 사진 분석 ──
-  var _pastedImgs=[]; // 붙여넣기 누적 버퍼 (항상 누적 모드로 동작)
-
-  function _updatePasteStatus(){
-    var hint=document.getElementById('paste_hint');
-    var btn=document.getElementById('btn_io_paste');
-    if(_pastedImgs.length===0){
-      if(hint)hint.style.display='none';
-      if(btn)btn.classList.remove('active');
-    }else{
-      if(hint){
-        hint.style.display='block';
-        hint.innerHTML='📋 <strong>'+_pastedImgs.length+'장</strong> 누적됨 — 추가로 Ctrl+V 하거나 '
-          +'<button onclick="window._submitPasted()" style="background:var(--accent2);color:#fff;border:none;border-radius:6px;padding:3px 10px;cursor:pointer;font-size:11px;font-weight:600">분석 시작</button>'
-          +' <button onclick="window._cancelPaste()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;cursor:pointer;font-size:11px;color:var(--text3);margin-left:4px">취소</button>';
-      }
-      if(btn)btn.classList.add('active');
-    }
-  }
-
-  window._triggerPaste=function(){
-    // 버튼을 눌러도/안 눌러도 붙여넣기는 항상 누적되므로, 여기서는 안내 문구만 보여준다.
-    if(_pastedImgs.length===0){
-      var hint=document.getElementById('paste_hint');
-      if(hint){
-        hint.style.display='block';
-        hint.innerHTML='📋 화면 캡처 후 <strong>Ctrl+V</strong> (Mac: ⌘V) 를 누르세요. 여러 번 붙여넣기도 가능합니다. '
-          +'<button onclick="window._cancelPaste()" style="margin-left:8px;background:none;border:none;cursor:pointer;color:var(--text3);font-size:11px">취소</button>';
-      }
-    }
-  };
-  window._cancelPaste=function(){
-    _pastedImgs=[];
-    var preview=document.getElementById('drop_preview');
-    if(preview)preview.innerHTML='';
-    _updatePasteStatus();
-  };
-
-  window._handleDropFiles=function(files){
-    if(!files||!files.length)return;
-    window._analyzePhoto(files);
-  };
-
-  // 클립보드 붙여넣기 지원 (버튼을 먼저 누르지 않아도 항상 누적됨)
-  document.addEventListener('paste',function(e){
-    if(!getKey())return;
-    var items=e.clipboardData&&e.clipboardData.items;
-    if(!items)return;
-    var imgs=[];
-    for(var i=0;i<items.length;i++){
-      if(items[i].type.indexOf('image')!==-1) imgs.push(items[i].getAsFile());
-    }
-    if(!imgs.length)return;
-
-    // 미리보기 추가 (기존 썸네일 유지한 채 누적)
-    var preview=document.getElementById('drop_preview');
-    imgs.forEach(function(f){
-      var url=URL.createObjectURL(f);
-      var wrap=document.createElement('div');
-      wrap.style.cssText='position:relative;display:inline-block';
-      var img=document.createElement('img');
-      img.src=url;
-      img.style.cssText='height:60px;border-radius:6px;border:1.5px solid var(--accent2);object-fit:cover';
-      wrap.appendChild(img);
-      if(preview)preview.appendChild(wrap);
-    });
-
-    imgs.forEach(function(f){_pastedImgs.push(f);});
-    _updatePasteStatus();
-  });
-
-  window._submitPasted=function(){
-    if(!_pastedImgs.length)return;
-    var files=_pastedImgs.slice();
-    _pastedImgs=[];
-    _updatePasteStatus();
-    window._analyzePhoto(files);
-  };
-
-  window._analyzePhoto=function(filesOrArray){
-    var files=Array.from(filesOrArray);
-    if(!files.length)return;
-    var key=getKey();
-    if(!key){alert('API 키를 먼저 설정해주세요.');return;}
-
-    // 미리보기 (전달된 files 전체 기준으로 다시 그림 — 붙여넣기로 누적된 경우도 files에 모두 포함되어 있음)
-    var preview=document.getElementById('drop_preview');
-    if(preview){
-      preview.innerHTML='';
-      files.forEach(function(f){
-        var url=URL.createObjectURL(f);
-        var img=document.createElement('img');
-        img.src=url;
-        img.style.cssText='height:60px;border-radius:6px;border:1px solid var(--border);object-fit:cover';
-        preview.appendChild(img);
-      });
-    }
-
-    var loading=document.getElementById('vision_loading');
-    var msg=document.getElementById('vision_loading_msg');
-    loading.style.display='block';
-    if(msg) msg.textContent='Claude가 '+files.length+'장의 결과지를 분석 중입니다...';
-
-    var promises=files.map(function(f){
-      return new Promise(function(res){
-        var img=new Image();
-        var url=URL.createObjectURL(f);
-        img.onload=function(){
-          // 최대 1600px로 축소, 품질 0.85
-          var MAX=1600,Q=0.85;
-          var w=img.width,h=img.height;
-          if(w>MAX||h>MAX){
-            if(w>h){h=Math.round(h*MAX/w);w=MAX;}
-            else{w=Math.round(w*MAX/h);h=MAX;}
-          }
-          var canvas=document.createElement('canvas');
-          canvas.width=w;canvas.height=h;
-          canvas.getContext('2d').drawImage(img,0,0,w,h);
-          var dataUrl=canvas.toDataURL('image/jpeg',Q);
-          URL.revokeObjectURL(url);
-          res({b64:dataUrl.split(',')[1],mime:'image/jpeg'});
-        };
-        img.src=url;
-      });
-    });
-
-    Promise.all(promises).then(function(imgs){
-      callClaudeVision(key,imgs,loading);
-    });
-  };
-
-  function callClaudeVision(key,imgs,loading){
-    var prompt='이 이미지(들)는 혈액가스검사(ABG) 또는 혈액 검사 결과지입니다. 여러 장인 경우 모두 참고하세요.\n'
-      +'다음 항목의 수치를 찾아 JSON으로만 반환하세요. 없으면 null로 표시하세요.\n'
-      +'반드시 JSON 객체만 반환하고 다른 텍스트는 절대 포함하지 마세요.\n\n'
-      +'{\n'
-      +'  "ph": null,\n'
-      +'  "pco2": null,\n'
-      +'  "hco3": null,\n'
-      +'  "po2": null,\n'
-      +'  "sao2": null,\n'
-      +'  "fio2": null,\n'
-      +'  "na": null,\n'
-      +'  "cl": null,\n'
-      +'  "k": null,\n'
-      +'  "glc": null,\n'
-      +'  "bun": null,\n'
-      +'  "cr": null,\n'
-      +'  "phos": null,\n'
-      +'  "osm": null,\n'
-      +'  "alb": null,\n'
-      +'  "lac": null\n'
-      +'}\n\n'
-      +'주의사항:\n'
-      +'- pH는 소수점 2~3자리 (예: 7.35)\n'
-      +'- PaCO2/pCO2는 mmHg 단위\n'
-      +'- HCO3/Bicarbonate는 mEq/L 단위\n'
-      +'- SaO2/SpO2는 % (0-100 사이 숫자로)\n'
-      +'- FiO2는 소수(0.21~1.0) 또는 %면 100으로 나눠서\n'
-      +'- Glucose/Blood sugar는 mg/dL\n'
-      +'- Lactate/Lactic acid는 mmol/L\n'
-      +'- Albumin은 g/dL\n'
-      +'- Phosphate/Inorganic P는 mg/dL\n'
-      +'- Osmolality는 mOsm/kg';
-
-    // 메시지 content: 이미지들 + 텍스트
-    var content=imgs.map(function(img){
-      return {type:'image',source:{type:'base64',media_type:img.mime,data:img.b64}};
-    });
-    content.push({type:'text',text:prompt});
-
-    fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'x-api-key':key,
-        'anthropic-version':'2023-06-01',
-        'anthropic-dangerous-direct-browser-access':'true'
-      },
-      body:JSON.stringify({
-        model:'claude-sonnet-4-6',
-        max_tokens:500,
-        messages:[{role:'user',content:content}]
-      })
-    })
-    .then(function(r){return r.json();})
-    .then(function(data){
-      loading.style.display='none';
-      if(data.error){
-        alert('API 오류: '+data.error.message);
-        return;
-      }
-      var text=(data.content&&data.content[0]&&data.content[0].text)||'';
-      var match=text.match(/\{[\s\S]*\}/);
-      if(!match){alert('결과를 파싱할 수 없습니다. 다시 시도해주세요.');return;}
-      try{
-        _extracted=JSON.parse(match[0]);
-        showVisionModal(_extracted);
-      }catch(e){
-        alert('JSON 파싱 오류: '+e.message);
-      }
-    })
-    .catch(function(e){
-      loading.style.display='none';
-      alert('네트워크 오류: '+e.message);
-    });
-  }
-
-  // ── 확인 모달 ──
-  var FIELD_LABELS={
-    ph:'pH',pco2:'PaCO₂ (mmHg)',hco3:'HCO₃⁻ (mEq/L)',
-    po2:'PaO₂ (mmHg)',sao2:'SaO₂ (%)',fio2:'FiO₂',
-    na:'Na⁺ (mEq/L)',cl:'Cl⁻ (mEq/L)',k:'K⁺ (mEq/L)',
-    glc:'Glucose (mg/dL)',bun:'BUN (mg/dL)',cr:'Creatinine (mg/dL)',
-    phos:'Phosphate (mg/dL)',osm:'Serum Osmolality',
-    alb:'Albumin (g/dL)',lac:'Lactate (mmol/L)'
-  };
-
-  function showVisionModal(vals){
-    var container=document.getElementById('vision_fields');
-    var st=document.getElementById('vision_status');
-    container.innerHTML='';
-    var found=0;
-    Object.keys(FIELD_LABELS).forEach(function(k){
-      var v=vals[k];
-      var hasVal=(v!==null&&v!==undefined&&v!=='');
-      if(hasVal)found++;
-      var div=document.createElement('div');
-      div.style.cssText='display:flex;flex-direction:column;gap:3px';
-      div.innerHTML='<label style="font-size:10px;color:var(--text3)">'+FIELD_LABELS[k]+'</label>'
-        +'<input data-key="'+k+'" type="number" inputmode="decimal" step="any" value="'+(hasVal?v:'')+'" '
-        +'placeholder="미감지" '
-        +'style="padding:7px 10px;border:1.5px solid '+(hasVal?'var(--accent2)':'var(--border)')+';border-radius:8px;background:var(--bg2);color:var(--text1);font-size:13px;font-weight:'+(hasVal?'600':'400')+';width:100%;box-sizing:border-box">';
-      container.appendChild(div);
-    });
-    st.textContent=found+'개 항목이 감지되었습니다. 값을 확인하고 수정 후 적용하세요.';
-    document.getElementById('modal_vision').classList.add('open');
-  }
-
-  window._closeVision=function(){
-    document.getElementById('modal_vision').classList.remove('open');
-    _extracted={};
-  };
-  window._applyVision=function(){
-    var inputs=document.querySelectorAll('#vision_fields input[data-key]');
-    var ID_MAP={ph:'i_ph',pco2:'i_pco2',hco3:'i_hco3',po2:'i_po2',sao2:'i_sao2',fio2:'i_fio2',
-      na:'i_na',cl:'i_cl',k:'i_k',glc:'i_glc',bun:'i_bun',cr:'i_cr',
-      phos:'i_phos',osm:'i_osm',alb:'i_alb',lac:'i_lac'};
-    inputs.forEach(function(inp){
-      var key=inp.getAttribute('data-key');
-      var val=inp.value.trim();
-      var targetId=ID_MAP[key];
-      if(targetId&&val){
-        var el=document.getElementById(targetId);
-        if(el){el.value=val;el.className='';}
-      }
-    });
-    window._closeVision();
-    // 스크롤 맨 위로
-    window.scrollTo({top:0,behavior:'smooth'});
-  };
-
-  // ── 초기화 ──
-  updateVisionBtn();
-
-  // 모달 배경 클릭 시 닫기
-  ['modal_settings','modal_vision'].forEach(function(id){
-    document.getElementById(id).addEventListener('click',function(e){
-      if(e.target===this) this.classList.remove('open');
-    });
-  });
+  var _extracted={},_cameraImgs=[],_pastedImgs=[];
+  var FIELD_LABELS={ph:'pH',pco2:'PaCO₂ (mmHg)',hco3:'HCO₃⁻ / tCO₂ (mEq/L)',po2:'PaO₂ (mmHg)',sao2:'SaO₂ (%)',fio2:'FiO₂',na:'Na⁺ (mEq/L)',cl:'Cl⁻ (mEq/L)',k:'K⁺ (mEq/L)',glc:'Glucose (mg/dL)',bun:'BUN (mg/dL)',cr:'Creatinine (mg/dL)',phos:'Phosphate (mg/dL)',osm:'Serum Osmolality (mOsm/kg)',alb:'Albumin (g/dL)',lac:'Lactate (mmol/L)'};
+  var RULES=[
+    {key:'ph',a:[/^ph$/i],min:6.8,max:7.8},{key:'pco2',a:[/^p\s*co\s*2$/i,/^pa\s*co\s*2$/i,/^pco₂$/i],min:5,max:150},{key:'po2',a:[/^p\s*o\s*2$/i,/^pa\s*o\s*2$/i,/^po₂$/i],min:10,max:700},{key:'hco3',a:[/^hco\s*3$/i,/^hco₃$/i,/^t\s*co\s*2$/i,/^total\s*co\s*2$/i,/^co\s*2$/i],min:1,max:60},{key:'sao2',a:[/^o\s*2\s*sat$/i,/^o2sat$/i,/^sa?o\s*2$/i],min:20,max:100},{key:'fio2',a:[/^fi\s*o\s*2$/i,/^fio2$/i],min:.21,max:100},{key:'na',a:[/^na\+?$/i,/^na\+?\s*\(?poct\)?$/i,/^sodium$/i],min:90,max:200},{key:'cl',a:[/^cl-?$/i,/^cl-?\s*\(?poct\)?$/i,/^chloride$/i],min:50,max:150},{key:'k',a:[/^k\+?$/i,/^k\+?\s*\(?poct\)?$/i,/^potassium$/i],min:1,max:12},{key:'glc',a:[/^glucose$/i,/^glu$/i],min:10,max:1500},{key:'bun',a:[/^bun$/i],min:1,max:250},{key:'cr',a:[/^creatinine$/i,/^creat(?:inine)?$/i,/^cr$/i],min:.1,max:30},{key:'phos',a:[/phosphorus/i,/^phosphate$/i,/^phos$/i],min:.1,max:25},{key:'osm',a:[/osmolality/i,/^osm$/i],min:150,max:500},{key:'alb',a:[/^albumin$/i,/^alb$/i],min:.5,max:8},{key:'lac',a:[/^lactic\s*acid/i,/^lactate$/i,/^lac$/i],min:.1,max:30}
+  ];
+  function load(show,msg){var e=document.getElementById('vision_loading'),t=document.getElementById('vision_loading_msg');if(e)e.style.display=show?'block':'none';if(t&&msg)t.textContent=msg;}
+  function norm(t){return String(t||'').replace(/[−–—]/g,'-').replace(/,/g,'.').replace(/\s+/g,' ').trim();}
+  function num(t){var m=norm(t).match(/-?\d+(?:\.\d+)?/);return m?Number(m[0]):null;}
+  function rows(lines){var r=[];lines.slice().sort(function(a,b){return a.bbox.y0-b.bbox.y0;}).forEach(function(x){var y=(x.bbox.y0+x.bbox.y1)/2,q=r.find(function(z){return Math.abs(z.y-y)<=Math.max(18,(x.bbox.y1-x.bbox.y0)*.75);});if(!q){q={y:y,i:[]};r.push(q);}q.i.push(x);});return r.map(function(q){q.i.sort(function(a,b){return a.bbox.x0-b.bbox.x0;});return q;});}
+  function map(lines){var out={};rows(lines).forEach(function(row){var raw=norm(row.i.map(function(i){return i.text;}).join(' '));var label=raw.replace(/\b(?:h|l)\b\s*$/i,'').replace(/\b(?:mmhg|mmol\/?l|meq\/?l|mg\/?dl|g\/?dl|ng\/?ml|u\/?l|%)\b.*$/i,'').trim();var vals=row.i.map(function(i){return {v:num(i.text),x:i.bbox.x0,c:i.confidence||0};}).filter(function(x){return x.v!==null;});RULES.forEach(function(rule){if(out[rule.key]||!rule.a.some(function(a){return a.test(label)||a.test(raw);}))return;var c=vals.filter(function(x){return x.v>=rule.min&&x.v<=rule.max;}).sort(function(a,b){return b.x-a.x;})[0];if(c){var v=c.v;if(rule.key==='fio2'&&v>1)v=v/100;out[rule.key]={value:v,confidence:c.c,raw:raw};}});});return out;}
+  function prep(file){return new Promise(function(ok,bad){var im=new Image(),u=URL.createObjectURL(file);im.onload=function(){var s=Math.max(1,Math.min(2,2400/Math.max(im.width,im.height))),w=Math.round(im.width*s),h=Math.round(im.height*s),c=document.createElement('canvas'),x=c.getContext('2d',{willReadFrequently:true});c.width=w;c.height=h;x.drawImage(im,0,0,w,h);var d=x.getImageData(0,0,w,h),a=d.data;for(var i=0;i<a.length;i+=4){var y=.299*a[i]+.587*a[i+1]+.114*a[i+2];y=Math.max(0,Math.min(255,(y-150)*1.55+150));a[i]=a[i+1]=a[i+2]=y;}x.putImageData(d,0,0);URL.revokeObjectURL(u);c.toBlob(function(b){ok(b||file);},'image/jpeg',.95);};im.onerror=function(){URL.revokeObjectURL(u);bad(new Error('이미지를 열 수 없습니다.'));};im.src=u;});}
+  async function ocr(files){if(!window.Tesseract)throw new Error('OCR 라이브러리를 불러오지 못했습니다. 인터넷 연결 후 다시 시도하세요.');var all=[];for(var i=0;i<files.length;i++){load(true,'무료 로컬 OCR로 '+(i+1)+'/'+files.length+'장 인식 중…');var f=await prep(files[i]),res=await Tesseract.recognize(f,'eng',{logger:function(m){if(m.status==='recognizing text')load(true,'글자인식 중… '+Math.round(m.progress*100)+'%');}});(res.data.lines||[]).forEach(function(l){all.push({text:l.text,confidence:l.confidence,bbox:l.bbox});});}return map(all);}
+  function preview(files){var p=document.getElementById('drop_preview');if(!p)return;p.innerHTML='';files.forEach(function(f){var im=document.createElement('img');im.src=URL.createObjectURL(f);im.style.cssText='height:60px;border-radius:6px;border:1px solid var(--border);object-fit:cover';p.appendChild(im);});}
+  function showQueued(){var h=document.getElementById('paste_hint'),b=document.getElementById('btn_io_paste');if(!_pastedImgs.length){if(h)h.style.display='none';if(b)b.classList.remove('active');return;}if(h){h.style.display='block';h.innerHTML='📄 <strong>'+_pastedImgs.length+'장</strong> 선택됨 — <button onclick="window._submitPasted()" style="background:var(--accent2);color:#fff;border:none;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px;font-weight:700">인식 시작</button> <button onclick="window._cancelPaste()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 9px;cursor:pointer;font-size:11px;color:var(--text3);margin-left:4px">취소</button>'; }if(b)b.classList.add('active');}
+  window._queuePhotoFiles=function(files){var f=Array.from(files||[]);if(!f.length)return;f.forEach(function(x){_pastedImgs.push(x);});preview(_pastedImgs);showQueued();var e=document.getElementById('input_photo');if(e)e.value='';};
+  window._handleDropFiles=function(files){window._queuePhotoFiles(files);};
+  window._triggerPaste=function(){var h=document.getElementById('paste_hint');if(!_pastedImgs.length&&h){h.style.display='block';h.innerHTML='📋 화면 캡처 후 <strong>Ctrl+V</strong> (Mac: ⌘V)를 누르세요.';}};
+  window._cancelPaste=function(){_pastedImgs=[];preview([]);showQueued();};
+  window._submitPasted=function(){if(!_pastedImgs.length)return;var f=_pastedImgs.slice();_pastedImgs=[];showQueued();window._analyzePhoto(f);};
+  document.addEventListener('paste',function(e){var x=e.clipboardData&&e.clipboardData.items,f=[];if(!x)return;for(var i=0;i<x.length;i++)if(x[i].type.indexOf('image')!==-1)f.push(x[i].getAsFile());window._queuePhotoFiles(f);});
+  function camera(){var s=document.getElementById('camera_status'),l=document.getElementById('camera_count_label'),b=document.getElementById('btn_io_camera');if(!_cameraImgs.length){if(s)s.style.display='none';if(b)b.classList.remove('active');return;}if(s)s.style.display='block';if(l)l.textContent='📷 '+_cameraImgs.length+'장 촬영됨 — 추가 촬영하거나 인식을 시작하세요';if(b)b.classList.add('active');}
+  window._addCameraPhoto=function(f){if(!f||!f.length)return;_cameraImgs.push(f[0]);var p=document.getElementById('camera_preview'),im=document.createElement('img');im.src=URL.createObjectURL(f[0]);im.style.cssText='height:72px;border-radius:8px;border:1.5px solid var(--accent2);object-fit:cover';if(p)p.appendChild(im);camera();document.getElementById('input_camera').value='';};
+  window._submitCamera=function(){if(!_cameraImgs.length)return;var f=_cameraImgs.slice();_cameraImgs=[];document.getElementById('camera_preview').innerHTML='';camera();window._analyzePhoto(f);};
+  window._cancelCamera=function(){_cameraImgs=[];document.getElementById('camera_preview').innerHTML='';camera();};
+  window._analyzePhoto=function(files){files=Array.from(files||[]);if(!files.length)return;preview(files);load(true,'이미지를 준비하는 중…');ocr(files).then(function(v){load(false);_extracted=v;modal(v);}).catch(function(e){load(false);alert('OCR 실패: '+e.message);});};
+  function modal(vals){var c=document.getElementById('vision_fields'),s=document.getElementById('vision_status'),n=0;c.innerHTML='';Object.keys(FIELD_LABELS).forEach(function(k){var d=vals[k],has=!!d;if(has)n++;var e=document.createElement('div');e.style.cssText='display:flex;flex-direction:column;gap:3px';e.innerHTML='<label style="font-size:10px;color:var(--text3)">'+FIELD_LABELS[k]+'</label><input data-key="'+k+'" type="number" inputmode="decimal" step="any" value="'+(has?d.value:'')+'" placeholder="미감지" style="padding:7px 10px;border:1.5px solid '+(has?'var(--accent2)':'var(--border)')+';border-radius:8px;background:var(--bg2);color:var(--text1);font-size:13px;font-weight:'+(has?'600':'400')+';width:100%;box-sizing:border-box">';c.appendChild(e);});s.textContent=n+'개 항목을 로컬 OCR로 감지했습니다. 사진 원본과 대조한 뒤 적용하세요.';document.getElementById('modal_vision').classList.add('open');}
+  window._closeVision=function(){document.getElementById('modal_vision').classList.remove('open');_extracted={};};
+  window._applyVision=function(){var m={ph:'i_ph',pco2:'i_pco2',hco3:'i_hco3',po2:'i_po2',sao2:'i_sao2',fio2:'i_fio2',na:'i_na',cl:'i_cl',k:'i_k',glc:'i_glc',bun:'i_bun',cr:'i_cr',phos:'i_phos',osm:'i_osm',alb:'i_alb',lac:'i_lac'};document.querySelectorAll('#vision_fields input[data-key]').forEach(function(i){var e=document.getElementById(m[i.dataset.key]);if(e&&i.value.trim()){e.value=i.value.trim();e.className='';}});window._closeVision();window.scrollTo({top:0,behavior:'smooth'});};
+  var mv=document.getElementById('modal_vision');if(mv)mv.addEventListener('click',function(e){if(e.target===this)window._closeVision();});
 })();
 </script>
 </body>
