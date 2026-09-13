@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#0f172a">
-<title>통합 ABGA 판독기 v5.14</title>
+<title>통합 ABGA 판독기 v5.15</title>
 <style>
 :root {
   --bg: #0f172a;
@@ -358,7 +358,7 @@ body{
 </head>
 <body>
 <header class="app-header">
-  <h1>통합 ABGA 판독기 <span>v5.14</span></h1>
+  <h1>통합 ABGA 판독기 <span>v5.15</span></h1>
   <button id="btn_settings" onclick="window._openSettings()" title="API 키 설정" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text2);opacity:.7;transition:opacity .15s;flex-shrink:0" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
@@ -645,7 +645,7 @@ function printResult(){
     }catch(e){}
   }
   var content='<!DOCTYPE html><html><head><meta charset="UTF-8">'
-    +'<title>통합 ABGA 판독기 v5.14 — 판독 결과</title>'
+    +'<title>통합 ABGA 판독기 v5.15 — 판독 결과</title>'
     +'<style>'+styles
     +'body{background:#fff;color:#000;font-family:system-ui,sans-serif;padding:10px 14px;max-width:800px;margin:0 auto}'
     +'.step-body{display:block!important}.drxb,.goldmark-body{display:block!important}'
@@ -1377,8 +1377,15 @@ function run(){
     else if(dA2>4){cTag='혼합: +대사성 알칼리증';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성/만성 예측 모두 크게 초과 → 대사성 알칼리증 독립 공존 가능성';isMixed=true;mixComponents=['호흡성 알칼리증','대사성 알칼리증'];compLabel='과보상 → 대사성 알칼리증 혼합';fcData.compStatus='mixed_met_alk';}
     else{cTag='보상 범위 이탈';cCls='tag-warn';cNote='HCO₃⁻ '+hco3.toFixed(1)+' → 급성/만성 보상 예측 범위 모두 벗어남. 혼합장애 가능성 검토 필요';compLabel='보상 범위 이탈';fcData.compStatus='adequate';}
   }else{cTag='추가 평가 필요';cCls='tag-warn';cNote='일차장애 확정이 어려워 보상 공식 적용이 제한됩니다.';compLabel='판정 보류';cFormula='일차장애 불명확';cFormulaDetail='';fcData.compStatus='na';}
+  var ventNote='';
+  if(ventilated){
+    var ventStrong=isMixed||(fcData.compStatus&&fcData.compStatus.indexOf('uncertain')!==-1);
+    ventNote=ventStrong
+      ?'<p style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-weight:600;color:var(--warn-text)">⚠ 기계환기 중 — 이 판정을 확정하기 전에 먼저 확인하세요: 이 PaCO₂가 환자의 자발 호흡 반응이 아니라 인공호흡기 설정(호흡수·일회호흡량·분당환기량)에 의한 것은 아닌지, 조절 모드(controlled)인지 자발 보조 모드(supported)인지. 조절 모드라면 환자가 스스로 보상할 수 없으므로, 이 혼합/불확실 판정이 실제 병태생리가 아니라 환기 설정의 결과일 수 있습니다.</p>'
+      :'<p style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-weight:600;color:var(--warn-text)">⚠ 기계환기 중: 환기량이 설정값에 의해 조절되므로 자발 호흡 보상이 제한될 수 있습니다. 참고로 해석하세요.</p>';
+  }
   html+=mkStep('II-3','#34d399','보상기전 평가',cTag,cCls,
-    cFormulaDetail+srow('실제 값','CO₂ '+pco2.toFixed(1)+' / HCO₃⁻ '+hco3.toFixed(1))+cbox('<p>'+cNote+'</p>'+(ventilated?'<p style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-weight:600;color:var(--warn-text)">⚠ 기계환기 중: 환기량이 설정값에 의해 조절되므로 자발 호흡 보상이 제한됩니다. 보상 공식(Winters 등)은 자발 호흡을 전제로 하므로 이 결과를 주의하여 해석하세요.</p>':'')));
+    cFormulaDetail+srow('실제 값','CO₂ '+pco2.toFixed(1)+' / HCO₃⁻ '+hco3.toFixed(1))+cbox('<p>'+cNote+'</p>'+ventNote));
 
   /* STEP 4: AG */
   var agVal=null,agEff=null,highAG=false,drRatio=null,drInterp='',drCls='',agQualifier='';
@@ -1627,15 +1634,26 @@ function run(){
         }
         drBody+=cbox(interpDetail);
 
-        if(alb===null){drBody+=nw('⚠ 이 계산은 Albumin = 4.0 g/dL을 전제로 합니다. 실제 값이 다를 경우 위 Albumin 입력란에 입력하면 보정 AG로 재계산됩니다.');}
-        else if(Math.abs(alb-4.0)>0.05){drBody+=ni('ℹ Albumin '+alb.toFixed(1)+' g/dL 반영 → 보정AG('+agEff.toFixed(1)+')로 계산하였습니다.');}
-
         /* ΔAG가 작을 때 신뢰도 경고 */
         if(dAG<=5){
           drBody+=nw('⚠ ΔAG = '+dAG.toFixed(1)+' mEq/L로 매우 작습니다. '
             +'AG 측정 오차(±1–2 mEq/L) 범위 내일 수 있어 Delta ratio의 신뢰도가 낮습니다. '
             +'이 결과는 참고용으로만 해석하고, Lactate·케톤·BUN/Cr 등 임상 정보를 함께 확인하세요.');
         }
+
+        /* ── 해석상 주의사항 체크리스트 ── */
+        var glcAGApplied=(glc!==null&&glc>=400);
+        var albApplied=(alb!==null&&Math.abs(alb-4.0)>0.05);
+        var crElevated=(cr!==null&&cr>1.3);
+        drBody+=cbox('<p style="font-weight:600;margin-bottom:6px">Delta ratio 해석 시 확인할 것</p>'
+          +'<p style="margin-top:4px">'+(alb!==null?'✅':'❔')+' <strong>알부민 보정</strong> — '
+            +(alb!==null?'반영됨 (Albumin '+alb.toFixed(1)+' g/dL'+(albApplied?', 보정 적용':'')+')':'미입력 — 4.0 g/dL로 가정하고 계산했습니다. 실제 알부민이 낮다면 진짜 AG는 더 높을 수 있습니다.')+'</p>'
+          +'<p style="margin-top:4px">'+(glc!==null?(glcAGApplied?'✅':'➖'):'❔')+' <strong>고혈당 Na⁺ 보정</strong> — '
+            +(glc===null?'혈당 미입력 — 400 mg/dL 이상이면 AG가 과소평가될 수 있습니다.':glcAGApplied?'반영됨 (혈당 '+glc.toFixed(0)+' mg/dL)':'해당 없음 (혈당 400 미만)')+'</p>'
+          +'<p style="margin-top:4px">❔ <strong>채혈 시점 일치</strong> — Na⁺·Cl⁻·HCO₃⁻가 이번 계산과 같은 시점(같은 채혈)에서 나온 값인지 확인하세요. 시점이 다르면(특히 치료가 진행 중이라면) delta ratio가 실제 상태를 반영하지 못할 수 있습니다.</p>'
+          +'<p style="margin-top:4px">'+(crElevated?'⚠':'❔')+' <strong>기저 HCO₃⁻ 이상 가능성</strong> — '
+            +(crElevated?'Creatinine '+cr.toFixed(1)+' mg/dL로 상승되어 있습니다. 만성 신질환이 있다면 기저 HCO₃⁻가 원래 낮았을 수 있어 ratio가 낮게(<1) 나올 수 있습니다.':'만성 신질환이나 만성 호흡성 산증처럼 기저 HCO₃⁻가 원래 높거나 낮았을 가능성은 임상 병력으로 확인하세요.')+'</p>'
+          +'<p style="margin-top:8px;font-size:11px;color:var(--text3)">✅ = 이미 계산에 반영됨 · ➖ = 해당 없음 · ❔/⚠ = 직접 확인 필요</p>');
 
         /* ── 해석 기준표 (접힘) ── */
         var deid='drb'+Date.now(),dcid='drc'+Date.now();
@@ -2125,7 +2143,7 @@ function run(){
   /* 인쇄용 헤더 */
   var now=new Date();
   var ts=now.getFullYear()+'.'+(now.getMonth()+1).toString().padStart(2,'0')+'.'+now.getDate().toString().padStart(2,'0')+' '+now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v5.14 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
+  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v5.15 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
   out.innerHTML=printHdr+html+finalHtml+fcHtml;
   document.getElementById('btn_pdf_wrap').style.display='block';
   out.style.display='block';
