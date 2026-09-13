@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#0f172a">
-<title>통합 ABGA 판독기 v5.13</title>
+<title>통합 ABGA 판독기 v5.14</title>
 <style>
 :root {
   --bg: #0f172a;
@@ -358,7 +358,7 @@ body{
 </head>
 <body>
 <header class="app-header">
-  <h1>통합 ABGA 판독기 <span>v5.13</span></h1>
+  <h1>통합 ABGA 판독기 <span>v5.14</span></h1>
   <button id="btn_settings" onclick="window._openSettings()" title="API 키 설정" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text2);opacity:.7;transition:opacity .15s;flex-shrink:0" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
@@ -645,7 +645,7 @@ function printResult(){
     }catch(e){}
   }
   var content='<!DOCTYPE html><html><head><meta charset="UTF-8">'
-    +'<title>통합 ABGA 판독기 v5.13 — 판독 결과</title>'
+    +'<title>통합 ABGA 판독기 v5.14 — 판독 결과</title>'
     +'<style>'+styles
     +'body{background:#fff;color:#000;font-family:system-ui,sans-serif;padding:10px 14px;max-width:800px;margin:0 auto}'
     +'.step-body{display:block!important}.drxb,.goldmark-body{display:block!important}'
@@ -2125,7 +2125,7 @@ function run(){
   /* 인쇄용 헤더 */
   var now=new Date();
   var ts=now.getFullYear()+'.'+(now.getMonth()+1).toString().padStart(2,'0')+'.'+now.getDate().toString().padStart(2,'0')+' '+now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v5.13 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
+  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v5.14 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
   out.innerHTML=printHdr+html+finalHtml+fcHtml;
   document.getElementById('btn_pdf_wrap').style.display='block';
   out.style.display='block';
@@ -2363,17 +2363,20 @@ document.querySelectorAll('input').forEach(function(el){
   function _updatePasteStatus(){
     var hint=document.getElementById('paste_hint');
     var btn=document.getElementById('btn_io_paste');
+    var dz=document.getElementById('drop_zone_label');
     if(_pastedImgs.length===0){
       if(hint)hint.style.display='none';
       if(btn)btn.classList.remove('active');
+      if(dz)dz.classList.remove('active');
     }else{
       if(hint){
         hint.style.display='block';
-        hint.innerHTML='📋 <strong>'+_pastedImgs.length+'장</strong> 누적됨 — 추가로 Ctrl+V 하거나 '
+        hint.innerHTML='📋 <strong>'+_pastedImgs.length+'장</strong> 누적됨 — 추가로 붙여넣거나(Ctrl+V) 파일을 더 끌어놓은 뒤 '
           +'<button onclick="window._submitPasted()" style="background:var(--accent2);color:#fff;border:none;border-radius:6px;padding:3px 10px;cursor:pointer;font-size:11px;font-weight:600">분석 시작</button>'
           +' <button onclick="window._cancelPaste()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;cursor:pointer;font-size:11px;color:var(--text3);margin-left:4px">취소</button>';
       }
       if(btn)btn.classList.add('active');
+      if(dz)dz.classList.add('active');
     }
   }
 
@@ -2397,7 +2400,20 @@ document.querySelectorAll('input').forEach(function(el){
 
   window._handleDropFiles=function(files){
     if(!files||!files.length)return;
-    window._analyzePhoto(files);
+    var arr=Array.from(files);
+    var preview=document.getElementById('drop_preview');
+    arr.forEach(function(f){
+      var url=URL.createObjectURL(f);
+      var wrap=document.createElement('div');
+      wrap.style.cssText='position:relative;display:inline-block';
+      var img=document.createElement('img');
+      img.src=url;
+      img.style.cssText='height:60px;border-radius:6px;border:1.5px solid var(--accent2);object-fit:cover';
+      wrap.appendChild(img);
+      if(preview)preview.appendChild(wrap);
+    });
+    arr.forEach(function(f){_pastedImgs.push(f);});
+    _updatePasteStatus();
   };
 
   // 클립보드 붙여넣기 지원 (버튼을 먼저 누르지 않아도 항상 누적됨)
