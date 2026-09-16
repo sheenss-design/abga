@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#0f172a">
-<title>통합 ABGA 판독기 v5.15</title>
+<title>통합 ABGA 판독기 v5.16</title>
 <style>
 :root {
   --bg: #0f172a;
@@ -358,7 +358,7 @@ body{
 </head>
 <body>
 <header class="app-header">
-  <h1>통합 ABGA 판독기 <span>v5.15</span></h1>
+  <h1>통합 ABGA 판독기 <span>v5.16</span></h1>
   <button id="btn_settings" onclick="window._openSettings()" title="API 키 설정" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text2);opacity:.7;transition:opacity .15s;flex-shrink:0" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
@@ -645,7 +645,7 @@ function printResult(){
     }catch(e){}
   }
   var content='<!DOCTYPE html><html><head><meta charset="UTF-8">'
-    +'<title>통합 ABGA 판독기 v5.15 — 판독 결과</title>'
+    +'<title>통합 ABGA 판독기 v5.16 — 판독 결과</title>'
     +'<style>'+styles
     +'body{background:#fff;color:#000;font-family:system-ui,sans-serif;padding:10px 14px;max-width:800px;margin:0 auto}'
     +'.step-body{display:block!important}.drxb,.goldmark-body{display:block!important}'
@@ -668,6 +668,22 @@ function srow(l,v,c){return '<div class="srow"><span class="srow-l">'+l+'</span>
 function cbox(h){return '<div class="cbox">'+h+'</div>';}
 function nw(h){return '<div class="nw">'+h+'</div>';}
 function ni(h){return '<div class="ni">'+h+'</div>';}
+function buildGoldmark(title){
+  var gmid='gm'+Date.now()+Math.random().toString(36).slice(2,7),gcid='gc'+Date.now()+Math.random().toString(36).slice(2,7);
+  return '<div class="goldmark-wrap"><div class="goldmark-hdr" onclick="window._tog(\''+gmid+'\',\''+gcid+'\')">'+(title||'고음이온차 원인 감별 (GOLDMARK)')+' <span class="chv op" id="'+gcid+'">▾</span></div>'+
+    '<div class="goldmark-body" id="'+gmid+'">'+
+    '<p style="margin-bottom:8px">미측정 음이온(주로 독성 산, 대사산물)이 증가한 상황으로, 주요 원인을 GOLDMARK로 기억합니다.</p>'+
+    '<div class="goldmark-grid">'+
+    '<div class="gm-item"><div class="gm-letter">G</div><div class="gm-name">Glycols</div><div class="gm-detail">에틸렌·프로필렌 글리콜 (부동액 중독)</div></div>'+
+    '<div class="gm-item"><div class="gm-letter">O</div><div class="gm-name">Oxoproline</div><div class="gm-detail">아세트아미노펜 장기 사용 시 5-oxoproline 상승</div></div>'+
+    '<div class="gm-item"><div class="gm-letter">L</div><div class="gm-name">L-Lactate</div><div class="gm-detail">패혈증·심근경색·쇼크·심한 빈혈 등 조직 저산소증에서 혐기성대사의 결과로 젖산 생성</div></div>'+
+    '<div class="gm-item"><div class="gm-letter">D</div><div class="gm-name">D-Lactate</div><div class="gm-detail">Short bowel syndrome 등에서 장내 세균이 탄수화물을 비정상적으로 발효시켜 만드는 젖산</div></div>'+
+    '<div class="gm-item"><div class="gm-letter">M</div><div class="gm-name">Methanol</div><div class="gm-detail">체내에서 독성인 포름산(Formic acid)으로 대사되어 실명과 산증 유발</div></div>'+
+    '<div class="gm-item"><div class="gm-letter">A</div><div class="gm-name">Aspirin</div><div class="gm-detail">과다 복용 시 호흡 중추를 자극해 호흡성 알칼리증을 먼저 일으키지만, 이후 살리실산 자체가 산으로 작용</div></div>'+
+    '<div class="gm-item"><div class="gm-letter">R</div><div class="gm-name">Renal failure</div><div class="gm-detail">급성 신손상·말기 신부전 시 산성 노폐물(인산, 황산 등) 축적</div></div>'+
+    '<div class="gm-item"><div class="gm-letter">K</div><div class="gm-name">Ketoacidosis</div><div class="gm-detail">당뇨병성·알코올성·기아성 케톤산증 — 포도당을 에너지로 쓰지 못해 지방을 분해하면서 부산물로 케톤체 축적</div></div>'+
+    '</div></div></div>';
+}
 function tog(bid,cid){
   var b=document.getElementById(bid),c=document.getElementById(cid);
   if(!b||!c)return;
@@ -1273,7 +1289,20 @@ function run(){
   var hiCO2=pco2>45,loCO2=pco2<=35,hiHCO=hco3>26,loHCO=hco3<22;
   /* 완전 정상 판정: pH·CO2·HCO3 모두 정상 범위 → 이상 없음 */
   var allNormal=phNormal&&!hiCO2&&!loCO2&&!hiHCO&&!loHCO;
-  if(ph<7.35){
+  /* pH 7.40 근방(±0.02) + PaCO2·HCO3 동일 방향 이상: 수치만으로 일차장애 방향 결정 불가 */
+  var dirIndeterminate=(ph>=7.38&&ph<=7.42)&&((loHCO&&loCO2)||(hiHCO&&hiCO2));
+  if(dirIndeterminate){
+    pType='indeterminate_dir';pTag='방향 판단 불가 (임상 병력 필요)';pCls='tag-warn';
+    rNote=(loHCO&&loCO2)
+      ?('pH '+ph+'는 7.40 근방(±0.02)이며 PaCO₂·HCO₃⁻가 모두 <strong>낮은</strong> 방향으로 벗어나 있습니다. 이 조합은 수치만으로는 어느 쪽이 일차장애인지 원리적으로 구분할 수 없습니다.<br><br>'
+        +'① <strong>호흡성 알칼리증이 선행</strong> — 과호흡 유발 상황(중추 자극, 통증, 불안, 약물 중독 등) 이후 신장이 HCO₃⁻를 낮춰 보상 중이거나, 대사성 산증이 뒤따라 겹치는 초기 단계<br>'
+        +'② <strong>대사성 산증이 선행</strong> — 산 축적 질환에서 호흡이 과보상하여 PaCO₂가 예상보다 더 떨어지며 pH가 7.40까지 눌려 돌아온 상태<br><br>'
+        +'수치가 아니라 <strong>병력</strong>으로 판단해야 합니다 (예: 살리실산 중독 초기처럼 알려진 선행 원인이 있다면 ①로 해석하는 것이 타당합니다).')
+      :('pH '+ph+'는 7.40 근방(±0.02)이며 PaCO₂·HCO₃⁻가 모두 <strong>높은</strong> 방향으로 벗어나 있습니다. 이 조합은 수치만으로는 어느 쪽이 일차장애인지 원리적으로 구분할 수 없습니다.<br><br>'
+        +'① <strong>호흡성 산증이 선행</strong> — 환기저하 이후 신장이 HCO₃⁻를 올려 보상 중인 단계<br>'
+        +'② <strong>대사성 알칼리증이 선행</strong> — 구토·이뇨제 등으로 호흡이 저하되며 PaCO₂가 예상보다 더 오르며 pH가 7.40까지 밀려 돌아온 상태<br><br>'
+        +'수치가 아니라 <strong>병력</strong>으로 판단해야 합니다.');
+  }else if(ph<7.35){
     if(hiCO2){pType='resp_acid';pTag='호흡성 산증';pCls='tag-bad';rNote='산혈증(pH↓) → PaCO₂ 증가 → 일차원인이 호흡성';}
     else{pType='met_acid';pTag='대사성 산증';pCls='tag-bad';rNote='산혈증(pH↓) → HCO₃⁻ 감소 → 일차원인이 대사성';}
   }else if(ph>7.45){
@@ -1469,32 +1498,20 @@ function run(){
         +'AG > 17이면 HAG 확정입니다. Delta ratio도 함께 확인하세요.</p>').replace('<div class="nw">','').replace('</div>',''));
     }else if(highAG&&hasMetAcid){
       /* HAGMA: 고음이온차 + 대사성 산증 → GOLDMARK */
-      var gmid='gm'+Date.now(),gcid='gc'+Date.now();
       agBody+=cbox('<p><strong>고음이온차 대사성 산증 (HAGMA)</strong></p>'
         +'<p style="margin-top:4px">Na⁺와 Cl⁻·HCO₃⁻의 합 사이 간격이 정상보다 커진 상태입니다. '
         +'이는 혈중에 <strong>측정되지 않는 음이온(미측정 산, 독성 물질 등)</strong>이 증가했음을 의미하며, '
         +'이 미측정 산이 HCO₃⁻를 소비하여 대사성 산증을 일으킵니다.</p>');
-      agBody+='<div class="goldmark-wrap"><div class="goldmark-hdr" onclick="window._tog(\''+gmid+'\',\''+gcid+'\')">HAGMA 원인 감별 (GOLDMARK) <span class="chv op" id="'+gcid+'">▾</span></div>'+
-        '<div class="goldmark-body" id="'+gmid+'">'+
-        '<p style="margin-bottom:8px">미측정 음이온(주로 독성 산, 대사산물)이 증가한 상황으로, 주요 원인을 GOLDMARK로 기억합니다.</p>'+
-        '<div class="goldmark-grid">'+
-        '<div class="gm-item"><div class="gm-letter">G</div><div class="gm-name">Glycols</div><div class="gm-detail">에틸렌·프로필렌 글리콜 (부동액 중독)</div></div>'+
-        '<div class="gm-item"><div class="gm-letter">O</div><div class="gm-name">Oxoproline</div><div class="gm-detail">아세트아미노펜 장기 사용 시 5-oxoproline 상승</div></div>'+
-        '<div class="gm-item"><div class="gm-letter">L</div><div class="gm-name">L-Lactate</div><div class="gm-detail">패혈증·심근경색·쇼크·심한 빈혈 등 조직 저산소증에서 혐기성대사의 결과로 젖산 생성</div></div>'+
-        '<div class="gm-item"><div class="gm-letter">D</div><div class="gm-name">D-Lactate</div><div class="gm-detail">Short bowel syndrome 등에서 장내 세균이 탄수화물을 비정상적으로 발효시켜 만드는 젖산</div></div>'+
-        '<div class="gm-item"><div class="gm-letter">M</div><div class="gm-name">Methanol</div><div class="gm-detail">체내에서 독성인 포름산(Formic acid)으로 대사되어 실명과 산증 유발</div></div>'+
-        '<div class="gm-item"><div class="gm-letter">A</div><div class="gm-name">Aspirin</div><div class="gm-detail">과다 복용 시 호흡 중추를 자극해 호흡성 알칼리증을 먼저 일으키지만, 이후 살리실산 자체가 산으로 작용</div></div>'+
-        '<div class="gm-item"><div class="gm-letter">R</div><div class="gm-name">Renal failure</div><div class="gm-detail">급성 신손상·말기 신부전 시 산성 노폐물(인산, 황산 등) 축적</div></div>'+
-        '<div class="gm-item"><div class="gm-letter">K</div><div class="gm-name">Ketoacidosis</div><div class="gm-detail">당뇨병성·알코올성·기아성 케톤산증 — 포도당을 에너지로 쓰지 못해 지방을 분해하면서 부산물로 케톤체 축적</div></div>'+
-        '</div></div></div>';
+      agBody+=buildGoldmark('HAGMA 원인 감별 (GOLDMARK)');
     }else if(highAG&&!hasMetAcid){
-      /* HAG: 고음이온차 + 대사성 산증 없음 */
+      /* HAG: 고음이온차 + 대사성 산증 미확정 (일차장애가 met_acid가 아니거나 방향 판단 불가) */
       agBody+=cbox('<p><strong>고음이온차 (HAG)</strong></p>'
-        +'<p style="margin-top:4px">음이온차가 상승해 있으나 현재 일차장애는 대사성 산증이 아닙니다. '
-        +'미측정 음이온이 증가한 원인이 존재하지만, 동반된 산염기 장애(예: 대사성 알칼리증, 호흡성 장애)에 의해 '
-        +'pH가 산성으로 치우치지 않은 상태입니다.</p>'
-        +'<p style="margin-top:6px">AG 상승 원인(젖산, 케톤, 신부전, 독소 등)을 임상 맥락에 따라 추가 확인하세요. '
+        +'<p style="margin-top:4px">음이온차가 상승해 있으나 현재 일차장애는 대사성 산증으로 확정되지 않았습니다. '
+        +'미측정 음이온이 증가한 원인이 존재하지만, 동반된 산염기 장애(예: 대사성 알칼리증, 호흡성 장애) 또는 '
+        +'일차장애 방향이 아직 불명확한 상태이기 때문입니다.</p>'
+        +'<p style="margin-top:6px">아래 원인들을 확인하면 일차장애 방향을 정하는 데에도 참고가 될 수 있습니다. '
         +'<strong>HAGMA가 숨어 있을 가능성을 배제하기 위해 Delta ratio 및 Lactate를 함께 참고하세요.</strong></p>');
+      agBody+=buildGoldmark('AG 상승 원인 감별 (GOLDMARK)');
     }else if(!highAG&&hasMetAcid){
       /* NAGMA: 정상 음이온차 + 대사성 산증 */
       agBody+=cbox('<p><strong>정상음이온차 대사성 산증 (NAGMA)</strong></p>'
@@ -2143,7 +2160,7 @@ function run(){
   /* 인쇄용 헤더 */
   var now=new Date();
   var ts=now.getFullYear()+'.'+(now.getMonth()+1).toString().padStart(2,'0')+'.'+now.getDate().toString().padStart(2,'0')+' '+now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v5.15 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
+  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v5.16 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
   out.innerHTML=printHdr+html+finalHtml+fcHtml;
   document.getElementById('btn_pdf_wrap').style.display='block';
   out.style.display='block';
