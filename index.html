@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#0f172a">
-<title>통합 ABGA 판독기 v5.17</title>
+<title>통합 ABGA 판독기 v5.18</title>
 <style>
 :root {
   --bg: #0f172a;
@@ -358,7 +358,7 @@ body{
 </head>
 <body>
 <header class="app-header">
-  <h1>통합 ABGA 판독기 <span>v5.17</span></h1>
+  <h1>통합 ABGA 판독기 <span>v5.18</span></h1>
   <button id="btn_settings" onclick="window._openSettings()" title="API 키 설정" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text2);opacity:.7;transition:opacity .15s;flex-shrink:0" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
@@ -645,7 +645,7 @@ function printResult(){
     }catch(e){}
   }
   var content='<!DOCTYPE html><html><head><meta charset="UTF-8">'
-    +'<title>통합 ABGA 판독기 v5.17 — 판독 결과</title>'
+    +'<title>통합 ABGA 판독기 v5.18 — 판독 결과</title>'
     +'<style>'+styles
     +'body{background:#fff;color:#000;font-family:system-ui,sans-serif;padding:10px 14px;max-width:800px;margin:0 auto}'
     +'.step-body{display:block!important}.drxb,.goldmark-body{display:block!important}'
@@ -2084,8 +2084,12 @@ function run(){
     patterns.push({label:'🟠 COPD 만성 악화 패턴',detail:'호흡성 산증 + 대사성 알칼리증 혼합(만성 보상 초과) + 저산소혈증 — COPD 만성 이뇨제 사용 패턴. 이뇨제·저칼륨혈증 확인.'});
 
   // 삼중 장애 (triple disorder)
-  if(isMixed&&mixComponents.length>=2&&highAG&&hasMetAcid)
-    patterns.push({label:'🟣 삼중 산염기 장애 가능성',detail:'혼합장애('+mixComponents.join('+')+')에 HAGMA가 추가로 동반되어 있습니다. 임상 맥락 종합 해석이 필요합니다.'});
+  // v5.18: 서로 다른 3개 축(대사성 산증 + 대사성 알칼리증 + 호흡성 장애)이 모두 있을 때만 삼중으로 판정
+  var _mcStr=mixComponents.join('|');
+  var _hasMetAlk=(fcData.drStatus==='mixed_met_alk')||_mcStr.indexOf('대사성 알칼리증')!==-1;
+  var _tripleOK=isMixed&&highAG&&hasMetAcid&&_hasMetAlk&&_mcStr.indexOf('호흡성')!==-1;
+  if(_tripleOK)
+    patterns.push({label:'🟣 삼중 산염기 장애 가능성',detail:'혼합장애('+mixComponents.join('+')+')에 HAGMA가 함께 확인되어 대사성 산증·대사성 알칼리증·호흡성 장애가 모두 존재합니다. 임상 맥락 종합 해석이 필요합니다.'});
 
   /* ── 원인/감별 텍스트 ── */
   var primCause='';
@@ -2162,7 +2166,7 @@ function run(){
   /* 인쇄용 헤더 */
   var now=new Date();
   var ts=now.getFullYear()+'.'+(now.getMonth()+1).toString().padStart(2,'0')+'.'+now.getDate().toString().padStart(2,'0')+' '+now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v5.17 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
+  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v5.18 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
   out.innerHTML=printHdr+html+finalHtml+fcHtml;
   document.getElementById('btn_pdf_wrap').style.display='block';
   out.style.display='block';
