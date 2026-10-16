@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#0f172a">
-<title>통합 ABGA 판독기 v5.18</title>
+<title>통합 ABGA 판독기 v5.19</title>
 <style>
 :root {
   --bg: #0f172a;
@@ -358,7 +358,7 @@ body{
 </head>
 <body>
 <header class="app-header">
-  <h1>통합 ABGA 판독기 <span>v5.18</span></h1>
+  <h1>통합 ABGA 판독기 <span>v5.19</span></h1>
   <button id="btn_settings" onclick="window._openSettings()" title="API 키 설정" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text2);opacity:.7;transition:opacity .15s;flex-shrink:0" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
@@ -645,7 +645,7 @@ function printResult(){
     }catch(e){}
   }
   var content='<!DOCTYPE html><html><head><meta charset="UTF-8">'
-    +'<title>통합 ABGA 판독기 v5.18 — 판독 결과</title>'
+    +'<title>통합 ABGA 판독기 v5.19 — 판독 결과</title>'
     +'<style>'+styles
     +'body{background:#fff;color:#000;font-family:system-ui,sans-serif;padding:10px 14px;max-width:800px;margin:0 auto}'
     +'.step-body{display:block!important}.drxb,.goldmark-body{display:block!important}'
@@ -1635,18 +1635,18 @@ function run(){
         var interpDetail='';
         if(drRatio<1){
           interpDetail='<p style="margin-top:6px"><strong style="color:var(--red)">ratio < 1 — HAGMA + NAGMA 혼합 가능</strong></p>'
-            +'<p style="margin-top:4px">쌓인 산(ΔAG↑)에 비해 HCO₃⁻가 <em>더 많이</em> 떨어진 상태입니다. '
-            +'미측정 음이온 증가 외에도 HCO₃⁻가 별도로 소실되고 있음을 의미합니다.</p>'
+            +'<p style="margin-top:4px">미측정 음이온 증가(ΔAG↑)에 비해 HCO₃⁻가 <em>더 많이</em> 떨어진 상태입니다. '
+            +'미측정 음이온 증가 외에도 HCO₃⁻가 별도로 소실되고 있을 가능성을 시사합니다.</p>'
             +'<p style="margin-top:4px;font-size:11px;color:var(--text3)">감별: 설사, 신세뇨관 산증(RTA), 대량 생리식염수 투여 등 NAGMA 원인 확인</p>';
         }else if(drRatio<=2){
           var typical=(drRatio>=1.0&&drRatio<=2.0);
           interpDetail='<p style="margin-top:6px"><strong style="color:var(--green,#22c55e)">ratio 1–2 — 순수 HAGMA</strong></p>'
-            +'<p style="margin-top:4px">쌓인 산(ΔAG↑)만큼 HCO₃⁻가 소비된 상태입니다. '
-            +'순수 HAGMA에서는 실제로 <strong>ratio 1.6 전후</strong>가 흔합니다 (비중탄산염 완충계 기여 때문).</p>'
+            +'<p style="margin-top:4px">미측정 음이온 증가(ΔAG↑)와 HCO₃⁻ 감소가 비슷한 크기입니다. '
+            +'순수 HAGMA에서는 실제로 <strong>ratio 1.0–2.0</strong>이 흔하며, 젖산산증에서는 1.6 전후, DKA에서는 케토산 소실로 1 안팎까지 나올 수 있습니다.</p>'
             +(drRatio>=1.5&&drRatio<=2.0?'<p style="margin-top:4px;font-size:11px;color:var(--text3)">현재 ratio '+drRatio.toFixed(2)+'는 순수 HAGMA의 전형 범위(1.0–2.0) 내에 있습니다.</p>':'');
         }else{
           interpDetail='<p style="margin-top:6px"><strong style="color:var(--red)">ratio > 2 — HAGMA + 대사성 알칼리증 혼합 또는 기저 HCO₃⁻ 상승</strong></p>'
-            +'<p style="margin-top:4px">쌓인 산(ΔAG↑) 대비 HCO₃⁻가 <em>생각보다 덜</em> 떨어진 상태입니다. 두 가지 원인을 고려하세요.</p>'
+            +'<p style="margin-top:4px">미측정 음이온 증가(ΔAG↑) 대비 HCO₃⁻가 <em>생각보다 덜</em> 떨어진 상태입니다. 두 가지 원인을 고려하세요.</p>'
             +'<p style="margin-top:6px">① <strong>대사성 알칼리증 동반</strong> — 구토·이뇨제 등으로 HCO₃⁻가 위로 끌려 올라간 경우<br>'
             +'② <strong>기저 HCO₃⁻ 상승</strong> — 만성 호흡성 산증(COPD) 등으로 HCO₃⁻가 이미 높았던 경우</p>'
             +'<p style="margin-top:4px;font-size:11px;color:var(--text3)">예: 구토+알코올성 케톤산증, COPD 기저 상태에서 HAGMA 발생</p>';
@@ -1678,7 +1678,7 @@ function run(){
         var deid='drb'+Date.now(),dcid='drc'+Date.now();
         drBody+='<div class="drx"><div class="drxh" onclick="window._tog(\''+deid+'\',\''+dcid+'\')">Delta ratio 개념 및 해석 기준표 <span class="chv op" id="'+dcid+'">▾</span></div>'+
           '<div class="drxb" id="'+deid+'">'+
-          '<p style="margin-bottom:8px">Delta ratio는 <strong>고음이온차 대사성 산증(HAGMA)에서 쌓인 산의 양과 떨어진 중탄산염의 양이 맞는지</strong> 보는 비율입니다. 순수 HAGMA라면 산이 1 늘면 HCO₃⁻도 1 줄어야 하므로 비가 약 1:1(실제로는 1.0–2.0, 흔히 1.6 전후)이어야 합니다.</p>'+
+          '<p style="margin-bottom:8px">Delta ratio는 <strong>고음이온차 대사성 산증(HAGMA)에서 미측정 음이온(ΔAG)의 증가량과 HCO₃⁻(ΔHCO₃⁻)의 감소량이 서로 맞는지</strong> 보는 비율입니다. 유기산(HA)은 H⁺와 A⁻로 해리되어 H⁺는 HCO₃⁻를 소모하고 A⁻는 AG를 올리므로, 순수 HAGMA라면 비가 약 1:1(실제로는 1.0–2.0, 젖산산증은 1.6 전후)이어야 합니다.</p><p style="margin-bottom:8px;font-size:11px;color:var(--text3)">※ ΔAG는 산 자체가 아니라 <strong>음이온(산의 짝염기)의 증가분</strong>입니다. 산 부하의 간접 지표일 뿐이며, 음이온의 소변 배설·세포 내 완충·Na⁺염 투여·알부민 변화에 따라 실제 산 부하와 달라질 수 있습니다.</p>'+
           '<table style="width:100%;border-collapse:collapse;font-size:11px">'+
           '<thead><tr style="background:var(--bg3)">'+
           '<th style="padding:6px 8px;text-align:left;border:1px solid var(--border);font-weight:600">비</th>'+
@@ -1687,7 +1687,7 @@ function run(){
           '</tr></thead><tbody>'+
           '<tr style="'+(drRatio<1?'background:rgba(239,68,68,.08);font-weight:600':'')+'">'+
           '<td style="padding:6px 8px;border:1px solid var(--border)">&lt; 1</td>'+
-          '<td style="padding:6px 8px;border:1px solid var(--border)">산은 덜 쌓였는데 HCO₃⁻는 더 떨어짐</td>'+
+          '<td style="padding:6px 8px;border:1px solid var(--border)">음이온 증가에 비해 HCO₃⁻가 더 떨어짐</td>'+
           '<td style="padding:6px 8px;border:1px solid var(--border)"><strong>HAGMA + NAGMA</strong> (설사, RTA, 식염수)</td></tr>'+
           '<tr style="'+(drRatio>=1&&drRatio<=2?'background:rgba(34,197,94,.08);font-weight:600':'')+'">'+
           '<td style="padding:6px 8px;border:1px solid var(--border)">1–2</td>'+
@@ -1695,7 +1695,7 @@ function run(){
           '<td style="padding:6px 8px;border:1px solid var(--border)"><strong>순수 HAGMA</strong></td></tr>'+
           '<tr style="'+(drRatio>2?'background:rgba(239,68,68,.08);font-weight:600':'')+'">'+
           '<td style="padding:6px 8px;border:1px solid var(--border)">&gt; 2</td>'+
-          '<td style="padding:6px 8px;border:1px solid var(--border)">산은 많이 쌓였는데 HCO₃⁻는 덜 떨어짐</td>'+
+          '<td style="padding:6px 8px;border:1px solid var(--border)">음이온 증가에 비해 HCO₃⁻가 덜 떨어짐</td>'+
           '<td style="padding:6px 8px;border:1px solid var(--border)"><strong>HAGMA + 대사성 알칼리증</strong> (구토, 이뇨제) 또는 원래 HCO₃⁻가 높던 상태</td></tr>'+
           '</tbody></table>'+
           '<p style="margin-top:10px;font-size:11px;color:var(--text3)">⚠ Delta ratio는 HAGMA에서만 유효합니다. Albumin 보정 AG 사용을 권장합니다.</p>'+
@@ -1740,7 +1740,7 @@ function run(){
         /* GOLDMARK 안내 공통 */
         var goldmarkNote='<p style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">'
           +'<strong>⚠ 미측정 음이온(산) 증가 — 추가 평가 권고</strong><br>'
-          +'숨겨진 산의 증가 원인을 찾기 위해 다음 항목 검사를 고려하세요.<br>'
+          +'미측정 음이온 증가의 원인을 찾기 위해 다음 항목 검사를 고려하세요.<br>'
           +'• <strong>Lactate</strong> — 패혈증·쇼크·조직 저산소증 시 젖산 상승<br>'
           +'• <strong>Ketone / β-hydroxybutyrate</strong> — 당뇨병성·알코올성·기아성 케톤산증<br>'
           +'• <strong>BUN / Creatinine</strong> — 요독증(신부전)<br>'
@@ -2084,7 +2084,7 @@ function run(){
     patterns.push({label:'🟠 COPD 만성 악화 패턴',detail:'호흡성 산증 + 대사성 알칼리증 혼합(만성 보상 초과) + 저산소혈증 — COPD 만성 이뇨제 사용 패턴. 이뇨제·저칼륨혈증 확인.'});
 
   // 삼중 장애 (triple disorder)
-  // v5.18: 서로 다른 3개 축(대사성 산증 + 대사성 알칼리증 + 호흡성 장애)이 모두 있을 때만 삼중으로 판정
+  // v5.19: 서로 다른 3개 축(대사성 산증 + 대사성 알칼리증 + 호흡성 장애)이 모두 있을 때만 삼중으로 판정
   var _mcStr=mixComponents.join('|');
   var _hasMetAlk=(fcData.drStatus==='mixed_met_alk')||_mcStr.indexOf('대사성 알칼리증')!==-1;
   var _tripleOK=isMixed&&highAG&&hasMetAcid&&_hasMetAlk&&_mcStr.indexOf('호흡성')!==-1;
@@ -2166,7 +2166,7 @@ function run(){
   /* 인쇄용 헤더 */
   var now=new Date();
   var ts=now.getFullYear()+'.'+(now.getMonth()+1).toString().padStart(2,'0')+'.'+now.getDate().toString().padStart(2,'0')+' '+now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v5.18 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
+  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v5.19 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
   out.innerHTML=printHdr+html+finalHtml+fcHtml;
   document.getElementById('btn_pdf_wrap').style.display='block';
   out.style.display='block';
