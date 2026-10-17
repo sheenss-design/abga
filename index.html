@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#0f172a">
-<title>통합 ABGA 판독기 v5.19</title>
+<title>통합 ABGA 판독기 v5.20</title>
 <style>
 :root {
   --bg: #0f172a;
@@ -358,7 +358,7 @@ body{
 </head>
 <body>
 <header class="app-header">
-  <h1>통합 ABGA 판독기 <span>v5.19</span></h1>
+  <h1>통합 ABGA 판독기 <span>v5.20</span></h1>
   <button id="btn_settings" onclick="window._openSettings()" title="API 키 설정" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text2);opacity:.7;transition:opacity .15s;flex-shrink:0" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
@@ -645,7 +645,7 @@ function printResult(){
     }catch(e){}
   }
   var content='<!DOCTYPE html><html><head><meta charset="UTF-8">'
-    +'<title>통합 ABGA 판독기 v5.19 — 판독 결과</title>'
+    +'<title>통합 ABGA 판독기 v5.20 — 판독 결과</title>'
     +'<style>'+styles
     +'body{background:#fff;color:#000;font-family:system-ui,sans-serif;padding:10px 14px;max-width:800px;margin:0 auto}'
     +'.step-body{display:block!important}.drxb,.goldmark-body{display:block!important}'
@@ -664,6 +664,13 @@ function printResult(){
 }
 function rd(id){var el=document.getElementById(id);if(!el)return null;var s=el.value;if(!s||s.trim()==='')return null;var n=Number(s);return isFinite(n)?n:null;}
 function mk(id,v,lo,hi){var el=document.getElementById(id);if(!el||v===null)return;el.className=(v<lo||v>hi)?'inp-bad':'inp-ok';}
+/* v5.20: 고혈당 Na 보정 — Hillier(1999) 비선형 관찰 반영. 100~400 mg/dL: 1.6, 400 초과분: 4.0 mEq/L per 100 mg/dL */
+function naGlcDelta(glc){if(glc<=100)return 0;return 0.016*(Math.min(glc,400)-100)+0.040*Math.max(glc-400,0);}
+function naGlcFormula(na,glc){
+  var s1=na+' + 1.6×('+Math.min(glc,400).toFixed(0)+'−100)/100';
+  if(glc>400)s1+=' + 4.0×('+glc.toFixed(0)+'−400)/100';
+  return s1;
+}
 function srow(l,v,c){return '<div class="srow"><span class="srow-l">'+l+'</span><span class="srow-v'+(c?' '+c:'')+'">'+v+'</span></div>';}
 function cbox(h){return '<div class="cbox">'+h+'</div>';}
 function nw(h){return '<div class="nw">'+h+'</div>';}
@@ -1454,7 +1461,7 @@ function run(){
 
     /* ── 혈당 ≥ 400: 보정 Na 적용 AG 추가 표시 ── */
     if(glc!==null&&glc>=400){
-      var naCorr_ag=na+0.024*(glc-100);
+      var naCorr_ag=na+naGlcDelta(glc);
       var agCorr=naCorr_ag-(cl+hco3);
       var agEffCorr=(alb!==null&&Math.abs(alb-4.0)>0.05)?agCorr+2.5*(4.0-alb):agCorr;
       var corrDiff=agEffCorr-agEff;
@@ -1462,7 +1469,7 @@ function run(){
         :' ('+corrDiff.toFixed(1)+')'),(agEffCorr>17?'r':agEffCorr>12?'a':'g'));
       agBody+=cbox('<p><strong>혈당 '+glc.toFixed(0)+' mg/dL ≥ 400 — 고혈당 보정 Na⁺ 적용</strong></p>'
         +'<p class="mono" style="margin-top:4px">'
-        +'보정 Na⁺ = '+na+' + 0.024×('+glc.toFixed(0)+'−100) = '+naCorr_ag.toFixed(1)+' mEq/L<br>'
+        +'보정 Na⁺ = '+naGlcFormula(na,glc)+' = '+naCorr_ag.toFixed(1)+' mEq/L<br>'
         +'보정 AG = '+naCorr_ag.toFixed(1)+'–('+cl+'+'+hco3.toFixed(1)+') = '+agCorr.toFixed(1)+(agEffCorr!==agCorr?' → Alb 보정 후 '+agEffCorr.toFixed(1):'')
         +'</p>'
         +(agEffCorr>17&&!borderAG
@@ -1470,7 +1477,7 @@ function run(){
           :agEffCorr<=12&&agEff>12
           ?'<p style="margin-top:6px">고혈당에 의한 Na⁺ 희석을 보정하면 AG가 정상 범위 내에 해당합니다.</p>'
           :'<p style="margin-top:6px;color:var(--text3)">보정 전후 판정 일치 (보정량 '+corrDiff.toFixed(1)+' mEq/L).</p>')
-        +'<p style="margin-top:4px;font-size:11px;color:var(--text3)">혈당 400 mg/dL 이상에서 보정 Na⁺를 AG 계산에 반영하였습니다. 이하 수치에서는 보정 효과(≤7 mEq/L)가 임상적으로 무시 가능한 수준입니다.</p>');
+        +'<p style="margin-top:4px;font-size:11px;color:var(--text3)">혈당 400 mg/dL 이상에서 보정 Na⁺를 AG 계산에 반영하였습니다. 이하 수치에서는 보정 효과(≤5 mEq/L)가 임상적으로 무시 가능한 수준입니다.</p>');
       /* agEff를 보정값으로 업데이트 */
       agEff=agEffCorr;
       borderAG=(agEff>12&&agEff<=17);
@@ -1834,15 +1841,15 @@ function run(){
     var glcBody=srow('Glucose',glc.toFixed(0)+' mg/dL',glc<70?'r':glc>200?'r':glc>126?'a':'g')+srow('정상 범위','70–100 mg/dL (공복)');
 
     var corrNaStr='', corrNaNote='', osmCalcStr='';
-    if(na!==null&&glc>100){
-      // Hillier 2001 보정공식: Na_corr = Na_meas + 0.024 × (Glc - 100)
-      var naCorr=na+0.024*(glc-100);
+    if(na!==null&&glc>=200){
+      // v5.20: Hillier(1999) 구간별 보정 (100~400: 1.6, 400 초과분: 4.0 mEq/L per 100 mg/dL). 안내 표시 기준 200 mg/dL는 참고용
+      var naCorr=na+naGlcDelta(glc);
       var naDiff=naCorr-na;
       corrNaStr='보정 Na⁺: '+naCorr.toFixed(1)+' mEq/L (+'+naDiff.toFixed(1)+')';
       var naStatus=naCorr<135?'저나트륨혈증':naCorr<=145?'정상':' 고나트륨혈증';
       corrNaNote='고혈당으로 혈장 삼투압이 상승하여 세포 밖으로 수분이 이동, 측정 Na⁺가 희석됩니다. '
-        +'보정 Na⁺(Hillier 공식) = '+na+' + 0.024×('+glc.toFixed(0)+'−100) = <strong>'+naCorr.toFixed(1)+'</strong> mEq/L → '+naStatus+'<br>'
-        +'<span style="font-size:11px;color:var(--text3)">보정 Na⁺가 정상 또는 고나트륨혈증이면 실제 탈수가 숨겨져 있을 수 있습니다.</span>';
+        +'보정 Na⁺(Hillier 구간식) = '+naGlcFormula(na,glc)+' = <strong>'+naCorr.toFixed(1)+'</strong> mEq/L → '+naStatus+'<br>'
+        +'<span style="font-size:11px;color:var(--text3)">보정 Na⁺가 정상 또는 고나트륨혈증이면 실제 탈수가 숨겨져 있을 수 있습니다. 400 mg/dL 이하는 100 mg/dL당 1.6, 초과분은 4.0 mEq/L를 적용했으며(Hillier 1999, 건강인 6명 실험), 200 mg/dL 미만에서는 보정량이 측정 오차 수준이라 표시하지 않습니다(참고용 기준).</span>';
       glcBody+=srow('보정 Na⁺ (Hillier)',naCorr.toFixed(1)+' mEq/L',naCorr<135?'a':naCorr>145?'r':'g');
     }
 
@@ -2084,7 +2091,7 @@ function run(){
     patterns.push({label:'🟠 COPD 만성 악화 패턴',detail:'호흡성 산증 + 대사성 알칼리증 혼합(만성 보상 초과) + 저산소혈증 — COPD 만성 이뇨제 사용 패턴. 이뇨제·저칼륨혈증 확인.'});
 
   // 삼중 장애 (triple disorder)
-  // v5.19: 서로 다른 3개 축(대사성 산증 + 대사성 알칼리증 + 호흡성 장애)이 모두 있을 때만 삼중으로 판정
+  // v5.20: 서로 다른 3개 축(대사성 산증 + 대사성 알칼리증 + 호흡성 장애)이 모두 있을 때만 삼중으로 판정
   var _mcStr=mixComponents.join('|');
   var _hasMetAlk=(fcData.drStatus==='mixed_met_alk')||_mcStr.indexOf('대사성 알칼리증')!==-1;
   var _tripleOK=isMixed&&highAG&&hasMetAcid&&_hasMetAlk&&_mcStr.indexOf('호흡성')!==-1;
@@ -2126,7 +2133,7 @@ function run(){
   /* ⑥-2 Glucose */
   if(glc!==null){
     var glcSumStr=glc.toFixed(0)+' mg/dL — '+(glc<70?'저혈당':glc<=100?'정상':glc<=126?'공복혈당 이상':glc<=200?'고혈당':'심각한 고혈당');
-    if(na!==null&&glc>100){var naC2=na+0.024*(glc-100);glcSumStr+=' | 보정Na⁺ '+naC2.toFixed(1)+' mEq/L';}
+    if(na!==null&&glc>=200){var naC2=na+naGlcDelta(glc);glcSumStr+=' | 보정Na⁺ '+naC2.toFixed(1)+' mEq/L';}
     blocks+='<div class="dxblock"><div class="dxblock-lbl">Glucose</div><div class="dxblock-val">'+glcSumStr+'</div></div>';
   }
   /* ⑥-3 BUN/Cr */
@@ -2166,7 +2173,7 @@ function run(){
   /* 인쇄용 헤더 */
   var now=new Date();
   var ts=now.getFullYear()+'.'+(now.getMonth()+1).toString().padStart(2,'0')+'.'+now.getDate().toString().padStart(2,'0')+' '+now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v5.19 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
+  var printHdr='<div class="print-header"><h2>통합 ABGA 판독기 v5.20 — 판독 결과</h2><p>판독일시: '+ts+'</p></div>';
   out.innerHTML=printHdr+html+finalHtml+fcHtml;
   document.getElementById('btn_pdf_wrap').style.display='block';
   out.style.display='block';
